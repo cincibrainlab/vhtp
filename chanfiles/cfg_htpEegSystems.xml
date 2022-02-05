@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- EEG System Configuration File 
+     filename: cfg_htpEegSystems.xml 
+
+ XML Format: See below to enter new <listitem>
+             See functions/config/htp_readEegSystems.m for information on formating.
+
+ Copyright (C) 2019  Cincinnati Children's (Pedapati Lab)
+
+ This file is part of High Throughput Pipeline (HTP), see 
+ https://bitbucket.org/eped1745/htp_stable/src/master/
+ Contact: ernest.pedapati@cchmc.org
+-->
+<list>
+   <listitem>
+      <net_displayname>EGI Hydrocel 128</net_displayname>
+      <net_name>EGI128</net_name>
+      <net_file>chanfiles/GSN-HydroCel-129.sfp</net_file>
+      <net_graphic>chanfiles/EEG_128_channel_array_map.pdf</net_graphic>
+      <net_filter>*.raw</net_filter>
+      <net_nochans>128</net_nochans>
+      <net_regions>
+         <Frontal>[1,2,3,4,8,9,10,11,14,15,16,18,19,20,21,22,23,24,25,26,27,32,33,118,122,123,124,125,128]</Frontal>
+         <Premotor>[28,29,30,34,35,36,39,40,104,105,109,110,111,115,116,117]</Premotor>
+         <SMA>[5,6,12,13,112]</SMA>
+         <Motor>[31,37,41,42,80,87,93,103]</Motor>
+         <Somatosensory>[45,46,47,53,54,55,79,86,98,102,108]</Somatosensory>
+         <Parietal>[51,52,57,58,59,60,61,62,78,85,91,92,96,97,100]</Parietal>
+         <Occipital>[65,66,67,69,70,71,72,75,76,77,83,89,90]</Occipital>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>EGI Hydrocel 32</net_displayname>
+      <net_name>EGI32</net_name>
+      <net_file>chanfiles/GSN-HydroCel-32.sfp</net_file>
+      <net_graphic>chanfiles/EEG_32_channel_array_map.pdf</net_graphic>
+      <net_filter>*.raw</net_filter>
+      <net_nochans>32</net_nochans>
+      <net_regions>
+         <Frontal>[1,27,2,3,4,11,12,31,32]</Frontal>
+         <Premotor>[11,12]</Premotor>
+         <SMA>[17,28]</SMA>
+         <Motor>[5,6,13,14]</Motor>
+         <Somatosensory>[13,7,8,14]</Somatosensory>
+         <Parietal>[23,15,7,19,8,16,24]</Parietal>
+         <Occipital>[15,9,20,19,16]</Occipital>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>EGI Hydrocel 64</net_displayname>
+      <net_name>EGI64</net_name>
+      <net_file>chanfiles/GSN-HydroCel-64.sfp</net_file>
+      <net_graphic>chanfiles/EEG_64_channel_array_map.pdf</net_graphic>
+      <net_filter>*.raw</net_filter>
+      <net_nochans>64</net_nochans>
+      <net_regions>
+         <Frontal>[1,27,2,3,4,11,12,31,32]</Frontal>
+         <Premotor>[11,12]</Premotor>
+         <SMA>[17,28]</SMA>
+         <Motor>[5,6,13,14]</Motor>
+         <Somatosensory>[13,7,8,14]</Somatosensory>
+         <Parietal>[23,15,7,19,8,16,24]</Parietal>
+         <Occipital>[15,9,20,19,16]</Occipital>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>MEA 30</net_displayname>
+      <net_name>MEA30</net_name>
+      <net_file>chanfiles/mea3d.mat</net_file>
+      <net_graphic>chanfiles/meaimg.PNG</net_graphic>
+      <net_filter>*.edf</net_filter>
+      <net_nochans>30</net_nochans>
+      <net_regions>
+         <RFrontal>[17,16,19,18]</RFrontal>
+         <LFrontal>[14,15,12,13]</LFrontal>
+         <RMedial>[22, 25, 28]</RMedial>
+         <LMedial>[9,6,3]</LMedial>
+         <RTemporal>[20,21,23,24,26,27,29,30]</RTemporal>
+         <LTemporal>[10,11,1,2,4,5,7,8]</LTemporal>
+         <Whole>[1:30]</Whole>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>MEARHD32</net_displayname>
+      <net_name>MEARHD32</net_name>
+      <net_file>chanfiles/mea3d.mat</net_file>
+      <net_graphic>chanfiles/meaimg.PNG</net_graphic>
+      <net_filter>*.rhd</net_filter>
+      <net_nochans>30</net_nochans>
+      <net_regions>
+         <RFrontal>[17,16,19,18]</RFrontal>
+         <LFrontal>[14,15,12,13]</LFrontal>
+         <RMedial>[22, 25, 28]</RMedial>
+         <LMedial>[9,6,3]</LMedial>
+         <RTemporal>[20,21,23,24,26,27,29,30]</RTemporal>
+         <LTemporal>[10,11,1,2,4,5,7,8]</LTemporal>
+         <Whole>[1:30]</Whole>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>Brainvision 64</net_displayname>
+      <net_name>BV64</net_name>
+      <net_file>chanfiles/BioSemi_64_10-10.elp</net_file>
+      <net_graphic>chanfiles/BV_64_channel_array_map.pdf</net_graphic>
+      <net_filter>*.eeg</net_filter>
+      <net_nochans>64</net_nochans>
+      <net_regions>
+         <Frontal>[1,27,2,3,4,11,12,31,32]</Frontal>
+         <Premotor>[11,12]</Premotor>
+         <SMA>[17,28]</SMA>
+         <Motor>[5,6,13,14]</Motor>
+         <Somatosensory>[13,7,8,14]</Somatosensory>
+         <Parietal>[23,15,7,19,8,16,24]</Parietal>
+         <Occipital>[15,9,20,19,16]</Occipital>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>EDF Generic</net_displayname>
+      <net_name>EDFGENERIC</net_name>
+      <net_file>chanfiles/standard_1020.elc</net_file>
+      <net_graphic></net_graphic>
+      <net_filter>*.edf</net_filter>
+      <net_nochans>30</net_nochans>
+      <net_regions>
+         <RFrontal>[17,16,19,18]</RFrontal>
+         <LFrontal>[14,15,12,13]</LFrontal>
+         <RMedial>[22, 25, 28]</RMedial>
+         <LMedial>[9,6,3]</LMedial>
+         <RTemporal>[20,21,23,24,26,27,29,30]</RTemporal>
+         <LTemporal>[10,11,1,2,4,5,7,8]</LTemporal>
+         <Whole>[1:30]</Whole>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+   <listitem>
+      <net_displayname>MEA XDAT</net_displayname>
+      <net_name>MEAXDAT</net_name>
+      <net_file>chanfiles/mea3d.mat</net_file>
+      <net_graphic>chanfiles/meaimg.PNG</net_graphic>
+      <net_filter>*_data.xdat</net_filter>
+      <net_nochans>30</net_nochans>
+      <net_regions>
+         <RFrontal>[17,16,19,18]</RFrontal>
+         <LFrontal>[14,15,12,13]</LFrontal>
+         <RMedial>[22, 25, 28]</RMedial>
+         <LMedial>[9,6,3]</LMedial>
+         <RTemporal>[20,21,23,24,26,27,29,30]</RTemporal>
+         <LTemporal>[10,11,1,2,4,5,7,8]</LTemporal>
+         <Whole>[1:30]</Whole>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>
+</list>
