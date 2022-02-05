@@ -2,13 +2,11 @@
 <a href='https://github.com/drpedapati/visualhtp/'><img src="man/figures/logo.svg" height="350px"/></a>
 <hr />
 </div>
-<p align="center">
 <!-- badges: start -->
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
 ![Github All Releases](https://img.shields.io/github/downloads/drpedapati/visualhtp/total)
 <!-- badges: end -->
-</p>
 ## Introduction
 With the **vhtp** toolbox, anyone can easily work with EEG data using MATLAB-Octave programming language. The **vhtp** philosophy: You can produce ready-to-use EEG outputs with a **simple set of functions** that implement your favorite EEG toolkits. 
 <img src="man/figures/overview.svg" alt="vhtp functions" align="left" />
