@@ -1,10 +1,11 @@
 function [results] = utility_htpImportEeg( filepath, varargin )
-% utility_htpDirectoryListing() - prototype function for eeg_htp functions.
-%      This is a template for utility type functions only. No EEG input.
-%      Add 'help' comments here to be viewed on command line.
+% utility_htpImportEeg() - main import function
 %
 % Usage:
-%    >> [ results ] = utility_htpFunctionTemplate( filepath, varargin )
+%    >> [ results ] = utility_htpImportEeg( filepath, varargin )
+%
+% Example:
+%    >> [results] = utility_htpImportEeg('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
 %
 % Require Inputs:
 %     filepath       - directory to get file list
@@ -14,9 +15,9 @@ function [results] = utility_htpImportEeg( filepath, varargin )
 %     'ext'          - specify file extenstion
 %     'keyword'      - keyword search
 %     'subdirOn'     - (true/false) search subdirectories
-%     'dryrun'       - specify file extenstion
-%     'chanxml'      - keyword search
-%     'outputdir'    - keyword search
+%     'dryrun'       - no actual changes to disk, default: true
+%     'chanxml'      - specify channel catalog xml
+%     'outputdir'    - output path (default: tempdir)
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
@@ -149,15 +150,14 @@ for i = 1 : height(filelist)
         event_codes = [];
     end
     
-    setinfo = cell2table({filelist.outputfile(i) EEG.nbchan EEG.trials EEG.pnts EEG.srate EEG.xmin ...
-        EEG.xmax EEG.ref has_events event_codes filelist.outputfile{i} filelist.outputdir(i) ...
-        EEG.subject, original_file...
+    setinfo = cell2table({filelist.outputfile(i) ip.Results.nettype ip.Results.ext timestamp EEG.nbchan EEG.trials EEG.pnts EEG.srate EEG.xmin ...
+        EEG.xmax EEG.ref has_events numel(EEG.event) event_codes filelist.outputfile{i} filelist.outputdir(i) ...
+        EEG.subject filelist.filename{i} filelist.filepath{i}...
         }, ...
-        'VariableNames', {'setname','nbchan','trials','pnts','srate','xmin', ...
-        'xmax','ref','has_events','event_codes','filename','filepath','subject', 'original_file'});
+        'VariableNames', {'setname','nettype','raw_fmt','import_date', 'raw_nbchan','raw_trials','raw_pnts','raw_srate','raw_xmin', ...
+        'raw_xmax','raw_ref','raw_has_events','raw_no_events','raw_event_codes','raw_filename','raw_filepath','raw_subject', 'source_file','source_path'});
     
-    EEG.etc.htp.import = setinfo;
-    EEG.htp.import = setinfo;
+    EEG.vhtp.inforow = setinfo;
     
     if ~ip.Results.dryrun
         try
