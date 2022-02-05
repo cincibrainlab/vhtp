@@ -1,12 +1,12 @@
 <div align="center">
-<a href='https://github.com/drpedapati/visualhtp/'><img src="man/figures/logo.svg" height="350px"/></a>
+<a href='https://github.com/cincibrainlab/vhtp/'><img src="man/figures/logo.svg" height="350px"/></a>
 <hr />
 </div>
 
 <!-- badges: start -->
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-![Github All Releases](https://img.shields.io/github/downloads/drpedapati/visualhtp/total)
+![Github All Releases](https://img.shields.io/github/downloads/cincibrainlab/vhtp/total)
 <!-- badges: end -->
 
 ## Introduction
