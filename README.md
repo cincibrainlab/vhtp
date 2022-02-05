@@ -26,12 +26,11 @@ Is there room for another opensource EEG toolkit? The **vhtp** toolkit focuses o
   - **Export to BIDS:** Following import to SET, data directories confirming to EEG BIDS specifications can be created for sharing.
 
 
-
 ## Installation
 
     git clone http://github.org/cincibrainlab/visualhtp
 
-## Resources
+## Workflow Example
 
 ### Documentation
 
@@ -56,7 +55,7 @@ Conduct](https://github.com/davidgohel/flextable/blob/master/CONDUCT.md).
 ### Bug reports
 
 When you file a [bug
-report](https://github.com/cincibrainlab/visualhtp/issues), please spend
+report](https://github.com/cincibrainlab/vhtp/issues), please spend
 some time making it easy for me to follow and reproduce. The more time
 you spend on making the bug report coherent, the more time we can
 dedicate to investigate the bug as opposed to the bug report.
