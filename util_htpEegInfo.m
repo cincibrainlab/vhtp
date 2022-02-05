@@ -1,4 +1,4 @@
-function [results] = utility_htpEegInfo( filepath, varargin )
+function [results] = util_htpEegInfo( filepath, varargin )
 % utility_htpEegInfo() - retreive stored htp reporting data rows from SET
 % files. If no structure is found, data will be attempted to pull from SET
 % structure directly. Does not load data, only SET structure.
