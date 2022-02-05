@@ -1,4 +1,4 @@
-function [results] = utility_htpDirectoryListing( filepath, varargin )
+function [results] = util_htpDirListing( filepath, varargin )
 % utility_htpDirectoryListing() - prototype function for eeg_htp functions.
 %      This is a template for utility type functions only. No EEG input.
 %      Add 'help' comments here to be viewed on command line.

@@ -77,7 +77,7 @@ end
 % filenames
 changeExtToSet = @( str ) strrep(str, ip.Results.ext, '.set'); % convert new filename to .set
 
-filelist = utility_htpDirectoryListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
+filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
 
 if ~isempty(filelist.filename)
     filelist.success = false(height(filelist),1);
