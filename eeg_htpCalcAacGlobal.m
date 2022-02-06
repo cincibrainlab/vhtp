@@ -110,7 +110,6 @@ outputfile = fullfile(ip.Results.outputdir, ...
 
         for bandi = 1 : length(bandDefs)
             bandname =[ PSDType{pi} '_' bandDefs{bandi,1}];
-
             bandindex.(bandname) = freqs > bandDefs{bandi,2} & freqs < bandDefs{bandi,3};
             bandpower.(bandname) = squeeze(mean(PSD(bandindex.(bandname),:,:),1));
             cluster_indices = 1 : numel(chanlocs);  % replace with any channel index, i.e. network indexes
@@ -158,40 +157,29 @@ outputfile = fullfile(ip.Results.outputdir, ...
         aac.(label{i}) = aac.(label{i})(1,:);
     end
 
-    aacAll{si} = aac;
+    % Create CSV rows
+    % count = 1;
+    csvout = {};
+    datafields = fieldnames(aac);
+    for ci = 1 : numel(chanlocs)
+        csvout{ci, 1} = EEG.setname;
+        csvout{ci, 2} = chanlocs(ci).labels;
+        for fi = 1 : numel(datafields)
+            workingField = aac.(datafields{fi});
+            csvout{ci, 2+fi} = workingField(ci);
+        end
+    end
 
-    %s.unloadDataset;
-    EEG = [];
-
-
-%% END: Signal Processing
-
-
-
-
-    ID = repmat({IDlist{n}}, npair*nfreq, 1);
-
-    Group = repmat({EEG.group}, npair*nfreq, 1);
-
-    
-
-    sheet = [ID, Group, Pair1, Pair2, Region1, Region2, num2cell(freq), num2cell(dwpli)];
-
-    header = ["ID" "Group" "label1" "label2" "region1" "region2" "freq_Hz" "dwpli"];
-
-    T = cell2table(num2cell(sheet),'VariableNames',cellstr(header));
-
-    filename = ['C:\data\2_P1_70FXS_71_TDC\signal\csv_storage\P1_',IDlist{n},'_signal_dwpli.csv'];
-
-    writetable(T, filename,'WriteRowNames',true);
+    results = cell2table(csvout, "VariableNames", [{'eegid'},{'chan'}, datafields(:)']);
+    EEG.vhtp.eeg_htpCalcAacGlobal.result_table = results;
 
 % END: Signal Processing
 
 % QI Table
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid','function','timestamp'});
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
 
 % Outputs: 
-results = [];
 
 
 end
