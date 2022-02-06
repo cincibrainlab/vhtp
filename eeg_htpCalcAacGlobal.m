@@ -1,9 +1,10 @@
-function [EEG, results] = eeg_htpCalcPli( EEG, varargin )
-% eeg_htpCalcPli() - calculates phase lag index on EEG set
-%      Add 'help' comments here to be viewed on command line.
+function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
+% eeg_htpCalcAacGlobal() - calculates amplitude-amplitude coupling 
+% (AAC) as described in Wang et al. (2017). Global (mean) power
+% of the low frequency band is coupled with local gamma power.
 %
 % Usage:
-%    >> [ EEG, results ] = eeg_htpFunctionTemplate( EEG )
+%    >> [ EEG, results ] = eeg_htpCalcAacGlobal( EEG, varargin )
 %
 % Require Inputs:
 %     EEG       - EEGLAB Structure
@@ -21,7 +22,7 @@ function [EEG, results] = eeg_htpCalcPli( EEG, varargin )
 %     results   - etc.htp results structure or customized
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%  please see http://github.com/cincibrainlab/vhtp for details.
 %    
 %  Contact: kyle.cullion@cchmc.org
 
@@ -29,8 +30,6 @@ timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Function Specific
-
-% Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
 defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 
                    'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55; 
@@ -47,7 +46,8 @@ outputdir = ip.Results.outputdir;
 bandDefs = ip.Results.bandDefs;
 
 % base output file can be modified with strrep()
-outputfile = fullfile(outputdir, [functionstamp '_'  EEG.setname '_' timestamp '.mat']); 
+outputfile = fullfile(ip.Results.outputdir, ...
+    [functionstamp '_'  EEG.setname '_' timestamp '.mat']); 
 
 % START: Signal Processing
 
