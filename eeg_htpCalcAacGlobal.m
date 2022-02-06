@@ -50,217 +50,126 @@ bandDefs = ip.Results.bandDefs;
 outputfile = fullfile(outputdir, [functionstamp '_'  EEG.setname '_' timestamp '.mat']); 
 
 % START: Signal Processing
-% calculate power from first and last frequency from banddefs
-if ndims(EEG.data) > 2 %#ok<ISMAT>
-                EEG = o.EEG;
-            EEG.data = reshape(EEG.data, size(EEG.data,1), size(EEG.data,2)*size(EEG.data,3));
-            EEG.pnts   = size(EEG.data,2);
-            EEG.trials = 1;
-            EEG.event = [];
-            EEG.epoch = [];
-            EEG.urevent = [];
-            
-            o.EEG = eeg_checkset( EEG );
-    %dat = permute(detrend3(permute(EEG.data, [2 3 1])), [3 1 2]);
-    dat = EEG.data;
-    cdat = reshape(dat, size(dat,1), size(dat,2)*size(dat,3));
-else
-    cdat = EEG.data;
-end
 
-if EEG.trials==1
-    EEG.pnts = EEG.srate * 2;
-    EEG.trials = floor(size(EEG.data,2)/EEG.pnts);
-    duration = EEG.pnts*EEG.trials;
-    EEG.data = reshape(EEG.data(:,1:duration),EEG.nbchan,EEG.pnts,EEG.trials);
-    EEG.times = linspace(-EEG.pnts,EEG.pnts-2,EEG.pnts);
-end
-
-
-
-    % below code is designed for 3d EEG.data:
-
-%     nfreq = 27;
-
-%     freqs2use  = linspace(4,30,nfreq); % 4-30 Hz linear sampling with 1Hz step
-
-    freqs2use  = [10.5:.5:12.5 30:5:55]; % 5+6
-
-    nfreq = length(freqs2use);
-
-    % wavelet and FFT parameters
-
-    time          = -1:1/EEG.srate:1; % 2-sec
-
-    half_wavelet  = (length(time)-1)/2; 
-
-%     num_cycles    = linspace(3,10,length(freqs2use));
-
-    num_cycles    = [3:.5:5,7.5:.5:10];
-
-    n_wavelet     = length(time);
-
-    n_data        = EEG.pnts*EEG.trials; % same with duration
-
-    n_convolution = n_wavelet+n_data-1;
-
-
-
-    combos = combnk({EEG.chanlocs(:).labels}',2); % channel pairs (unique)
-
-
-
-    %% initialize
-
-    dwpli_pair   = zeros(EEG.nbchan, EEG.nbchan, length(freqs2use)); 
-
-    % wpli_pair   = zeros(EEG.nbchan, EEG.nbchan, length(freqs2use)); 
-
-    tic % ~264 sec/4 min
-
-    for pairi=1:length(combos)
-
-        channel1 = combos{pairi,1};
-
-        channel2 = combos{pairi,2};
-
-
-
-        chanidx = zeros(1,2); 
-
-        chanidx(1) = find(strcmpi(channel1,{EEG.chanlocs.labels}));
-
-        chanidx(2) = find(strcmpi(channel2,{EEG.chanlocs.labels}));
-
-
-
-        % data FFTs (1d for performance - Cohen's convention)
-
-        data_fft1 = fft(reshape(EEG.data(chanidx(1),:,:),1,n_data),n_convolution); % 1x41000
-
-        data_fft2 = fft(reshape(EEG.data(chanidx(2),:,:),1,n_data),n_convolution);
-
-
-
-        for fi=1:length(freqs2use)  
-
-            % create wavelet and take FFT
-
-            s = num_cycles(fi)/(2*pi*freqs2use(fi));
-
-            complex_wavelet = exp(2*1i*pi*freqs2use(fi).*time).*exp(-time.^2./(2*(s^2)));
-
-            wavelet_fft = fft(complex_wavelet, n_convolution);
-
-
-
-            % complex signal 1 from channel 1 via convolution
-
-            convolution_f1 = wavelet_fft.*data_fft1;
-
-            convolution_result1 = ifft(convolution_f1, n_convolution);
-
-            convolution_result1 = convolution_result1(half_wavelet+1:end-half_wavelet); % 1x40000
-
-            sig1 = reshape(convolution_result1, EEG.pnts, EEG.trials); % 1000(pnts)*40(trials)
-
-            [y,f2,c] = cwt(reshape(EEG.data(chanidx(2),:,:),1,n_data),EEG.srate,'wavetype','morlet','s0',1);
-
-            sigz = reshape(y, EEG.pnts, EEG.trials); % 1000(pnts)*40(trials)
-
-            % complex signal 2 from channel 2 via convolution
-
-            convolution_f2 = wavelet_fft.*data_fft2;
-
-            convolution_result2 = ifft(convolution_f2, n_convolution);
-
-            convolution_result2 = convolution_result2(half_wavelet+1:end-half_wavelet);
-
-            sig2 = reshape(convolution_result2, EEG.pnts, EEG.trials); 
-
-
-
-            % WPLIs (over time per trial)
-
-            cdd = sig1 .* conj(sig2); % cross-spectrum: 1000(pnts)*133(trial)
-
-            cdi = imag(cdd); % imaginary part of cross-spectrum: 1000(pnts)*133(trial)    
-
-
-
-            imagsum = sum(cdi); % average (~sum) imaginary component: 1x133
-
-            imagsumW = sum(abs(cdi)); % average (~sum) magnitude of the imaginary component: 1x133
-
-            diagsum = sum(cdi.^2); % sum from diagonal entries only 1x133
-
-
-
-            dwpli_pair(chanidx(1),chanidx(2),fi) = mean((imagsum.^2 - diagsum)./(imagsumW.^2 - diagsum), 2); 
-
-    %         wpli_pair(chanidx(1),chanidx(2),fi) = mean((imagsum.^2) ./(imagsumW.^2), 2);
-
+    % check if data is continuous, if not epoch to 1 s bins
+    if ndims(EEG.data) < 3
+        warning("Data is continuous. Converted to 1 second epochs.")
+        EEG = eeg_regepochs(EEG, 'recurrence', 1);
+    end
+
+    EEG.data = gpuArray(EEG.data);
+
+    % get channel structure
+    chanlocs = EEG.chanlocs;
+
+    % create full atlas table in chanlocs order
+    chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
+    chanlist.index = (1:height(chanlist)).';
+    atlasLookupTable = readtable("resource_elecDetailsEGI128_v2.csv");
+    matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, ...
+     'Keys', {'chan','chan'});
+
+    matchedAtlasTable = sortrows(matchedAtlasTable,'index');
+
+    % Remove the "other" nodes
+    checkchans = chanlocs(~(matchedAtlasTable.position == "OTHER"));
+    chanlocs(~(matchedAtlasTable.position == "OTHER"))
+    cEEG = pop_select(cEEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
+    EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
+    chanlocs = EEG.chanlocs;
+
+    % alternative power calculation
+    upperFreqLimit = 90;
+    deviationFromLog = 5;
+    PSD = [];
+
+    %PSD = zeros(length(freqBins), size(EEG.data,2), length(chanlocs))
+    freqBins = logspace(log10(1+deviationFromLog), log10(upperFreqLimit+deviationFromLog), 281)-deviationFromLog;
+    PSDType = {'absolute','relative'}; PSDArray = [];
+    for pi = 1 : numel(PSDType)
+        for i = 1 : size(EEG.data,1)
+            [~, freqs, times, firstPSD] = spectrogram(EEG.data(i,:), EEG.srate, floor(EEG.srate/2), freqBins, EEG.srate);
+            %freqs =  s.rest_rel_hz;
+            % hz x trial x chan
+            switch PSDType{pi}
+                case 'absolute'
+                    PSDArray.(PSDType{pi})(:,:,i) = firstPSD; %#ok<*SAGROW> % 100 (hz pnts) x 161 (trials) x 68
+                case 'relative'
+                    PSDArray.(PSDType{pi})(:,:,i) = firstPSD ./ sum(firstPSD,1); % Relative Power
+            end
+        end
+    end
+    %firstPSD2 = squeeze(s.rest_rel_power);
+    %%
+
+    glmaac=[]; count = 0;
+    loBandArr = {'theta','alpha1','alpha2'};
+    hiBandArr = {'gamma1'};
+
+    % create band indexes and global cluster for correlation
+    bandname = []; bandindex =[]; bandpower =[]; cluster =[];
+    for pi = 1 : numel(PSDType)
+
+        PSD = gather(PSDArray.(PSDType{pi}));
+
+        for bandi = 1 : length(bandDefs)
+            bandname =[ PSDType{pi} '_' bandDefs{bandi,1}];
+
+            bandindex.(bandname) = freqs > bandDefs{bandi,2} & freqs < bandDefs{bandi,3};
+            bandpower.(bandname) = squeeze(mean(PSD(bandindex.(bandname),:,:),1));
+            cluster_indices = 1 : numel(chanlocs);  % replace with any channel index, i.e. network indexes
+            cluster.(bandname) =  squeeze(mean(bandpower.(bandname)(:,cluster_indices),2));
         end
 
     end
 
-    toc
+    % compute global to local AAC
+    globalaac = @(globalPower, localNodePower) corr(globalPower, localNodePower, 'Type', 'Spearman');
+    bandDefs2 = fieldnames(cluster); aac = []; PSD = [];
+    for pi = 1 : numel(PSDType)
+        PSD = PSDArray.(PSDType{pi});
+        for bandi = 1 : length(bandDefs2)
+            % bandname = bandDefs{bandi,1};
+            bandname = bandDefs2{bandi};
+            bandSplitName = strsplit(bandname, "_");
+            lowerPowerType = bandSplitName{1};
 
-    % visual check
+            if contains(bandname, {'theta','alpha1','alpha2'}) % low to high frequency
+                lowerband = bandname;
 
-    % figure;imagesc(dwpli_pair(:,:,1))
+                globalnode = repmat(cluster.(lowerband), [1 size(bandpower.(lowerband),2)]);
+                localnodes = bandpower.(bandname);
 
-
-
-    %% output csv - channel-wise dbwpli
-
-    nbchan = EEG.nbchan; npair = (nbchan*nbchan-nbchan)/2; % 2278
-
-    pair1 =[]; pair2 =[]; region1 = []; region2 =[];
-
-    for q=2:nbchan
-
-        pair2 = [pair2; repmat({num2str(q)},q-1,1)];
-
-        region2 = [region2; repmat({EEG.chanlocs(q).labels},q-1,1)];
-
-        for p=1:q-1
-
-            pair1 = [pair1; {num2str(p)}];
-
-            region1 = [region1; {EEG.chanlocs(p).labels}];
-
+                % upperbands = {'absolute_gamma1','absolute_gamma2','absolute_epsilon'};
+                for ui = 1 : length(bandDefs2)
+                    upperband = bandDefs2{ui,1};
+                    bandSplitName = strsplit(upperband, "_");
+                    upperPowerType = bandSplitName{1};
+                    if strcmp(lowerPowerType, upperPowerType)
+                        if contains(upperband, {'gamma1','gamma2','epsilon'})
+                            % aac for just upper bands with lower bands
+                            label = sprintf("%s_%s", lowerband, bandDefs2{ui,1});
+                            aac.(label) = globalaac(globalnode, bandpower.(bandDefs2{ui,1}));
+                        end
+                    end
+                end
+            end
         end
-
     end
 
-    Pair1 =[]; Pair2 =[];
-
-    Pair1 = repmat(pair1,nfreq,1); Region1 = repmat(region1,nfreq,1);
-
-    Pair2 = repmat(pair2,nfreq,1); Region2 = repmat(region2,nfreq,1);
-
-
-
-    freq = []; 
-
-    for i=1:length(freqs2use)
-
-        freq = [freq;repmat(freqs2use(i),npair,1)];
-
+    for i = 1 : numel(fieldnames(aac))
+        label = fieldnames(aac);
+        aac.(label{i}) = aac.(label{i})(1,:);
     end
 
+    aacAll{si} = aac;
+
+    %s.unloadDataset;
+    EEG = [];
 
 
-    dwpli = [];
+%% END: Signal Processing
 
-    for k=1:nfreq 
-
-        temp = dwpli_pair(:,:,k); 
-
-        dwpli = [dwpli;temp(triu(true(size(temp)),1))];
-
-    end
 
 
 
