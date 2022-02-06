@@ -32,6 +32,8 @@ Is there room for another opensource EEG toolkit? The **vhtp** toolkit focuses o
 
 ## Workflow Example
 
+**Runfiles** are at the center of **vhtp** workflow. Add a series of **vhtp** functions to a **runfile** to produce a reprocible researchs script. 
+
 ### Documentation
 
 Function help is located here: TBD
