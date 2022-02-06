@@ -1,0 +1,69 @@
+label,publish,labelclean,region,no_vertices,color_r,color_g,color_b,mni_avg_x,mni_avg_y,mni_avg_z,Acronyms,Name,RSN,shorthand
+bankssts L,Banks of Sup. Temp. Sulcus L,banksstsL,LT,76,0.098039216,0.392156863,0.156862745,-53.09083136,-45.17865159,7.536198996,BSTS L,bankssts L,other,BSTSL
+bankssts R,Banks of Sup. Temp. Sulcus R,banksstsR,RT,70,0.098039216,0.392156863,0.156862745,53.59659233,-40.68084022,9.873798663,BSTS R,bankssts R,other,BSTSR
+caudalanteriorcingulate L,Caudal Anterior Cingulate L,caudalanteriorcingulateL,LL,48,0.490196078,0.392156863,0.62745098,-5.068496306,20.59873183,26.43535837,cACC L,caudalanteriorcingulate L,DAN,cACCL
+caudalanteriorcingulate R,Caudal Anterior Cingulate R,caudalanteriorcingulateR,RL,68,0.490196078,0.392156863,0.62745098,4.415227087,21.79904881,26.58150997,cACC R,caudalanteriorcingulate R,DMN,cACCR
+caudalmiddlefrontal L,Caudal Middle Frontal L,caudalmiddlefrontalL,LF,224,0.392156863,0.098039216,0,-37.30340602,11.31617858,46.93655853,cMFG L,caudalmiddlefrontal L,SAN,cMFGL
+caudalmiddlefrontal R,Caudal Middle Frontal R,caudalmiddlefrontalR,RF,186,0.392156863,0.098039216,0,36.60156017,13.21335674,48.06370396,cMFG R,caudalmiddlefrontal R,SAN,cMFGR
+cuneus L,Cuneus L,cuneusL,LO,93,0.862745098,0.078431373,0.392156863,-5.825780866,-79.8351715,19.42173702,CUN L,cuneus L,VIS,CUNL
+cuneus R,Cuneus R,cuneusR,RO,99,0.862745098,0.078431373,0.392156863,7.998451041,-77.92548579,20.32712091,CUN R,cuneus R,VIS,CUNR
+entorhinal L,Entorhinal L,entorhinalL,LT,30,0.862745098,0.078431373,0.039215686,-26.37986643,-4.79147216,-33.2702963,ENT L,entorhinal L,other,ENTL
+entorhinal R,Entorhinal R,entorhinalR,RT,32,0.862745098,0.078431373,0.039215686,23.46317216,-5.681483021,-35.09085675,ENT R,entorhinal R,other,ENTR
+frontalpole L,Frontal Pole L,frontalpoleL,LPF,22,0.392156863,0,0.392156863,-7.326240498,68.35492443,-10.88895031,FP L,frontalpole L,other,FPL
+frontalpole R,Frontal Pole R,frontalpoleR,RPF,30,0.392156863,0,0.392156863,7.323236893,67.77775614,-14.68464709,FP R,frontalpole R,other,FPR
+fusiform L,Fusiform L,fusiformL,LT,268,0.705882353,0.862745098,0.549019608,-36.28704753,-43.48326492,-22.24514535,FUS L,fusiform L,VIS,FUSL
+fusiform R,Fusiform R,fusiformR,RT,255,0.705882353,0.862745098,0.549019608,34.62608722,-40.8376057,-22.81006023,FUS R,fusiform R,VIS,FUSR
+inferiorparietal L,Inferior Parietal L,inferiorparietalL,LP,351,0.862745098,0.235294118,0.862745098,-42.21501862,-70.78855658,31.78634283,IPL L,inferiorparietal L,other,IPLL
+inferiorparietal R,Inferior Parietal R,inferiorparietalR,RP,421,0.862745098,0.235294118,0.862745098,46.48063642,-63.29676394,31.80540111,IPL R,inferiorparietal R,other,IPLR
+inferiortemporal L,Inferior Temporal L,inferiortemporalL,LT,307,0.705882353,0.156862745,0.470588235,-52.61131329,-36.2678855,-22.29554037,ITG L,inferiortemporal L,DAN,ITGL
+inferiortemporal R,Inferior Temporal R,inferiortemporalR,RT,316,0.705882353,0.156862745,0.470588235,51.25452103,-32.43625409,-24.85532647,ITG R,inferiortemporal R,DAN,ITGR
+insula L,Insula L,insulaL,LT,174,1,0.752941176,0.125490196,-37.79276926,-2.220496392,2.419510623,INS L,insula L,SAN,INSL
+insula R,Insula R,insulaR,RT,196,1,0.752941176,0.125490196,35.56993301,1.978799405,-1.937606786,INS R,insula R,SAN,INSR
+isthmuscingulate L,Isthmus Cingulate L,isthmuscingulateL,LL,81,0.549019608,0.078431373,0.549019608,-6.687263419,-45.3652672,18.1150999,iCC L,isthmuscingulate L,DMN,iCCL
+isthmuscingulate R,Isthmus Cingulate R,isthmuscingulateR,RL,91,0.549019608,0.078431373,0.549019608,5.607010749,-42.04117388,18.81716772,iCC R,isthmuscingulate R,DMN,iCCR
+lateraloccipital L,Lateral Occipital L,lateraloccipitalL,LO,371,0.078431373,0.117647059,0.549019608,-31.15324077,-89.15737025,0.43169462,LOG L,lateraloccipital L,VIS,LOGL
+lateraloccipital R,Lateral Occipital R,lateraloccipitalR,RO,367,0.078431373,0.117647059,0.549019608,34.79646911,-84.77412531,1.523084489,LOG R,lateraloccipital R,VIS,LOGR
+lateralorbitofrontal L,Lateral Orbitofrontal L,lateralorbitofrontalL,LPF,221,0.137254902,0.294117647,0.196078431,-24.67895488,30.19012959,-18.91690676,LOF L,lateralorbitofrontal L,DMN,LOFL
+lateralorbitofrontal R,Lateral Orbitofrontal R,lateralorbitofrontalR,RPF,206,0.137254902,0.294117647,0.196078431,23.31520793,31.98456486,-19.31787346,LOF R,lateralorbitofrontal R,DMN,LOFR
+lingual L,Lingual L,lingualL,LO,246,0.882352941,0.549019608,0.549019608,-13.50276139,-70.5067654,-5.430601984,LING L,lingual L,VIS,LINGL
+lingual R,Lingual R,lingualR,RO,227,0.882352941,0.549019608,0.549019608,13.45965101,-67.02770577,-3.765018596,LING R,lingual R,VIS,LINGR
+medialorbitofrontal L,Medial Orbitofrontal L,medialorbitofrontalL,LPF,155,0.784313725,0.137254902,0.294117647,-6.980921456,32.99945648,-17.16231799,MOF L,medialorbitofrontal L,DMN,MOFL
+medialorbitofrontal R,Medial Orbitofrontal R,medialorbitofrontalR,RPF,170,0.784313725,0.137254902,0.294117647,4.049403831,36.61161105,-15.23425498,MOF R,medialorbitofrontal R,DMN,MOFR
+middletemporal L,Middle Temporal L,middletemporalL,LT,277,0.62745098,0.392156863,0.196078431,-57.97054635,-23.31857823,-15.08373944,MTG L,middletemporal L,DAN,MTGL
+middletemporal R,Middle Temporal R,middletemporalR,RT,324,0.62745098,0.392156863,0.196078431,58.21693903,-22.07331187,-15.29992363,MTG R,middletemporal R,DAN,MTGR
+paracentral L,Paracentral L,paracentralL,LC,110,0.235294118,0.862745098,0.235294118,-6.977699751,-30.43656234,57.27466913,paraC L,paracentral L,other,paraCL
+paracentral R,Paracentral R,paracentralR,RC,128,0.235294118,0.862745098,0.235294118,7.019540273,-26.95521269,57.07698854,paraC R,paracentral R,other,paraCR
+parahippocampal L,Parahippocampal L,parahippocampalL,LT,68,0.078431373,0.862745098,0.235294118,-25.8173524,-28.84535657,-20.9499784,paraH L,parahippocampal L,DMN,paraHL
+parahippocampal R,Parahippocampal R,parahippocampalR,RT,66,0.078431373,0.862745098,0.235294118,23.97480663,-30.19157639,-18.69370274,paraH R,parahippocampal R,DMN,paraHR
+parsopercularis L,Pars Opercularis L,parsopercularisL,LF,139,0.862745098,0.705882353,0.549019608,-49.03946649,16.65752653,14.24483071,pOPER L,parsopercularis L,DAN,pOPERL
+parsopercularis R,Pars Opercularis R,parsopercularisR,RF,118,0.862745098,0.705882353,0.549019608,48.71670002,16.78416866,13.51169668,pOPER R,parsopercularis R,DAN,pOPERR
+parsorbitalis L,Pars Orbitalis L,parsorbitalisL,LPF,72,0.078431373,0.392156863,0.196078431,-44.44360569,39.38654042,-14.14185763,pORB L,parsorbitalis L,DAN,pORBL
+parsorbitalis R,Pars Orbitalis R,parsorbitalisR,RPF,68,0.078431373,0.392156863,0.196078431,43.40268694,42.35954484,-14.52292028,pORB R,parsorbitalis R,DAN,pORBR
+parstriangularis L,Pars Triangularis L,parstriangularisL,LF,101,0.862745098,0.235294118,0.078431373,-47.33446916,31.86217985,0.797021943,pTRI L,parstriangularis L,DAN,pTRIL
+parstriangularis R,Pars Triangularis R,parstriangularisR,RF,148,0.862745098,0.235294118,0.078431373,47.89542142,33.68538211,1.740187547,pTRI R,parstriangularis R,DAN,pTRIR
+pericalcarine L,Pericalcarine L,pericalcarineL,LO,109,0.470588235,0.392156863,0.235294118,-10.61966023,-81.76800254,5.525652852,periCAL L,pericalcarine L,other,periCALL
+pericalcarine R,Pericalcarine R,pericalcarineR,RO,110,0.470588235,0.392156863,0.235294118,11.68981526,-80.17201335,6.952899412,periCAL R,pericalcarine R,other,periCALR
+postcentral L,Postcentral L,postcentralL,LC,333,0.862745098,0.078431373,0.078431373,-45.80022755,-22.45623466,45.01462956,postC L,postcentral L,other,postCL
+postcentral R,Postcentral R,postcentralR,RC,307,0.862745098,0.078431373,0.078431373,43.75794697,-20.28489574,46.21474526,postC R,postcentral R,other,postCR
+posteriorcingulate L,Posteriorcingulate L,posteriorcingulateL,LL,85,0.862745098,0.705882353,0.862745098,-5.135518083,-15.06914101,38.21034144,PCC L,posteriorcingulate L,DMN,PCCL
+posteriorcingulate R,Posteriorcingulate R,posteriorcingulateR,RL,93,0.862745098,0.705882353,0.862745098,5.073456817,-16.70049141,39.23004879,PCC R,posteriorcingulate R,DMN,PCCR
+precentral L,Precentral L,precentralL,LC,339,0.235294118,0.078431373,0.862745098,-40.52230103,-9.455406982,46.04406984,preC L,precentral L,other,preCL
+precentral R,Precentral R,precentralR,RC,353,0.235294118,0.078431373,0.862745098,40.19710605,-7.360544765,45.81849655,preC R,precentral R,other,preCR
+precuneus L,Precuneus L,precuneusL,LP,314,0.62745098,0.549019608,0.705882353,-9.097383784,-59.48551434,37.61989446,PCUN L,precuneus L,DMN,PCUNL
+precuneus R,Precuneus R,precuneusR,RP,325,0.62745098,0.549019608,0.705882353,9.594222782,-57.74741573,38.39015067,PCUN R,precuneus R,DMN,PCUNR
+rostralanteriorcingulate L,Rostral Anterior Cingulate L,rostralanteriorcingulateL,LL,78,0.31372549,0.078431373,0.549019608,-4.571633164,39.23418572,1.080687962,rACC L,rostralanteriorcingulate L,DMN,rACCL
+rostralanteriorcingulate R,Rostral Anterior Cingulate R,rostralanteriorcingulateR,RL,56,0.31372549,0.078431373,0.549019608,4.145604526,37.9307865,2.874655456,rACC R,rostralanteriorcingulate R,DMN,rACCR
+rostralmiddlefrontal L,Rostral Middle Frontal L,rostralmiddlefrontalL,LF,543,0.294117647,0.196078431,0.490196078,-34.09391229,47.17612868,16.94516718,rMFG L,rostralmiddlefrontal L,SAN,rMFGL
+rostralmiddlefrontal R,Rostral Middle Frontal R,rostralmiddlefrontalR,RF,551,0.294117647,0.196078431,0.490196078,34.22282861,48.18248485,17.04976001,rMFG R,rostralmiddlefrontal R,SAN,rMFGR
+superiorfrontal L,Superior Frontal L,superiorfrontalL,LF,671,0.078431373,0.862745098,0.62745098,-11.54649123,29.75148874,41.30284262,sFG L,superiorfrontal L,other,sFGL
+superiorfrontal R,Superior Frontal R,superiorfrontalR,RF,603,0.078431373,0.862745098,0.62745098,11.67214373,31.83083951,41.3379779,sFG R,superiorfrontal R,other,sFGR
+superiorparietal L,Superior Parietal L,superiorparietalL,LP,484,0.078431373,0.705882353,0.549019608,-23.4800292,-65.15509987,49.87722236,SPL L,superiorparietal L,other,SPLL
+superiorparietal R,Superior Parietal R,superiorparietalR,RP,464,0.078431373,0.705882353,0.549019608,23.64620419,-64.75907658,51.49919407,SPL R,superiorparietal R,other,SPLR
+superiortemporal L,Superior Temporal L,superiortemporalL,LT,290,0.549019608,0.862745098,0.862745098,-54.51250583,-11.89920402,-3.813715533,STG L,superiortemporal L,AUD,STGL
+superiortemporal R,Superior Temporal R,superiortemporalR,RT,257,0.549019608,0.862745098,0.862745098,53.98252527,-6.190982579,-6.688615957,STG R,superiortemporal R,AUD,STGR
+supramarginal L,Supramarginal L,supramarginalL,LP,305,0.31372549,0.62745098,0.078431373,-56.66352514,-38.09858793,33.75862257,SMAR L,supramarginal L,SAN,SMARL
+supramarginal R,Supramarginal R,supramarginalR,RP,302,0.31372549,0.62745098,0.078431373,54.33346345,-31.34703856,35.58888735,SMAR R,supramarginal R,SAN,SMARR
+temporalpole L,Temporal Pole L,temporalpoleL,LT,38,0.274509804,0.078431373,0.666666667,-28.14030666,13.92830144,-38.00805803,TP L,temporalpole L,other,TPL
+temporalpole R,Temporal Pole R,temporalpoleR,RT,38,0.274509804,0.078431373,0.666666667,26.54218922,16.20180624,-36.10298484,TP R,temporalpole R,other,TPR
+transversetemporal L,Transverse Temporal L,transversetemporalL,LT,34,0.588235294,0.588235294,0.784313725,-45.70413609,-22.56326845,9.949553096,TT L,transversetemporal L,other,TTL
+transversetemporal R,Transverse Temporal R,transversetemporalR,RT,23,0.588235294,0.588235294,0.784313725,46.06444973,-16.85315475,9.449802208,TT R,transversetemporal R,other,TTR
