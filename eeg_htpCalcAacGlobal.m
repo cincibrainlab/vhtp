@@ -74,7 +74,6 @@ outputfile = fullfile(ip.Results.outputdir, ...
     % Remove the "other" nodes
     checkchans = chanlocs(~(matchedAtlasTable.position == "OTHER"));
     chanlocs(~(matchedAtlasTable.position == "OTHER"))
-    cEEG = pop_select(cEEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
     EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
     chanlocs = EEG.chanlocs;
 
@@ -82,14 +81,11 @@ outputfile = fullfile(ip.Results.outputdir, ...
     upperFreqLimit = 90;
     deviationFromLog = 5;
     PSD = [];
-
-    %PSD = zeros(length(freqBins), size(EEG.data,2), length(chanlocs))
     freqBins = logspace(log10(1+deviationFromLog), log10(upperFreqLimit+deviationFromLog), 281)-deviationFromLog;
     PSDType = {'absolute','relative'}; PSDArray = [];
     for pi = 1 : numel(PSDType)
         for i = 1 : size(EEG.data,1)
             [~, freqs, times, firstPSD] = spectrogram(EEG.data(i,:), EEG.srate, floor(EEG.srate/2), freqBins, EEG.srate);
-            %freqs =  s.rest_rel_hz;
             % hz x trial x chan
             switch PSDType{pi}
                 case 'absolute'
