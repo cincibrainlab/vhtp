@@ -121,7 +121,7 @@ outputfile = fullfile(outputdir, [functionstamp '_'  EEG.setname '_' timestamp '
             cluster.(bandname) =  squeeze(mean(bandpower.(bandname)(:,cluster_indices),2));
         end
 
-    end
+    end 
 
     % compute global to local AAC
     globalaac = @(globalPower, localNodePower) corr(globalPower, localNodePower, 'Type', 'Spearman');
