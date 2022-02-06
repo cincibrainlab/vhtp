@@ -160,10 +160,12 @@ spectro_info = table(repmat(EEG.subject, length(f),1), ...
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid','function_name','timestamp'});
 
 % Outputs: 
-EEG.etc.htp.pow.summary_table = csvtable;
-EEG.etc.htp.pow.spectro = [spectro_info, spectro_values];
-EEG.etc.htp.pow.qi_table = qi_table;
-results = EEG.etc.htp.pow;
+EEG.vhtp.eeg_htpCalcRestPower.summary_table = csvtable;
+
+% EEG.etc.htp.pow.summary_table = csvtable;
+%EEG.vhtp.eeg_htpCalcRestPower.pow.spectro = [spectro_info, spectro_values];
+%EEG.vhtp.eeg_htpCalcRestPower.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpCalcRestPower;
 
 
 

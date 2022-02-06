@@ -1,5 +1,5 @@
 function EEG = eeg_htpCalcLaplacian( EEG )
-
+% units microvolts per square mm
 
 % compute inter-electrode distances
 interelectrodedist=zeros(EEG.nbchan);
@@ -16,9 +16,6 @@ X = [EEG.chanlocs.X];
 Y = [EEG.chanlocs.Y];
 Z = [EEG.chanlocs.Z];
 
-
-
-% create G and H matrices
-[junk,G,H] = laplacian_perrinX(rand(size(X)),X,Y,Z,[],1e-6);
+[EEG.data,G,H] = laplacian_perrinX(EEG.data,X,Y,Z);
 
 end

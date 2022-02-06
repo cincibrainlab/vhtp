@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
-% eeg_htpCalcAacGlobal() - calculates amplitude-amplitude coupling 
+% eeg_htpCalcAacGlobal() - calculates amplitude-amplitude coupling
 % (AAC) as described in Wang et al. (2017). Global (mean) power
 % of the low frequency band is coupled with local gamma power.
 %
@@ -16,14 +16,14 @@ function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
 %     {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 'alpha2', 10.5, 12.5;
 %     'beta', 13, 30;'gamma1', 30, 55; 'gamma2', 65, 80; 'epsilon', 81, 120;}
 %     'outputdir' - path for saved output files (default: tempdir)
-%     
+%
 % Outputs:
 %     EEG       - EEGLAB Structure with modified .etc.htp field
 %     results   - etc.htp results structure or customized
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab/vhtp for details.
-%    
+%
 %  Contact: kyle.cullion@cchmc.org
 
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
@@ -31,12 +31,12 @@ functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Function Specific
 defaultOutputDir = tempdir;
-defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 
-                   'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55; 
-                   'gamma2', 65, 80; 'epsilon', 81, 120; };
+defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
+    'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55;
+    'gamma2', 65, 80; 'epsilon', 81, 120; };
 
 % MATLAB built-in input validation
-ip = inputParser();   
+ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
@@ -47,131 +47,128 @@ bandDefs = ip.Results.bandDefs;
 
 % base output file can be modified with strrep()
 outputfile = fullfile(ip.Results.outputdir, ...
-    [functionstamp '_'  EEG.setname '_' timestamp '.mat']); 
+    [functionstamp '_'  EEG.setname '_' timestamp '.mat']);
 
 % START: Signal Processing
 
-    % check if data is continuous, if not epoch to 1 s bins
-    if ndims(EEG.data) < 3
-        warning("Data is continuous. Converted to 1 second epochs.")
-        EEG = eeg_regepochs(EEG, 'recurrence', 1);
-    end
+% check if data is continuous, if not epoch to 1 s bins
+if ndims(EEG.data) < 3
+    warning("Data is continuous. Converted to 1 second epochs.")
+    EEG = eeg_regepochs(EEG, 'recurrence', 1);
+end
 
-    EEG.data = gpuArray(EEG.data);
+EEG.data = gpuArray(EEG.data);
 
-    % get channel structure
-    chanlocs = EEG.chanlocs;
+% get channel structure
+chanlocs = EEG.chanlocs;
 
-    % create full atlas table in chanlocs order
-    chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
-    chanlist.index = (1:height(chanlist)).';
-    atlasLookupTable = readtable("GSN-HydroCel-129_dict.csv");
-    matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, ...
-     'Keys', {'chan','chan'});
+% create full atlas table in chanlocs order
+chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
+chanlist.index = (1:height(chanlist)).';
+atlasLookupTable = readtable("GSN-HydroCel-129_dict.csv");
+matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, ...
+    'Keys', {'chan','chan'});
 
-    matchedAtlasTable = sortrows(matchedAtlasTable,'index');
+matchedAtlasTable = sortrows(matchedAtlasTable,'index');
 
-    % Remove the "other" nodes
-    checkchans = chanlocs(~(matchedAtlasTable.position == "OTHER"));
-    chanlocs(~(matchedAtlasTable.position == "OTHER"))
-    EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
-    chanlocs = EEG.chanlocs;
+% Remove the "other" nodes
+checkchans = chanlocs(~(matchedAtlasTable.position == "OTHER"));
+chanlocs(~(matchedAtlasTable.position == "OTHER"))
+EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
+chanlocs = EEG.chanlocs;
 
-    % alternative power calculation
-    upperFreqLimit = 90;
-    deviationFromLog = 5;
-    PSD = [];
-    freqBins = logspace(log10(1+deviationFromLog), log10(upperFreqLimit+deviationFromLog), 281)-deviationFromLog;
-    PSDType = {'absolute','relative'}; PSDArray = [];
-    for pi = 1 : numel(PSDType)
-        for i = 1 : size(EEG.data,1)
-            [~, freqs, times, firstPSD] = spectrogram(EEG.data(i,:), EEG.srate, floor(EEG.srate/2), freqBins, EEG.srate);
-            % hz x trial x chan
-            switch PSDType{pi}
-                case 'absolute'
-                    PSDArray.(PSDType{pi})(:,:,i) = firstPSD; %#ok<*SAGROW> % 100 (hz pnts) x 161 (trials) x 68
-                case 'relative'
-                    PSDArray.(PSDType{pi})(:,:,i) = firstPSD ./ sum(firstPSD,1); % Relative Power
-            end
+% alternative power calculation
+upperFreqLimit = 90;
+deviationFromLog = 5;
+PSD = [];
+freqBins = logspace(log10(1+deviationFromLog), log10(upperFreqLimit+deviationFromLog), 281)-deviationFromLog;
+PSDType = {'absolute','relative'}; PSDArray = [];
+for pi = 1 : numel(PSDType)
+    for i = 1 : size(EEG.data,1)
+        [~, freqs, times, firstPSD] = spectrogram(EEG.data(i,:), EEG.srate, floor(EEG.srate/2), freqBins, EEG.srate);
+        % hz x trial x chan
+        switch PSDType{pi}
+            case 'absolute'
+                PSDArray.(PSDType{pi})(:,:,i) = firstPSD; %#ok<*SAGROW> % 100 (hz pnts) x 161 (trials) x 68
+            case 'relative'
+                PSDArray.(PSDType{pi})(:,:,i) = firstPSD ./ sum(firstPSD,1); % Relative Power
         end
     end
-    %firstPSD2 = squeeze(s.rest_rel_power);
-    %%
+end
+%firstPSD2 = squeeze(s.rest_rel_power);
+%%
 
-    glmaac=[]; count = 0;
-    loBandArr = {'theta','alpha1','alpha2'};
-    hiBandArr = {'gamma1'};
+glmaac=[]; count = 0;
+loBandArr = {'theta','alpha1','alpha2'};
+hiBandArr = {'gamma1'};
 
-    % create band indexes and global cluster for correlation
-    bandname = []; bandindex =[]; bandpower =[]; cluster =[];
-    for pi = 1 : numel(PSDType)
+% create band indexes and global cluster for correlation
+bandname = []; bandindex =[]; bandpower =[]; cluster =[];
+for pi = 1 : numel(PSDType)
 
-        PSD = gather(PSDArray.(PSDType{pi}));
+    PSD = gather(PSDArray.(PSDType{pi}));
 
-        for bandi = 1 : length(bandDefs)
-            bandname =[ PSDType{pi} '_' bandDefs{bandi,1}];
-            bandindex.(bandname) = freqs > bandDefs{bandi,2} & freqs < bandDefs{bandi,3};
-            bandpower.(bandname) = squeeze(mean(PSD(bandindex.(bandname),:,:),1));
-            cluster_indices = 1 : numel(chanlocs);  % replace with any channel index, i.e. network indexes
-            cluster.(bandname) =  squeeze(mean(bandpower.(bandname)(:,cluster_indices),2));
-        end
+    for bandi = 1 : length(bandDefs)
+        bandname =[ PSDType{pi} '_' bandDefs{bandi,1}];
+        bandindex.(bandname) = freqs > bandDefs{bandi,2} & freqs < bandDefs{bandi,3};
+        bandpower.(bandname) = squeeze(mean(PSD(bandindex.(bandname),:,:),1));
+        cluster_indices = 1 : numel(chanlocs);  % replace with any channel index, i.e. network indexes
+        cluster.(bandname) =  squeeze(mean(bandpower.(bandname)(:,cluster_indices),2));
+    end
 
-    end 
+end
 
-    % compute global to local AAC
-    globalaac = @(globalPower, localNodePower) corr(globalPower, localNodePower, 'Type', 'Spearman');
-    bandDefs2 = fieldnames(cluster); aac = []; PSD = [];
-    for pi = 1 : numel(PSDType)
-        PSD = PSDArray.(PSDType{pi});
-        for bandi = 1 : length(bandDefs2)
-            % bandname = bandDefs{bandi,1};
-            bandname = bandDefs2{bandi};
-            bandSplitName = strsplit(bandname, "_");
-            lowerPowerType = bandSplitName{1};
+% compute global to local AAC
+globalaac = @(globalPower, localNodePower) corr(globalPower, localNodePower, 'Type', 'Spearman');
+bandDefs2 = fieldnames(cluster); aac = []; PSD = [];
+for pi = 1 : numel(PSDType)
+    PSD = PSDArray.(PSDType{pi});
+    for bandi = 1 : length(bandDefs2)
+        % bandname = bandDefs{bandi,1};
+        bandname = bandDefs2{bandi};
+        bandSplitName = strsplit(bandname, "_");
+        lowerPowerType = bandSplitName{1};
 
-            if contains(bandname, {'theta','alpha1','alpha2'}) % low to high frequency
-                lowerband = bandname;
+        if contains(bandname, {'theta','alpha1','alpha2'}) % low to high frequency
+            lowerband = bandname;
 
-                globalnode = repmat(cluster.(lowerband), [1 size(bandpower.(lowerband),2)]);
-                localnodes = bandpower.(bandname);
+            globalnode = repmat(cluster.(lowerband), [1 size(bandpower.(lowerband),2)]);
+            localnodes = bandpower.(bandname);
 
-                % upperbands = {'absolute_gamma1','absolute_gamma2','absolute_epsilon'};
-                for ui = 1 : length(bandDefs2)
-                    upperband = bandDefs2{ui,1};
-                    bandSplitName = strsplit(upperband, "_");
-                    upperPowerType = bandSplitName{1};
-                    if strcmp(lowerPowerType, upperPowerType)
-                        if contains(upperband, {'gamma1','gamma2','epsilon'})
-                            % aac for just upper bands with lower bands
-                            label = sprintf("%s_%s", lowerband, bandDefs2{ui,1});
-                            aac.(label) = globalaac(globalnode, bandpower.(bandDefs2{ui,1}));
-                        end
+            % upperbands = {'absolute_gamma1','absolute_gamma2','absolute_epsilon'};
+            for ui = 1 : length(bandDefs2)
+                upperband = bandDefs2{ui,1};
+                bandSplitName = strsplit(upperband, "_");
+                upperPowerType = bandSplitName{1};
+                if strcmp(lowerPowerType, upperPowerType)
+                    if contains(upperband, {'gamma1','gamma2','epsilon'})
+                        % aac for just upper bands with lower bands
+                        label = sprintf("%s_%s_aac", lowerband, bandDefs2{ui,1});
+                        aac.(label) = globalaac(globalnode, bandpower.(bandDefs2{ui,1}));
                     end
                 end
             end
         end
     end
+end
 
-    for i = 1 : numel(fieldnames(aac))
-        label = fieldnames(aac);
-        aac.(label{i}) = aac.(label{i})(1,:);
+for i = 1 : numel(fieldnames(aac))
+    label = fieldnames(aac);
+    aac.(label{i}) = aac.(label{i})(1,:);
+end
+
+% Create CSV rows
+% count = 1;
+csvout = {};
+datafields = fieldnames(aac);
+for ci = 1 : numel(chanlocs)
+    csvout{ci, 1} = EEG.setname;
+    csvout{ci, 2} = chanlocs(ci).labels;
+    for fi = 1 : numel(datafields)
+        workingField = aac.(datafields{fi});
+        csvout{ci, 2+fi} = workingField(ci);
     end
-
-    % Create CSV rows
-    % count = 1;
-    csvout = {};
-    datafields = fieldnames(aac);
-    for ci = 1 : numel(chanlocs)
-        csvout{ci, 1} = EEG.setname;
-        csvout{ci, 2} = chanlocs(ci).labels;
-        for fi = 1 : numel(datafields)
-            workingField = aac.(datafields{fi});
-            csvout{ci, 2+fi} = workingField(ci);
-        end
-    end
-
-    results = cell2table(csvout, "VariableNames", [{'eegid'},{'chan'}, datafields(:)']);
-    EEG.vhtp.eeg_htpCalcAacGlobal.result_table = results;
+end
 
 % END: Signal Processing
 
@@ -179,7 +176,11 @@ outputfile = fullfile(ip.Results.outputdir, ...
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 
-% Outputs: 
+% Outputs:
+EEG.vhtp.eeg_htpCalcAacGlobal.summary_table = ...
+    cell2table(csvout, "VariableNames", [{'eegid'},{'chan'}, datafields(:)']);
+EEG.vhtp.eeg_htpCalcAacGlobal.qi_table = qi_table;
 
+results = EEG.vhtp.eeg_htpCalcAacGlobal;
 
 end
