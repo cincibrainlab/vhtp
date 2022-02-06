@@ -16,6 +16,7 @@
       <net_displayname>EGI Hydrocel 128</net_displayname>
       <net_name>EGI128</net_name>
       <net_file>chanfiles/GSN-HydroCel-129.sfp</net_file>
+      <net_dict>chanfiles/GSN-HydroCel-129_dict.csv</net_dict>
       <net_graphic>chanfiles/EEG_128_channel_array_map.pdf</net_graphic>
       <net_filter>*.raw</net_filter>
       <net_nochans>128</net_nochans>
@@ -40,6 +41,7 @@
       <net_displayname>EGI Hydrocel 32</net_displayname>
       <net_name>EGI32</net_name>
       <net_file>chanfiles/GSN-HydroCel-32.sfp</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/EEG_32_channel_array_map.pdf</net_graphic>
       <net_filter>*.raw</net_filter>
       <net_nochans>32</net_nochans>
@@ -64,6 +66,7 @@
       <net_displayname>EGI Hydrocel 64</net_displayname>
       <net_name>EGI64</net_name>
       <net_file>chanfiles/GSN-HydroCel-64.sfp</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/EEG_64_channel_array_map.pdf</net_graphic>
       <net_filter>*.raw</net_filter>
       <net_nochans>64</net_nochans>
@@ -88,6 +91,7 @@
       <net_displayname>MEA 30</net_displayname>
       <net_name>MEA30</net_name>
       <net_file>chanfiles/mea3d.mat</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/meaimg.PNG</net_graphic>
       <net_filter>*.edf</net_filter>
       <net_nochans>30</net_nochans>
@@ -112,6 +116,7 @@
       <net_displayname>MEARHD32</net_displayname>
       <net_name>MEARHD32</net_name>
       <net_file>chanfiles/mea3d.mat</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/meaimg.PNG</net_graphic>
       <net_filter>*.rhd</net_filter>
       <net_nochans>30</net_nochans>
@@ -136,6 +141,7 @@
       <net_displayname>Brainvision 64</net_displayname>
       <net_name>BV64</net_name>
       <net_file>chanfiles/BioSemi_64_10-10.elp</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/BV_64_channel_array_map.pdf</net_graphic>
       <net_filter>*.eeg</net_filter>
       <net_nochans>64</net_nochans>
@@ -160,6 +166,7 @@
       <net_displayname>EDF Generic</net_displayname>
       <net_name>EDFGENERIC</net_name>
       <net_file>chanfiles/standard_1020.elc</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic></net_graphic>
       <net_filter>*.edf</net_filter>
       <net_nochans>30</net_nochans>
@@ -184,6 +191,7 @@
       <net_displayname>MEA XDAT</net_displayname>
       <net_name>MEAXDAT</net_name>
       <net_file>chanfiles/mea3d.mat</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/meaimg.PNG</net_graphic>
       <net_filter>*_data.xdat</net_filter>
       <net_nochans>30</net_nochans>
