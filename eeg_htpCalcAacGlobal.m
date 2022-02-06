@@ -65,7 +65,7 @@ outputfile = fullfile(ip.Results.outputdir, ...
     % create full atlas table in chanlocs order
     chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
     chanlist.index = (1:height(chanlist)).';
-    atlasLookupTable = readtable("resource_elecDetailsEGI128_v2.csv");
+    atlasLookupTable = readtable("GSN-HydroCel-129_dict.csv");
     matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, ...
      'Keys', {'chan','chan'});
 
