@@ -1,4 +1,4 @@
-function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
+function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % eeg_htpComputeSource() - compute forward solution using Brainstorm. By
     % default the function creates an minimum norm estimate source model from
     % EGI-128 formatted data. The datasets are stored as SET files with
@@ -10,7 +10,15 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
     % Require Inputs:
     %     EEG       - EEGLAB Structure
     % Function Specific Inputs:
-    %     'option1' - description
+    %     'saveset'     - save set to output dir (folder is source type)
+    %     'confirmplot' - display and save image of channel locations
+    %     default: false
+    %     'headless'    - assume brainstorm is running in the background
+    %     'outputdir'   - default output for tmp files; default tempdir
+    %     'nettype'     - define nettype, default EGI128
+    %     'computeheadmodel' - recalculate headmodel (check parameters)
+    %     'deletetempfiles' - delete temporary cont. files default:false.
+    %     If option is true, cannot visualize results in brainstorm GUI.
     %
     % Common Visual HTP Inputs:
     %     'bandDefs'   - cell-array describing frequency band definitions
@@ -38,82 +46,128 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
     %     urlwrite(download_headmodel, precomputed_openmeeg);
     % end
 
-    % Inputs: Function Specific
 
-    % Inputs: Common across Visual HTP functions
+    % Inputs: Function Specific
+    defaultHeadless = false;
     defaultOutputDir = tempdir;
     defaultBandDefs = {'delta', 2, 3.5; 'theta', 3.5, 7.5; 'alpha1', 8, 10;
                     'alpha2', 10, 12; 'beta', 13, 30; 'gamma1', 30, 55;
                     'gamma2', 65, 80; 'epsilon', 81, 120; };
+    defaultNetType = 'EGI128';
+    defaultConfirmPlot = false;
+    defaultSaveSet = false;
+    defaultComputeHeadModel = false;
+    defaultDeleteTempfiles = false;
 
     % MATLAB built-in input validation
     ip = inputParser();
     addRequired(ip, 'EEG', @isstruct);
     addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
     addParameter(ip, 'bandDefs', defaultBandDefs, @iscell)
+    addParameter(ip, 'headless', defaultHeadless, @islogical);
+    addParameter(ip, 'nettype', defaultNetType, @ischar);
+    addParameter(ip, 'confirmplot', defaultConfirmPlot, @logical);
+    addParameter(ip, 'saveset', defaultSaveSet, @logical);
+    addParameter(ip, 'computeheadmodel', defaultComputeHeadModel, @logical);
+    addParameter(ip, 'deletetempfiles', defaultComputeHeadModel, @logical);
     parse(ip, EEG, varargin{:});
 
-    outputdir = ip.Results.outputdir;
-    bandDefs = ip.Results.bandDefs;
-
-    % base output file can be modified with strrep()
-    outputfile = fullfile(outputdir, [functionstamp '_' EEG.setname '_' timestamp '.mat']);
+    % Dependency Check: Requires Brainstorm and EEGLAB Functions
+    % BRAINSTORM
+    if ~ip.Results.headless
+        if brainstorm('status'), warning('GUI Mode: Brainstorm Already Running.')
+        else
+            error('Please start Brainstorm or Turn on Server Mode (''headless'', true)');
+        end
+    end
+    % EEGLAB
+    if exist('eeglab', 'file') == 0,  error('Please add EEGLAB to path.'); end
+    % Access to Headmodel
+    % see under nettype switch
 
     % START: Signal Processing
 
-    % Create a new protocol if needed
-    ProtocolAnatSelection = 1;
-    ProtocolChannelSelection = 2;
-
-    % Precomputed Headmodel (OpenMEEG) (add alternate head models here)
-    openmeeg_egi128 = 'headmodel_surf_openmeeg.mat';
-    openmeeg = fullfile(tempdir, openmeeg_egi128);
-
-    if ~isfile(openmeeg), error("No head model available, please download. (http://www.dropbox.com/s/0m8oqrnlzodfj2n/headmodel_surf_openmeeg.mat?dl=1)"); end
-
-    % Get the protocol index of an existing protocol (already loaded previously in Brainstorm)
     iProtocol = bst_get('Protocol', 'eeg_htp');
 
+    % Get the protocol index of an existing protocol (already loaded previously in Brainstorm)
     if isempty(iProtocol)
+        % Create a new protocol if needed
+        ProtocolAnatSelection = 1;
+        ProtocolChannelSelection = 2;
         gui_brainstorm('CreateProtocol', 'eeg_htp', ...
             ProtocolAnatSelection, ProtocolChannelSelection);
     else
         gui_brainstorm('SetCurrentProtocol', iProtocol);
+        % Select all recordings
+        files_to_delete = bst_process('CallProcess', 'process_select_files_data', [], [], ...
+            'Comment', 'Link to raw file');
+        if ~isempty(files_to_delete)
+            % Process: Delete subjects
+           % bst_process('CallProcess', 'process_delete', files_to_delete, [], ...
+           %     'target', 1); % Delete subjects
+        end
     end
 
-    % Select all recordings
-    files_to_delete = bst_process('CallProcess', 'process_select_files_data', [], [], ...
-    'Comment', 'Link to raw file');
-
-    if ~isempty(files_to_delete)
-        % Process: Delete subjects
-        bst_process('CallProcess', 'process_delete', files_to_delete, [], ...
-        'target', 1); % Delete subjects
+    % define net and select from brainstorm options dynamically
+    switch ip.Results.nettype
+        case 'EGI128'
+            chanInfoStruct.headModel = 'ICBM152';
+            chanInfoStruct.brand = 'GSN';
+            chanInfoStruct.chanNumber = '128';
+            chanInfoStruct.chanLabelFormat = 'E1';
+            openmeeg_file = 'headmodel_surf_openmeeg_EGI128.mat';
     end
 
-    bstDefaults = bst_get('EegDefaults');
-
-    % define net
-    chanInfoStruct.headModel = 'ICBM152';
-    chanInfoStruct.brand = 'GSN';
-    chanInfoStruct.chanNumber = '128';
-    chanInfoStruct.chanLabelFormat = 'E1';
+    % Load specific head models
     net_index = selectBstDefaults(chanInfoStruct);
+    source_nettype_headmodel = fullfile(tempdir, openmeeg_file);
+    if ~isfile(source_nettype_headmodel)
+        error("No head model available, please download (http://www.dropbox.com/s/0m8oqrnlzodfj2n/headmodel_surf_openmeeg.mat?dl=1).");
+    else
+        disp([ip.Results.nettype ' precomputed headmodel available at' source_nettype_headmodel]);
+    end
 
+    % refresh protocol number
+    if isempty(iProtocol), iProtocol = bst_get('Protocol', 'eeg_htp'); end
+    Protocol_Info = bst_get('ProtocolInfo');
+    default_dir = fullfile(Protocol_Info.STUDIES, ...
+        bst_get('DirDefaultStudy'));
+
+    % check if headfile is already copied into default directory
+    target_default_headmodel = fullfile(default_dir, 'headmodel_surf_openmeeg.mat');
+    isDefaultHeadModelAvailable = exist(target_default_headmodel, 'file');
+
+    % add one copy of headmodel to default directory
+    if ~isDefaultHeadModelAvailable, copyfile(source_nettype_headmodel, target_default_headmodel); end
+
+    % Check if subject is already present, if so delete.
+    [dupSub, iSub] = bst_get('Subject', EEG.setname);
+    if ~isempty(dupSub)
+        db_delete_subjects(iSub)
+    end
+
+    % EEG SET to Brainstrom
     % generate continuous data for source model
     cEEG = epoch2cont(EEG);
-    rawFile = fullfile(tempdir, EEG.filename);
-    pop_saveset(cEEG, rawFile);
+
+    % temporary storage for continuous data
+    tempContFile = fullfile(tempdir, EEG.filename);
+    pop_saveset(cEEG, tempContFile);
 
     filetype = 'EEG-EEGLAB';
     sFile = bst_process('CallProcess', ...
         'process_import_data_raw', [], [], ...
         'subjectname', EEG.setname, ...
-        'datafile', {rawFile, filetype}, ...
+        'datafile', {tempContFile, filetype}, ...
         'channelreplace', net_index, ...
         'channelalign', 1, ...
         'evtmode', 'value');
 
+    % Delete temporary file
+    if ip.Results.deletetempfiles
+        try delete(tempContFile); catch, warning('Warning: Temporary Continuous File Not Deleted or Missing.'); end
+    end
+    % Assign Channel File
     sFile = bst_process('CallProcess', 'process_import_channel', ...
         sFile, [], ...
         'usedefault', net_index, ... % ICBM152: GSN HydroCel 128 E1
@@ -121,26 +175,27 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
         'fixunits', 1, ...
         'vox2ras', 1);
 
-    % Reselect all recordings
-    sFile = bst_process('CallProcess', 'process_select_files_data', sFile, [], ...
-    'Comment', 'Link to raw file');
+    % Get subject directory to copy headfile
+    subject_subdir = sFile.SubjectName;
+    subject_dir = fullfile(Protocol_Info.STUDIES, subject_subdir, bst_get('DirDefaultStudy'));
 
-    Protocol_Info = bst_get('ProtocolInfo');
-    subdirname = sFile.SubjectName;
-    default_dir = fullfile(Protocol_Info.STUDIES, ...
-        bst_get('DirDefaultStudy'));
-    target_dir = fullfile(Protocol_Info.STUDIES, ...
-        subdirname, bst_get('DirDefaultStudy'));
+    % check if headfile is already copied in subject directory
+    subject_default_headmodel = fullfile(subject_dir, 'headmodel_surf_openmeeg.mat');
+    isSubjectHeadModelAvailable = exist(subject_default_headmodel, 'file');
 
-    if ~isfile(fullfile(default_dir, openmeeg_egi128))
-        copyfile(openmeeg, default_dir);
-    end
-
-    if ~isfile(fullfile(target_dir, openmeeg_egi128))
-        copyfile(openmeeg, target_dir);
-    end
-
+    % add one copy of headmodel to subject directory
+    if ~isSubjectHeadModelAvailable, copyfile(target_default_headmodel, subject_default_headmodel); end
     db_reload_database('current');
+
+    % Reselect all recordings
+    % Process: Select data files in: D1156_rest_postcomp.set/*
+    sFile = bst_process('CallProcess', 'process_select_files_data', [], [], ...
+        'subjectname',   subject_subdir, ...
+        'condition',     '', ...
+        'tag',           '', ...
+        'includebad',    0, ...
+        'includeintra',  0, ...
+        'includecommon', 0);
 
     sFile = bst_process('CallProcess', 'process_noisecov', sFile, [], ...
         'baseline', [-500, -0.001], ...
@@ -155,7 +210,7 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
         'replacefile', 1); % Replace
 
     sFile = bst_process('CallProcess', 'process_inverse_2018', sFile, [], ...
-        'output', 1, ... % Kernel only: shared
+        'output', 2, ... % Kernel only: shared
         'inverse', struct( ...
         'Comment', 'MN: EEG', ...
         'InverseMethod', 'minnorm', ...
@@ -179,13 +234,15 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
 
     % manual confirmation of electrode placement
     % via plot of scalp with electrodes
-    cfg.plot = [{'EEG'} {'scalp'} {[1]}];
-    cfg.map = {sFile.ChannelFile};
-    [hFig, ~, ~] = view_channels_3d(cfg.map, cfg.plot{:});
-    saveas(hFig, fullfile(tempdir, ...
-    'figure_makeMne_confirmElectrodeLocations.png'));
-    bst_memory('UnloadAll', 'Forced');
-    bst_progress('stop');
+    if ip.Results.confirmplot
+        cfg.plot = [{'EEG'} {'scalp'} {[1]}];
+        cfg.map = {sFile.ChannelFile};
+        [hFig, ~, ~] = view_channels_3d(cfg.map, cfg.plot{:});
+        saveas(hFig, fullfile(tempdir, ...
+            'eeg_htpCalcSource_confirmplot.png'));
+        bst_memory('UnloadAll', 'Forced');
+        bst_progress('stop');
+    end
 
     % retrieve atlas
     sCortex = in_tess_bst('@default_subject/tess_cortex_pial_low.mat');
@@ -205,14 +262,9 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
         'addrowcomment', 1, ...
         'addfilecomment', 1);
 
-    % Create EEG Structure
-    EEG2 = EEG;
-
-    EEG2.times = [];
-    EEG2.data = [];
-    EEG2.chanlocs = [];
+    % EEG2 = Source EEG SET (using original SET as template)
+    EEG2 = EEG; EEG2.times = []; EEG2.data = []; EEG2.chanlocs = [];
     EEG2 = eeg_checkchanlocs(EEG2);
-
     EEG2.times = sFileExtract.Time; % times vector from bst
     EEG2.data = sFileExtract.Value(:, :); % data for each source channel
 
@@ -222,24 +274,32 @@ function [EEG2, results] = eeg_htpComputeSource(EEG, varargin)
         EEG2.chanlocs(j).type = 'EEG';
     end
 
-    EEG2.etc.atlas = atlas;
-    EEG2 = eeg_checkset(EEG2);
-
     EEG2.filename = strrep(EEG2.filename, '.set', [sourceDesc '.set']);
     EEG2.filepath = fullfile(ip.Results.outputdir, sourceDesc);
     savefile = fullfile(EEG2.filepath, EEG2.filename);
 
-    if 7 ~= exist(EEG2.filepath, 'dir'), status = mkdir(EEG2.filepath); end
+    EEG.vhtp.eeg_htpCalcSource.atlas = atlas;
+    EEG2.etc.atlas = atlas;
+    EEG2 = eeg_checkset(EEG2);
 
-    EEG2 = pop_saveset(EEG2, 'filename', savefile);
+    if ip.Results.saveset
+        if 7 ~= exist(EEG2.filepath, 'dir'), status = mkdir(EEG2.filepath); end
+        EEG2 = pop_saveset(EEG2, 'filename', savefile);
+    else
+        warning('eeg_htpCalcSource.atlas: Source SET not saved (use option ''saveset'', true).')
+    end
 
     % END: Signal Processing
 
     % QI Table
-    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid', 'function', 'timestamp'});
+    EEG.vhtp.eeg_htpCalcSource.qi_table = ...
+        cell2table({EEG.setname, functionstamp, timestamp ip.Results.outputdir, ...
+        ip.Results.headless, ip.Results.nettype, ip.Results.confirmplot, ip.Results.saveset}, ...
+        'VariableNames', {'eegid', 'scriptname', 'timestamp', 'outputdir', ...
+        'headless','nettype','confirmplot','saveset'});
 
     % Outputs:
-    results = [];
+    results = EEG.vhtp.eeg_htpCalcSource;
 
 end
 
@@ -282,6 +342,7 @@ function EEG = epoch2cont(EEG)
         EEG.pnts = npnts * ntrial;
         EEG.times = 1:1 / EEG.srate:(size(EEG.data, 2) / EEG.srate) * 1000;
     else
+        warning('Data is likely already continuous.')
         fprintf('No trial dimension present in data');
     end
 

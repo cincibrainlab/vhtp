@@ -52,7 +52,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     % MATLAB built-in input validation
     ip = inputParser();
     addRequired(ip, 'EEG', @isstruct);
-    addParameter(ip, 'gpuOn', defaultGpu);
+    addParameter(ip, 'gpuOn', defaultGpu, @islogical);
     addParameter(ip, 'duration', defaultDuration);
     addParameter(ip, 'offset', defaultOffset);
     addParameter(ip, 'window', defaultWindow);

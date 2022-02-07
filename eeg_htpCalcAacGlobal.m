@@ -9,7 +9,7 @@ function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
 % Require Inputs:
 %     EEG       - EEGLAB Structure
 % Function Specific Inputs:
-%     'option1' - description
+%     gpuon     - [logical] use gpuArray. default: false
 %
 % Common Visual HTP Inputs:
 %     'bandDefs'   - cell-array describing frequency band definitions
@@ -34,12 +34,14 @@ defaultOutputDir = tempdir;
 defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
     'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55;
     'gamma2', 65, 80; 'epsilon', 81, 120; };
+defaultGpu = 0;
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
+addParameter(ip, 'gpuon', defaultGpu, @islogical);
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -52,13 +54,16 @@ outputfile = fullfile(ip.Results.outputdir, ...
 % START: Signal Processing
 
 % check if data is continuous, if not epoch to 1 s bins
-if ndims(EEG.data) < 3
-    warning("Data is continuous. Converted to 1 second epochs.")
-    EEG = eeg_regepochs(EEG, 'recurrence', 1);
+if ndims(EEG.data) > 2
+    warning("Data is epoched. Converted to continuous.")
+    EEG = epoch2cont(EEG);
+    % EEG = eeg_regepochs(EEG, 'recurrence', 1);
 end
 
-EEG.data = gpuArray(EEG.data);
-
+if ip.Results.gpuon
+    warning('GPU Arrays Enabled.')
+    EEG.data = gpuArray(EEG.data);
+end
 % get channel structure
 chanlocs = EEG.chanlocs;
 
@@ -85,7 +90,8 @@ freqBins = logspace(log10(1+deviationFromLog), log10(upperFreqLimit+deviationFro
 PSDType = {'absolute','relative'}; PSDArray = [];
 for pi = 1 : numel(PSDType)
     for i = 1 : size(EEG.data,1)
-        [~, freqs, times, firstPSD] = spectrogram(EEG.data(i,:), EEG.srate, floor(EEG.srate/2), freqBins, EEG.srate);
+        [~, freqs, times, firstPSD] = spectrogram(EEG.data(i,:), EEG.srate, ...
+            floor(EEG.srate/2), freqBins, EEG.srate);
         % hz x trial x chan
         switch PSDType{pi}
             case 'absolute'
@@ -182,5 +188,25 @@ EEG.vhtp.eeg_htpCalcAacGlobal.summary_table = ...
 EEG.vhtp.eeg_htpCalcAacGlobal.qi_table = qi_table;
 
 results = EEG.vhtp.eeg_htpCalcAacGlobal;
+
+end
+
+
+function EEG = epoch2cont(EEG)
+    % revised 9/30/2021
+
+    if length(size(EEG.data)) > 2
+        % starting dimensions
+        [nchans, npnts, ntrial] = size(EEG.data);
+        EEG.data = double(reshape(EEG.data, nchans, npnts * ntrial));
+        EEG.pnts = npnts * ntrial;
+        EEG.times = 1:1 / EEG.srate:(size(EEG.data, 2) / EEG.srate) * 1000;
+    else
+        warning('Data is likely already continuous.')
+        fprintf('No trial dimension present in data');
+    end
+
+    EEG = eeg_checkset(EEG);
+    EEG.data = double(EEG.data);
 
 end

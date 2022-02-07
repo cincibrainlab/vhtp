@@ -1,4 +1,4 @@
-function [EEG2, results] = eeg_htpCalcLaplacian(EEG, varargin)
+function [EEG, results] = eeg_htpCalcLaplacian(EEG, varargin)
     % eeg_htpCalcLaplacian() - compute Laplacian of EEG data via Cohen's
     % implementation of Perrin et al. (1989). This function is a wrapper
     % for laplacian_perrinX (unmodified) from
@@ -49,7 +49,7 @@ function [EEG2, results] = eeg_htpCalcLaplacian(EEG, varargin)
 
     % External Fuction:
     % Source: https://github.com/mikexcohen/AnalyzingNeuralTimeSeries
-    [EEG.data, G, H] = laplacian_perrinX(EEG.data, X, Y, Z);
+    [EEG.data, ~, ~] = laplacian_perrinX(EEG.data, X, Y, Z);
 
     % Save dataset and create dir if needed
     if ip.Results.save
