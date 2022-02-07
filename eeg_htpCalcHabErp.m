@@ -201,7 +201,7 @@ resultsrow = array2table([N1 P2 N1PC P2PC N1Latency P2Latency], ...
 
 % QI Table
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
-    'VariableNames', {'eegid','function','timestamp'});
+    'VariableNames', {'eegid','scriptname','timestamp'});
 
 % Outputs: 
 EEG.etc.htp.hab.erp = erp';

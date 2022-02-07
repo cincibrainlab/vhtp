@@ -91,7 +91,7 @@ disp(['<a href = "file://' csvfile '"> Link to ' ip.Results.csvout '</a>']);
 
 % QI Table
 qi_table = cell2table({functionstamp, timestamp, height(filelist),csvfile, ip.Results.keyword, ip.Results.nettype }, ...
-    'VariableNames', {'script','timestamp', 'nofiles', 'csvfile', 'keyword', 'nettype'});
+    'VariableNames', {'scriptname','timestamp', 'nofiles', 'csvfile', 'keyword', 'nettype'});
 
 % Outputs:
 results = res.inforow;

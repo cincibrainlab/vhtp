@@ -119,7 +119,7 @@ end
 % QI Table
 qi_table = cellfun( @(EEG) ...
     cell2table({EEG.setname, functionstamp, timestamp}, ...
-    'VariableNames', {'eegid','function','timestamp'}), EEGcell, 'uni',0);
+    'VariableNames', {'eegid','scriptname','timestamp'}), EEGcell, 'uni',0);
 
 % Outputs:
 results = [];

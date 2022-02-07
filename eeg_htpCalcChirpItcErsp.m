@@ -210,7 +210,8 @@ csvTable = cell2table(csvRow, "VariableNames", {'eegid','trials','rejtrials','er
 % END: Signal Processing
 
 % QI Table
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid','function','timestamp'});
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', ...
+{'eegid','scriptname','timestamp'});
 
 % Outputs: 
 EEG.etc.htp.chirp.itc1  = corrected_itc;

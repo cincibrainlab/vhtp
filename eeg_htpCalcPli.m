@@ -253,7 +253,8 @@ function [EEG, results] = eeg_htpCalcPli(EEG, varargin)
     % END: Signal Processing
 
     % QI Table
-    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid', 'function', 'timestamp'});
+    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid', 'scriptname', 'timestamp'});
 
     % Outputs:
     results = [];

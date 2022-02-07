@@ -159,7 +159,8 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     % END: Signal Processing
 
     % QI Table
-    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid', 'function_name', 'timestamp'});
+    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid', 'scriptname', 'timestamp'});
 
     % Outputs:
     EEG.vhtp.eeg_htpCalcRestPower.summary_table = csvtable;

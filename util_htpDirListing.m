@@ -65,7 +65,8 @@ end
 % END: Utility code
 
 % QI Table
-qi_table = cell2table({functionstamp, timestamp}, 'VariableNames', {'scriptname','timestamp'});
+qi_table = cell2table({functionstamp, timestamp}, 'VariableNames',...
+ {'scriptname','timestamp'});
 
 % Outputs: 
 results = filelist;
