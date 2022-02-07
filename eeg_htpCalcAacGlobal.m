@@ -10,6 +10,7 @@ function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
 %     EEG       - EEGLAB Structure
 % Function Specific Inputs:
 %     gpuon     - [logical] use gpuArray. default: false
+%   sourcemode  - use DK atlas with source data
 %
 % Common Visual HTP Inputs:
 %     'bandDefs'   - cell-array describing frequency band definitions
@@ -35,6 +36,7 @@ defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
     'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55;
     'gamma2', 65, 80; 'epsilon', 81, 120; };
 defaultGpu = 0;
+defaultSourceMode = false;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -42,6 +44,7 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip, 'gpuon', defaultGpu, @islogical);
+addParameter(ip, 'sourcemode', defaultSourceMode, @islogical);
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -66,21 +69,39 @@ if ip.Results.gpuon
 end
 % get channel structure
 chanlocs = EEG.chanlocs;
+if ~ip.Results.sourcemode
+    % create full atlas table in chanlocs order
+    chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
+    chanlist.index = (1:height(chanlist)).';
+    atlasLookupTable = readtable("GSN-HydroCel-129_dict.csv");
+    matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, ...
+        'Keys', {'chan','chan'});
 
-% create full atlas table in chanlocs order
-chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
-chanlist.index = (1:height(chanlist)).';
-atlasLookupTable = readtable("GSN-HydroCel-129_dict.csv");
-matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, ...
-    'Keys', {'chan','chan'});
+    matchedAtlasTable = sortrows(matchedAtlasTable,'index');
 
-matchedAtlasTable = sortrows(matchedAtlasTable,'index');
+    % Remove the "other" nodes
+    checkchans = chanlocs(~(matchedAtlasTable.position == "OTHER"));
+    chanlocs(~(matchedAtlasTable.position == "OTHER"))
+    EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
+    chanlocs = EEG.chanlocs;
 
-% Remove the "other" nodes
-checkchans = chanlocs(~(matchedAtlasTable.position == "OTHER"));
-chanlocs(~(matchedAtlasTable.position == "OTHER"))
-EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
-chanlocs = EEG.chanlocs;
+else
+    % create full atlas table in chanlocs order
+    chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'labelclean'});
+    atlasLookupTable = readtable("DK_atlas-68_dict.csv");
+    matchedAtlasTable = innerjoin( chanlist, atlasLookupTable, 'Keys', {'labelclean','labelclean'});
+
+    networks = unique(matchedAtlasTable.RSN);
+    for i = 1 : numel(networks)
+        netindex.(networks{i}) = strcmp(matchedAtlasTable.RSN,  networks{i});
+    end
+
+    nodes = unique(matchedAtlasTable.labelclean);
+    for i = 1 : numel(nodes)
+        nodeindex.(nodes{i}) = find(strcmp(matchedAtlasTable.labelclean,  nodes{i}));
+    end
+end
+
 
 % alternative power calculation
 upperFreqLimit = 90;
@@ -179,8 +200,8 @@ end
 % END: Signal Processing
 
 % QI Table
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
-    'VariableNames', {'eegid','scriptname','timestamp'});
+qi_table = cell2table({EEG.setname, functionstamp, timestamp, ip.Results.sourcemode}, ...
+    'VariableNames', {'eegid','scriptname','timestamp', 'sourcemode'});
 
 % Outputs:
 EEG.vhtp.eeg_htpCalcAacGlobal.summary_table = ...
@@ -193,20 +214,20 @@ end
 
 
 function EEG = epoch2cont(EEG)
-    % revised 9/30/2021
+% revised 9/30/2021
 
-    if length(size(EEG.data)) > 2
-        % starting dimensions
-        [nchans, npnts, ntrial] = size(EEG.data);
-        EEG.data = double(reshape(EEG.data, nchans, npnts * ntrial));
-        EEG.pnts = npnts * ntrial;
-        EEG.times = 1:1 / EEG.srate:(size(EEG.data, 2) / EEG.srate) * 1000;
-    else
-        warning('Data is likely already continuous.')
-        fprintf('No trial dimension present in data');
-    end
+if length(size(EEG.data)) > 2
+    % starting dimensions
+    [nchans, npnts, ntrial] = size(EEG.data);
+    EEG.data = double(reshape(EEG.data, nchans, npnts * ntrial));
+    EEG.pnts = npnts * ntrial;
+    EEG.times = 1:1 / EEG.srate:(size(EEG.data, 2) / EEG.srate) * 1000;
+else
+    warning('Data is likely already continuous.')
+    fprintf('No trial dimension present in data');
+end
 
-    EEG = eeg_checkset(EEG);
-    EEG.data = double(EEG.data);
+EEG = eeg_checkset(EEG);
+EEG.data = double(EEG.data);
 
 end

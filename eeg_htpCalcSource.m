@@ -143,6 +143,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % Check if subject is already present, if so delete.
     [dupSub, iSub] = bst_get('Subject', EEG.setname);
     if ~isempty(dupSub)
+        warning('Duplicate Subject Found. Deleting and Recalculating.')
         db_delete_subjects(iSub)
     end
 
