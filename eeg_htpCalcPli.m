@@ -1,6 +1,5 @@
 function [EEG, results] = eeg_htpCalcPli(EEG, varargin)
     % eeg_htpCalcPli() - calculates phase lag index on EEG set
-    %      Add 'help' comments here to be viewed on command line.
     %
     % Usage:
     %    >> [ EEG, results ] = eeg_htpFunctionTemplate( EEG )
@@ -8,13 +7,7 @@ function [EEG, results] = eeg_htpCalcPli(EEG, varargin)
     % Require Inputs:
     %     EEG       - EEGLAB Structure
     % Function Specific Inputs:
-    %     'option1' - description
-    %
-    % Common Visual HTP Inputs:
-    %     'bandDefs'   - cell-array describing frequency band definitions
-    %     {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 'alpha2', 10.5, 12.5;
-    %     'beta', 13, 30;'gamma1', 30, 55; 'gamma2', 65, 80; 'epsilon', 81, 120;}
-    %     'outputdir' - path for saved output files (default: tempdir)
+    %     'outputdir' - description
     %
     % Outputs:
     %     EEG       - EEGLAB Structure with modified .vhtp field
@@ -258,5 +251,24 @@ function [EEG, results] = eeg_htpCalcPli(EEG, varargin)
 
     % Outputs:
     results = [];
+
+end
+
+function EEG = epoch2cont(EEG)
+    % revised 9/30/2021
+
+    if length(size(EEG.data)) > 2
+        % starting dimensions
+        [nchans, npnts, ntrial] = size(EEG.data);
+        EEG.data = double(reshape(EEG.data, nchans, npnts * ntrial));
+        EEG.pnts = npnts * ntrial;
+        EEG.times = 1:1 / EEG.srate:(size(EEG.data, 2) / EEG.srate) * 1000;
+    else
+        warning('Data is likely already continuous.')
+        fprintf('No trial dimension present in data');
+    end
+
+    EEG = eeg_checkset(EEG);
+    EEG.data = double(EEG.data);
 
 end
