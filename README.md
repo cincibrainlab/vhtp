@@ -15,7 +15,8 @@ With the **vhtp** toolbox, anyone can easily work with EEG data using MATLAB-Oct
 
 ## Key Features
 Is there room for another opensource EEG toolkit? The **vhtp** toolkit focuses on clean *implementation* and *reporting* of EEG analysis. **vhtp** implements wrappers around functions from all major EEG toolkits including EEGLAB, Fieldtrip, and Brainstorm.
-  - **Centered around SET:** Every core function in **vhtp** uses an **EEGLAB SET** structure as an input, output, or both. Example: *utility_htpImportEeg* converts a directory of original EEG files into SET files.
+
+  - **Centered around EEGLAB SET Files:** Every core function in **vhtp** uses an **EEGLAB SET** structure as an input, output, or both. Example: *utility_htpImportEeg* converts a directory of original EEG files into SET files.
   - **Extensible:** The EEGLAB SET structure is a common format across a variety of EEG systems and direct access to data. Therefore, any custom or external toolbox code can easily be incorporated into template functions. Example: *eeg_htpCalcChirpItcErsp* uses EEGLAB function newtimef to calculate intratrial coherence and event-related spectral pertubation. 
   - **Comprehensive pipeline**: **vhtp** includes functions for import, preprocessing, analysis, and visualization.
   - **High Throughput:** Our research team has collected over 4,000 dense-array EEGs. We have implemented parallel processing, batch preprocessing processing, and binary/CUDA independent component analysis to handle large batch jobs.
