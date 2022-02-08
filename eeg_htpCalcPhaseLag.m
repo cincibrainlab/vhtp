@@ -1,6 +1,10 @@
 function [EEG, results] = eeg_htpCalcPhaseLag(EEG, varargin)
-% eeg_htpCalcPli() - calculates phase lag index on EEG set
+% eeg_htpCalcPli() - calculates phase lag index on EEG set. Implementation
+% of Michael X Cohen's PLI code from Chapter 26.
 %
+% Cohen, Mike X. Analyzing neural time series data: theory and practice.
+% MIT Press 2014.
+
 % Usage:
 %    >> [ EEG, results ] = eeg_htpFunctionTemplate( EEG )
 %
