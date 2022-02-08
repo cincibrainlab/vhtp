@@ -50,8 +50,7 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
     
     parse(ip,EEGcell,varargin{:});
     outputdir = ip.Results.outputdir;
-    bandDefs = ip.Results.bandDefs;
-    
+
     % base output file can be modified with strrep()
     outfileCell = cellfun( @(EEG) fullfile(outputdir, ...
         [functionstamp '_'  EEG.setname '_' timestamp '.mat']), ...
