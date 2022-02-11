@@ -146,7 +146,8 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
     xlabel('Time (ms)'); ylabel('Frequency (Hz)');
     h = colorbar;
     ylabel(h,'Intertrial Coherence (ITC)');
-    ylim(h,[0 .2]);
+    %ylim(h,[0 .2]);
+    caxis([0 .2]); % important
     pbaspect([1 1 1]);
     title(plot_title);
     
@@ -160,7 +161,8 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
     xlabel('Time (ms)'); ylabel('Frequency (Hz)');
     h = colorbar;
     ylabel(h,'Power (microvolts) ');
-    ylim(h,[0 45]);
+    %ylim(h,[0 45]);
+    caxis([0 45]);
     pbaspect([1 1 1]);
     title(plot_title);
     
