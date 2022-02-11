@@ -164,10 +164,8 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     % Outputs:
     EEG.vhtp.eeg_htpCalcRestPower.summary_table = csvtable;
-
-    % EEG.etc.htp.pow.summary_table = csvtable;
-    %EEG.vhtp.eeg_htpCalcRestPower.pow.spectro = [spectro_info, spectro_values];
-    %EEG.vhtp.eeg_htpCalcRestPower.qi_table = qi_table;
+    EEG.vhtp.eeg_htpCalcRestPower.pow.spectro = [spectro_info, spectro_values];
+    EEG.vhtp.eeg_htpCalcRestPower.qi_table = qi_table;
     results = EEG.vhtp.eeg_htpCalcRestPower;
 
 end
