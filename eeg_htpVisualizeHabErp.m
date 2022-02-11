@@ -18,14 +18,14 @@ function [EEGcell, results] = eeg_htpVisualizeHabErp( EEGcell, varargin )
 %     {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 'alpha2', 10.5, 12.5;
 %     'beta', 13, 30;'gamma1', 30, 55; 'gamma2', 65, 80; 'epsilon', 81, 120;}
 %     'outputdir' - path for saved output files (default: tempdir)
-%     
+%
 % Outputs:
 %     EEGcell       - cell array of EEGLAB Structure with modified .etc.htp field
 %     results   - etc.htp results structure or customized
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
-%    
+%
 %  Contact: kyle.cullion@cchmc.org
 
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
@@ -35,16 +35,16 @@ functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
-defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 
-                   'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55; 
-                   'gamma2', 65, 80; 'epsilon', 81, 120; };
+defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
+    'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55;
+    'gamma2', 65, 80; 'epsilon', 81, 120; };
 defaultGroupIds = ones(1,length(EEGcell));
 defaultGroupMean = 1;
 defaultSingleplot = 1;
 
 
 % MATLAB built-in input validation
-ip = inputParser();   
+ip = inputParser();
 addRequired(ip, 'EEGcell', @iscell);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
@@ -96,7 +96,7 @@ else  % individual results
             plot_filename_cell{ei} = fullfile(outputdir, ...
                 ['hab_erp_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
         end
-           erp(ei,:) = EEGcell{ei}.etc.htp.hab.erp;
+        erp(ei,:) = EEGcell{ei}.etc.htp.hab.erp;
     end
 end
 
@@ -129,24 +129,48 @@ function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
 
 stimoffsets = [0 500 1000 1500];
 stimoffsets_actual = [25 545 1061 1579];
+din_labels = {'DIN1','DIN2','DIN3','DIN4'};
+rep_labels = {'S1','R1','R2','R3'};
+
+xline2 = @(offset) line([offset offset], [-10 10]);
+xtext = @(offset,label) text(offset+25, 0, label, 'rotation',90);
 
 figure('Position', [600 300 1200 900]);
 set(0,'defaultTextInterpreter','none');
 roi_strip = nan(1,length(erp));
 roi_strip2 = roi_strip;
-roi_strip([n1idx]) = -.5;
-roi_strip2([p2idx]) =  .5;
+roi_strip([n1idx]) = -1;
+roi_strip2([p2idx]) =  1;
 plot(t,roi_strip,'b.'); hold on;
 plot(t,roi_strip2,'r.');
-xline(stimoffsets,'-',{'DIN1','DIN2','DIN3','DIN4'},'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
-xline(stimoffsets_actual,':',{'S1','R1','R2','R3'} ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
+if ~verLessThan('matlab','9.5')
+    arrayfun(@(x) xline2(x), stimoffsets, 'uni',0)
+    arrayfun(@(x,y) xtext(x,y), stimoffsets,din_labels, 'uni',0)
+else
+    xline(stimoffsets,'-',din_labels,'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
+    xline(stimoffsets_actual,':',rep_labels ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
+end
 
-    for i = 1 : length(N1Lat)
-        xline(N1Lat(i),'b:',{['N1:' num2str(N1Lat(i)-stimoffsets_actual(i))]});
+for i = 1 : length(N1Lat)
+    n1_label = ['N1:' num2str(N1Lat(i)-stimoffsets_actual(i))];
+    if ~verLessThan('matlab','9.5')
+        line([N1Lat(i) N1Lat(i)],[-10 10],'Color','blue','LineStyle','--');
+        text(N1Lat(i)+25, 10, n1_label, 'rotation',90, ...
+            'color', 'blue', 'HorizontalAlignment','right');
+    else
+        xline(N1Lat(i),'b:',{n1_label});
     end
-    for i = 1 : length(P2Lat)
-        xline(P2Lat(i),'r:',{['P2: ' num2str(P2Lat(i)-stimoffsets_actual(i))]});
+end
+for i = 1 : length(P2Lat)
+    p2_label = ['P2: ' num2str(P2Lat(i)-stimoffsets_actual(i))];
+    if ~verLessThan('matlab','9.5')
+        line([P2Lat(i) P2Lat(i)],[-10 10],'Color','red','LineStyle','--');
+        text(P2Lat(i)+25, 10, p2_label, 'rotation',90, ...
+            'color', 'red', 'HorizontalAlignment','right');
+    else
+        xline(P2Lat(i),'r:',{p2_label});
     end
+end
 % hold on;
 plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
 ylim([-10 10])
