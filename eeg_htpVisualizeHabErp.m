@@ -42,10 +42,13 @@ defaultGroupIds = ones(1,length(EEGcell));
 defaultGroupMean = 1;
 defaultSingleplot = 1;
 
+errorMsg2 = 'EEG input should be either a cell array or struct.';
+validEegArray = @(x) assert(iscell(x) || isstruct(x), errorMsg2);
+
 
 % MATLAB built-in input validation
 ip = inputParser();
-addRequired(ip, 'EEGcell', @iscell);
+addRequired(ip, 'EEGcell', validEegArray);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip,'groupids', defaultGroupIds, @isvector)
@@ -54,6 +57,11 @@ addParameter(ip,'singleplot', defaultSingleplot, @islogical)
 
 parse(ip,EEGcell,varargin{:});
 
+if isstruct(EEGcell)
+    warning('Struct passed, converting to Cell.')
+    EEGcell = num2cell(EEGcell);
+end
+    
 outputdir = ip.Results.outputdir;
 bandDefs = ip.Results.bandDefs;
 

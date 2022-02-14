@@ -18,6 +18,9 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     %     'nettype'     - define nettype, default EGI128
     %     'computeheadmodel' - recalculate headmodel (check parameters)
     %     'deletetempfiles' - delete temporary cont. files default:false.
+    %     'usepreexisting' - looks for preexisting files in output dir;
+    %                       default: false
+    %     'resetprotocol'         - delete and reset protocol (logical: default false)
     %     If option is true, cannot visualize results in brainstorm GUI.
     %
     % Common Visual HTP Inputs:
@@ -55,9 +58,11 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
                     'gamma2', 65, 80; 'epsilon', 81, 120; };
     defaultNetType = 'EGI128';
     defaultConfirmPlot = false;
-    defaultSaveSet = false;
+    defaultSaveSet = true;
     defaultComputeHeadModel = false;
     defaultDeleteTempfiles = false;
+    defaultUsePreexisting = false;
+    defaultResetProtocol = false;
 
     % MATLAB built-in input validation
     ip = inputParser();
@@ -69,7 +74,9 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     addParameter(ip, 'confirmplot', defaultConfirmPlot, @logical);
     addParameter(ip, 'saveset', defaultSaveSet, @logical);
     addParameter(ip, 'computeheadmodel', defaultComputeHeadModel, @logical);
-    addParameter(ip, 'deletetempfiles', defaultComputeHeadModel, @logical);
+    addParameter(ip, 'deletetempfiles', defaultDeleteTempfiles, @logical);
+    addParameter(ip, 'usepreexisting', defaultUsePreexisting, @logical);
+    addParameter(ip, 'resetprotocol', defaultResetProtocol, @logical);
     parse(ip, EEG, varargin{:});
 
     % Dependency Check: Requires Brainstorm and EEGLAB Functions
@@ -98,14 +105,34 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             ProtocolAnatSelection, ProtocolChannelSelection);
     else
         gui_brainstorm('SetCurrentProtocol', iProtocol);
-        % Select all recordings
+        % get all recordings
         files_to_delete = bst_process('CallProcess', 'process_select_files_data', [], [], ...
             'Comment', 'Link to raw file');
-        if ~isempty(files_to_delete)
-            % Process: Delete subjects
-           % bst_process('CallProcess', 'process_delete', files_to_delete, [], ...
-           %     'target', 1); % Delete subjects
+        if ip.Results.resetprotocol
+            if ~isempty(files_to_delete)
+                % Process: Delete subjects
+                bst_process('CallProcess', 'process_delete', files_to_delete, [], ...
+                    'target', 1); % Delete subjects
+            end
         end
+        % use preexisting data
+        if ip.Results.usepreexisting
+            preexisting_source_files = bst_process('CallProcess', 'process_select_files_results', [], [], ...
+                'Comment', 'Link to raw file');
+            subIdx = find(strcmp(EEG.setname, {preexisting_source_files.SubjectName}));
+            if ~isempty(subIdx)
+                sFile = preexisting_source_files(subIdx);
+                % Process: Add Source Model Type Comment to each subject
+                sourceDesc = regexprep(sFile.Comment, ...
+                    {'[%(): ]+', '_+$'}, {'_', ''});
+                source.filename = strrep(EEG.filename, '.set', [sourceDesc '.set']);  
+                source.filepath = fullfile( ip.Results.outputdir, sourceDesc );
+                sourceEEG = pop_loadset(source.filename, source.filepath);
+                EEG2 = sourceEEG;
+                return
+            end
+        end
+
     end
 
     % define net and select from brainstorm options dynamically

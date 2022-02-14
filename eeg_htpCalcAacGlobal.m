@@ -191,9 +191,10 @@ datafields = fieldnames(aac);
 for ci = 1 : numel(chanlocs)
     csvout{ci, 1} = EEG.setname;
     csvout{ci, 2} = chanlocs(ci).labels;
+    csvout{ci, 3} = EEG.filename;
     for fi = 1 : numel(datafields)
         workingField = aac.(datafields{fi});
-        csvout{ci, 2+fi} = workingField(ci);
+        csvout{ci, 3+fi} = workingField(ci);
     end
 end
 
@@ -205,7 +206,7 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp, ip.Results.sourcem
 
 % Outputs:
 EEG.vhtp.eeg_htpCalcAacGlobal.summary_table = ...
-    cell2table(csvout, "VariableNames", [{'eegid'},{'chan'}, datafields(:)']);
+    cell2table(csvout, "VariableNames", [{'eegid'},{'chan'},{'filename'}, datafields(:)']);
 EEG.vhtp.eeg_htpCalcAacGlobal.qi_table = qi_table;
 
 results = EEG.vhtp.eeg_htpCalcAacGlobal;

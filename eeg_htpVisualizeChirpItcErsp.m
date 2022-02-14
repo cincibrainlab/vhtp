@@ -41,8 +41,11 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
     ip = inputParser();   
     errorMsg = 'Group Id vector must be same length as input'; 
     validGroupIds = @(x) assert(numel(x) == EEGno, errorMsg);
+
+    errorMsg2 = 'EEG input should be either a cell array or struct.';
+    validEegArray = @(x) assert(iscell(x) || isstruct(x), errorMsg2);
     
-    addRequired(ip, 'EEGcell', @iscell);
+    addRequired(ip, 'EEGcell', validEegArray);
     addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
     addParameter(ip,'groupids', defaultGroupIds, validGroupIds)
     addParameter(ip,'groupmean', defaultGroupMean, @islogical)
@@ -50,6 +53,11 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
     
     parse(ip,EEGcell,varargin{:});
     outputdir = ip.Results.outputdir;
+
+    if isstruct(EEGcell)
+        warning('Struct passed, converting to Cell.')
+        EEGcell = num2cell(EEGcell);
+    end
 
     % base output file can be modified with strrep()
     outfileCell = cellfun( @(EEG) fullfile(outputdir, ...

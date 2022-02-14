@@ -145,7 +145,8 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     allbandlabels = [abs_labels db_labels rel_labels];
     powertable = array2table([pow_abs_band pow_db_band pow_rel_band], 'VariableNames', allbandlabels);
 
-    infocolumns = table(repmat(EEG.subject, channo, 1), {EEG.chanlocs.labels}', 'VariableNames', {'eegid', 'chan'});
+    infocolumns = table(string(repmat(EEG.subject, channo, 1)), string(repmat(EEG.filename, channo, 1)), ...
+        {EEG.chanlocs.labels}', 'VariableNames', {'eegid', 'filename', 'chan'});
 
     csvtable = [infocolumns, powertable];
 
@@ -159,8 +160,8 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     % END: Signal Processing
 
     % QI Table
-    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
-    'VariableNames', {'eegid', 'scriptname', 'timestamp'});
+    qi_table = cell2table({EEG.setname, EEG.filename, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid', 'filename', 'scriptname', 'timestamp'});
 
     % Outputs:
     EEG.vhtp.eeg_htpCalcRestPower.summary_table = csvtable;
