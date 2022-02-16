@@ -157,10 +157,10 @@ function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
     roi.ERSP_gamma2_hz = {findHz(60, 100)};
     roi.ERSP_alpha_hz = {findHz(8, 12)};
 
-    roi.ErpOnset_hz = {findHz(2, 13)}; % LE's final freq range for onset was 6-13hz - should check with her about this
-    roi.ErpOnset_ms = {findTimes(92, 308)};
-    roi.ErpOffset_hz = {findHz(2, 13)};
-    roi.ErpOffset_ms = {findTimes(2038, 2254)};
+    roi.ItcOnset_hz = {findHz(2, 13)}; % LE's final freq range for onset was 6-13hz - should check with her about this
+    roi.ItcOnset_ms = {findTimes(92, 308)};
+    roi.ItcOffset_hz = {findHz(2, 13)};
+    roi.ItcOffset_ms = {findTimes(2038, 2254)};
 
     roi.ITC40_hz_og = {findHz(31, 42); findHz(43, 46); findHz(47, 57)};
     roi.ITC40_ms_og = {findTimes(676, 785); findTimes(796, 981); findTimes(988, 1066)};
@@ -190,15 +190,15 @@ function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
             computeMeanITC(roi.ITC40_hz_og, roi.ITC40_ms_og) ...
             computeMeanITC(roi.ITC40_hz, roi.ITC40_ms) ...
             computeMeanITC(roi.ITC80_hz, roi.ITC80_ms) ...
-            computeMeanITC(roi.ErpOnset_hz, roi.ErpOnset_ms) ...
-            computeMeanITC(roi.ErpOffset_hz, roi.ErpOffset_ms) ...
+            computeMeanITC(roi.ItcOnset_hz, roi.ItcOnset_ms) ...
+            computeMeanITC(roi.ItcOffset_hz, roi.ItcOffset_ms) ...
         };
 
     if ip.Results.emptyEEG, EEG.data = []; end
 
     csvTable = cell2table(csvRow, "VariableNames", {'eegid', 'trials', 'rejtrials', 'ersp_gamma', 'ersp_gamma1', ...
                                     'ersp_gamma2', ...
-                                    'ersp_alpha', 'itc40_og', 'itc40', 'itc80', 'erponset', 'erpoffset'});
+                                    'ersp_alpha', 'itc40_og', 'itc40', 'itc80', 'itconset', 'itcoffset'});
 
     % END: Signal Processing
 
