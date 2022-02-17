@@ -108,7 +108,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     % power computation
     [pxx, f] = pwelch(cdat', hanning(win), noverlap, freq(1, 1):.5:freq(end, 2), fs); %#ok<*ASGLU>
-
+    if size(pxx,1)==EEG.nbchan, pxx=pxx'; f=f'; end % added for single channel data (like mouse electrodes)
     if ip.Results.gpuOn, pxx = gather(pxx); f = gather(f); end
 
     % power derivations
