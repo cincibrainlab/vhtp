@@ -1,11 +1,11 @@
-function [results] = utility_htpImportMea( filepath, varargin )
+function [results] = util_htpImportMea( filepath, varargin )
 % utility_htpImportMea() - main import function
 %
 % Usage:
-%    >> [ results ] = utility_htpImportMea( filepath, varargin )
+%    >> [ results ] = util_htpImportMea( filepath, varargin )
 %
 % Example:
-%    >> [results] = utility_htpImportMea('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
+%    >> [results] = util_htpImportMea('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
 %
 % Require Inputs:
 %     filepath       - directory to get file list
@@ -121,7 +121,7 @@ for i = 1 : height(filelist)
                 end
                 
                 try
-                load(o.net_file, 'chanlocs');
+                load('mea3d.mat', 'chanlocs');
                 catch
                    o.msgout('mea3d.mat file missing', 'proc_error'); 
                 end
