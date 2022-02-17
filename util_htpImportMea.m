@@ -105,7 +105,61 @@ for i = 1 : height(filelist)
     output_file = fullfile(filelist.outputdir{i},filelist.outputfile{i});
     
     switch ip.Results.nettype
-        case 'EGI128'
+        case 'MEA30'
+            try
+                datafile =  filelist.filename{i};
+                folder = filelist.filepath{i};
+                
+                edfFile = fullfile(folder, datafile);
+                
+                EEG = pop_biosig( edfFile );
+                
+                if EEG.nbchan == 33
+                    EEG = pop_select( EEG, 'nochannel', [2,32,33]);
+                elseif EEG.nbchan == 32
+                    EEG = pop_select( EEG, 'nochannel', [2,32]);
+                end
+                
+                try
+                load(o.net_file, 'chanlocs');
+                catch
+                   o.msgout('mea3d.mat file missing', 'proc_error'); 
+                end
+                
+                chanlocs(31) = [];
+                EEG.chanlocs = chanlocs;
+                EEG = eeg_checkset( EEG );
+                
+                % clear chanlocs;
+                
+                %EEG = pop_select( EEG,'channel',{'17' '16' '15' '14' '19' '18' '13' '12' '21' '20' '11' ...
+                %    '10' '24' '23' '22' '9' '8' '7' '27' '26' '25' '6' '5' '4' '30' '29' '28' '3' '2' '1'});
+                
+                % based on the revised NN remap provided by Carrie Jonak
+                % (Channel remap.jpg)
+                
+                %EEG = pop_select( EEG,'channel',{'1','3','4','5','6','7','8','9','10', ...
+                %                     '11','12','13','14','15','16','17','18','19','20','21','22','23','24', ...
+                %                     '25','26','27','28','29','30','31'});
+                %
+                %
+                %                 '17' '16' '15' '14' '19' '18' '13' '12' '21' '20' '11' ...
+                %                     '10' '24' '23' '22' '9' '8' '7' '27' '26' '25' '6' '5' '4' '30' '29' '28' '3' '2' '1'});
+                %
+                %
+                swCHANNEL = 0;
+                swRESAMPLE  = 0;
+                EEG.filename = datafile;
+                EEG.chaninfo.filename = 'meachanlocs.mat';
+                o.EEG = eeg_checkset(EEG);
+                o.net_nbchan_orig = o.EEG.nbchan;
+                o.proc_sRate_raw = o.EEG.srate;
+                o.proc_xmax_raw = o.EEG.xmax;
+              
+            catch e
+                throw(e);
+            end
+            
             try EEG = pop_readegi(original_file);
             catch, error('Check if EEGLAB 2021 is installed'); end
             
