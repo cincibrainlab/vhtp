@@ -112,8 +112,10 @@ for i = 1 : height(filelist)
                 
                 edfFile = fullfile(folder, datafile);
                 
-                EEG = pop_biosig( edfFile );
-                
+                try EEG = pop_biosig( edfFile );
+                catch, error('Check if EEGLAB 2021 is installed'); end
+
+
                 if EEG.nbchan == 33
                     EEG = pop_select( EEG, 'nochannel', [2,32,33]);
                 elseif EEG.nbchan == 32
@@ -123,7 +125,7 @@ for i = 1 : height(filelist)
                 try
                 load('mea3d.mat', 'chanlocs');
                 catch
-                   o.msgout('mea3d.mat file missing', 'proc_error'); 
+                  error('mea3d.mat file missing'); 
                 end
                 
                 chanlocs(31) = [];
@@ -145,47 +147,19 @@ for i = 1 : height(filelist)
                 %
                 %                 '17' '16' '15' '14' '19' '18' '13' '12' '21' '20' '11' ...
                 %                     '10' '24' '23' '22' '9' '8' '7' '27' '26' '25' '6' '5' '4' '30' '29' '28' '3' '2' '1'});
-                %
-                %
+                
+                
                 swCHANNEL = 0;
                 swRESAMPLE  = 0;
                 EEG.filename = datafile;
                 EEG.chaninfo.filename = 'meachanlocs.mat';
-                o.EEG = eeg_checkset(EEG);
-                o.net_nbchan_orig = o.EEG.nbchan;
-                o.proc_sRate_raw = o.EEG.srate;
-                o.proc_xmax_raw = o.EEG.xmax;
-              
+                EEG = eeg_checkset(EEG);
+
             catch e
                 throw(e);
             end
-            
-            try EEG = pop_readegi(original_file);
-            catch, error('Check if EEGLAB 2021 is installed'); end
-            
-            % modified from EEGLAB readegilocs due to fixed path bug
-            locs = readlocs(netInfo.net_file);
-            locs(1).type = 'FID'; locs(2).type = 'FID'; locs(3).type = 'FID';
-            locs(end).type = 'REF';
-            
-            if EEG.nbchan == 256 || EEG.nbchan == 257
-                if EEG.nbchan == 256
-                    chaninfo.nodatchans = locs([end]);
-                    locs(end) = [];
-                end
-            elseif mod(EEG.nbchan,2) == 0
-                chaninfo.nodatchans = locs([1 2 3 end]);
-                locs([1 2 3 end]) = [];
-            else
-                chaninfo.nodatchans = locs([1 2 3]);
-                locs([1 2 3]) = [];
-            end % remove reference
-            
             chaninfo.filename = netInfo.net_file;
-            EEG.chanlocs   = locs;
-            EEG.urchanlocs = locs;
-            EEG.chaninfo   = chaninfo;
-            
+            EEG.chaninfo   = chaninfo;     
         otherwise
     end
     
@@ -227,8 +201,8 @@ for i = 1 : height(filelist)
     if i == 1
         % export figure to verify
         f = figure;
-        topoplot([],EEG.chanlocs, 'style', 'blank', 'drawaxis', 'on', 'electrodes', ...
-            'labelpoint', 'plotrad', [], 'chaninfo', EEG.chaninfo, 'whitebk', 'on');
+        topoplot([],EEG.chanlocs, 'style', 'blank', 'drawaxis', 'off', 'electrodes', ...
+            'labelpoint', 'plotrad', [], 'headrad', 0, 'chaninfo', EEG.chaninfo, 'whitebk', 'on');
         saveas(f, netverify_filename);
         close all;
     end
