@@ -90,8 +90,12 @@ if ip.Results.groupmean  % single mean across groups
     end
 
     for gi = 1 : group_no % mean each by group id
-        cur_group_idx(gi,:) = find(ip.Results.groupids(ip.Results.groupids == groups(gi)));
-        erp(gi,:) = mean(erpArr(cur_group_idx(gi,:),:),1);
+        cur_group_idx = find(ip.Results.groupids == groups(gi));
+        plot_title_cell{gi} = sprintf('Hab_erp_for_group %d', gi);
+        plot_filename_cell{gi} = fullfile(outputdir, ...
+            ['hab_erp_by_group' num2str(gi) '_' timestamp '.png']);
+        % cur_group_idx(gi,:) = find(ip.Results.groupids(ip.Results.groupids == groups(gi)));
+        erp(gi,:) = mean(erpArr(cur_group_idx,:),1);
     end
 else  % individual results
     for ei = 1 : length(EEGcell)

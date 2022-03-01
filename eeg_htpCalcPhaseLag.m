@@ -147,7 +147,8 @@ parfor ci = 1 : combo_size
 end
 
 freq_labels = arrayfun(@(x) sprintf('F%1.1f',x), freqs2use, 'uni',0);
-summary_table = [table(repmat(EEG.setname, combo_size,1), res_chan, res_chan2, 'VariableNames',{'eegid','chan1','chan2'}) ...
+
+summary_table = [table(string(repmat(EEG.setname, combo_size,1)), res_chan, res_chan2, 'VariableNames',{'eegid','chan1','chan2'}) ...
     array2table(res_dwpli,'VariableNames',freq_labels)];
 
 toc;
