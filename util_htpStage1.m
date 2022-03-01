@@ -6,27 +6,27 @@ timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 defaultExt          = '.set';
+defaultHighPass = [];
+defaultLowPass = [];
+defaultNotch = [];
+defaultCleanline = false;
 defaultKeyword      = [];
 defaultSubDirOn     = false;
 defaultDryrun       = true;
 defaultPresetXml = 'cfg_htpPresets.xml';
 defaultOutputDir    = tempdir;
 defaultNetType      = 'undefined';
-defaultHighPass = 0.5;
-defaultLowPass = 80;
-defaultNotch = [55 65];
-defaultCleanline = false;
 defaultResampleData = [];
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
 
 ip=inputParser();
 addRequired(ip, 'filepath', @isfolder)
-addOptional(ip,'highpass',defaultHighPass,@isnumeric)
-addOptional(ip, 'lowpass',defaultLowPass,@isnumeric)
-addOptional(ip,'notch',defaultNotch,@isnumeric)
-addOptional(ip,'cleanline',defaultCleanline,@islogical)
-addOptional(ip,'resampleData',defaultResampleData,@isnumeric)
+addParameter(ip,'highpass',defaultHighPass,@isnumeric)
+addParameter(ip, 'lowpass',defaultLowPass,@isnumeric)
+addParameter(ip,'notch',defaultNotch,@isnumeric)
+addParameter(ip,'cleanline',defaultCleanline,@islogical)
+addParameter(ip,'resampleData',defaultResampleData,@isnumeric)
 addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
 addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
@@ -66,7 +66,7 @@ try
     cfgFilename = ip.Results.presetxml;
     xmldata = ext_xml2struct( cfgFilename );
     presetList = xmldata.PresetOptions;
-catch
+catch e
     throw(e)
 end
 for i = 1 : height(filelist)
@@ -76,16 +76,48 @@ for i = 1 : height(filelist)
     EEG = pop_loadset(original_file);
     
     if ~isempty(ip.Results.highpass)
-        EEG = util_htpFilterSignal(EEG,'highpass','lowCutoff',ip.Results.highpass);
+        filtOrder   = 6600;
+        revFilt     = 0;
+        plotFreqz   = 0;
+        minPhase    = false;
+        
+        EEG = eeg_EegFilterEeglab(EEG,'Highpass','hipassfilt',ip.Results.highpass,'filtorder',filtOrder, 'revfilt', revFilt, 'plotfreqz',plotFreqz, 'minphase',minPhase);
     end
     if ~isempty(ip.Results.lowpass)
-        EEG = util_htpFilterSignal(EEG,'lowpass','highCutoff',ip.Results.lowpass);
+        filtOrder   = 3300;
+        revFilt     = 0;
+        plotFreqz   = 0;
+        minPhase    = false;
+        
+        EEG = eeg_EegFilterEeglab(EEG,'Lowpass','lowpassfilt',ip.Results.lowpass);
     end
     if ~isempty(ip.Results.notch) && ip.Results.lowpass >= ip.Results.notch(2) && ~(ip.Results.cleanline)
-        EEG = util_htpFilterSignal(EEG,'notch','notchCutoff',ip.Results.notch);
+        filtOrder   = 3300;
+        revFilt     = 1;
+        plotFreqz   = 0;
+        minPhase    = false;
+        
+        EEG = eeg_EegFilterEeglab(EEG,'Notch','notch',ip.Results.notch,'filtorder',filtOrder, 'revfilt', revFilt, 'plotfreqz',plotFreqz, 'minphase',minPhase);
     end
     if (ip.Results.cleanline)
-        EEG = util_htpFilterSignal(EEG,'cleanline','cleanlineFilt',ip.Results.cleanline);
+        cleanlineBandwidth = 2;
+        cleanlineChanList = [1:EEG.nbchan];
+        cleanlineComputePower = 0;
+        cleanlineLineFreqs = [60 120 180 240 300];
+        cleanlineNormSpectrum=0;
+        cleanlineP=0.01;
+        cleanlinePad = 2;
+        cleanlinePlotFigures=0;
+        cleanlineScanForLines=1;
+        cleanlineSigType='Channels';
+        cleanlineTau=100;
+        cleanlineVerb = 1;
+        cleanlineWinSize = 4;
+        cleanlineWinStep = 4;
+        
+        EEG = eeg_htpEegFilterEeglab(EEG,'Cleanline','cleanlinebandwidth',cleanlineBandwidth,'cleanlinechanlist',cleanlineChanList,'cleanlinecomputepower',cleanlineComputePower,'cleanlinelinefreqs',cleanlineLineFreqs,...
+                                        'cleanlinenormSpectrum',cleanlineNormSpectrum,'cleanlinep',cleanlineP, 'cleanlinepad',cleanlinePad,'cleanlineplotfigures',cleanlinePlotFigures,'cleanlinescanforlines',cleanlineScanForLines,...
+                                        'cleanlinesigtype',cleanlineSigType, 'cleanlinetau',cleanlineTau,'cleanlineverb',cleanlineVerb, 'cleanlinewinsize', cleanlineWinSize,'cleanlinewinstep',cleanlineWinStep);
     end
     
     if ~isempty(ip.Results.resampleData)
