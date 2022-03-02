@@ -143,6 +143,12 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             chanInfoStruct.chanNumber = '128';
             chanInfoStruct.chanLabelFormat = 'E1';
             openmeeg_file = 'headmodel_surf_openmeeg_EGI128.mat';
+        case 'BioSemi64' %Biosemi 64 A1
+            chanInfoStruct.headModel = 'ICBM152';
+            chanInfoStruct.brand = 'BioSemi';
+            chanInfoStruct.chanNumber = '64';
+            chanInfoStruct.chanLabelFormat = 'A1';
+            openmeeg_file = 'headmodel_surf_openmeeg_BioSemi64.mat'; 
     end
 
     % Load specific head models
