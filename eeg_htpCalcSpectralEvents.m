@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpCalcSpectralEvents(EEG, varargin)
-% eeg_htpCalcSpectralEvents() - TBD
+% eeg_htpCalcSpectralEvents() - Spectral Events Wrapper.
 %
 % Usage:
 %    >> [ EEG, results ] = eeg_htpCalcSpectralEvents( EEG, varargin )
