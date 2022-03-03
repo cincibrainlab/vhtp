@@ -29,7 +29,7 @@ Is there room for another opensource EEG toolkit? The **vhtp** toolkit focuses o
 
 ## Installation
 
-    git clone http://github.org/cincibrainlab/visualhtp
+    git clone http://github.org/cincibrainlab/vhtp
 
 ## Workflow Example
 
