@@ -23,7 +23,7 @@ function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
 %     results   - etc.htp results structure or customized
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab/vhtp for details.
+%  please see http://github.com/cincibrainlab/vhtp for details. 
 %
 %  Contact: kyle.cullion@cchmc.org
 
