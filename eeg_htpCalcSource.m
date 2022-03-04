@@ -302,6 +302,12 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     EEG2.times = sFileExtract.Time; % times vector from bst
     EEG2.data = sFileExtract.Value(:, :); % data for each source channel
 
+    % added 3/4/22 to strip ICA information on conversion which causes load issues on some systems.
+    EEG2.icawinv        = [];
+    EEG2.icasphere      = [];
+    EEG2.icaweights     = []; 
+    EEG2.icachansind    = [];
+
     for j = 1:length(sFileExtract.Atlas.Scouts) % create chanlocs from atlas regions
         tmpatlas = sFileExtract.Atlas.Scouts(j);
         EEG2.chanlocs(j).labels = genvarname(tmpatlas.Label);
