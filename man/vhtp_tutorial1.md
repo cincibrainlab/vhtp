@@ -102,3 +102,9 @@ end
 writetable(batch_result_table, fullfile(myRestPath, 'resting_power_summary.csv'));
 ```
 The last line uses the MATLAB command `writetable` to save the results to a spreadsheet (CSV). The `fullfile` functions combines a pathname and a filename to create a valid filepath.
+
+### Conclusion
+In this tutorial, you have gone from zero to one with the basics of data analysis with vhtp tools. You have learned how to load one or more datasets and then calculate spectral power into a CSV form that can be read by statistical software.
+
+Next, try a visualization of the data you have just collected or work on alternative spatial filters for your data prior to calculating power.
+

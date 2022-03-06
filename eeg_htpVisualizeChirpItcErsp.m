@@ -65,72 +65,103 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
         EEGcell, 'uni',0);
     
     % START: Start Visualization
-    
-    % get groups
-    groups = double(unique(ip.Results.groupids));
-    group_no = numel(groups);
-    
-    % consistent indexes regardless of group or inidividual ERP
-    t = EEGcell{1}.etc.htp.chirp.t_s;
-    f = EEGcell{1}.etc.htp.chirp.f_s;
-    
-    % calculate ERP mean, individual ERPs, or single plot ERPs
-    plot_title = [];
-    if ip.Results.groupmean  % single mean across groups
-        plot_title = 'PLACEHOLDER by Group';
-        for ei = 1 : length(EEGcell) % all ERPs in single array
-            itcArr(:,:,ei) = EEGcell{ei}.etc.htp.chirp.itc1;
-            erspArr(:,:,ei) = EEGcell{ei}.etc.htp.chirp.ersp1;
-        end
-        
-        for gi = 1 : group_no % mean each by group id
-            cur_group_idx = find(ip.Results.groupids == groups(gi));
-            plot_title_cell{gi} = sprintf('PLACEHOLDER for group %d', gi);
-            plot_filename_cell{gi} = fullfile(outputdir, ...
-                ['chirp_itcersp_by_group' num2str(gi) '_' timestamp '.png']);
-            itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3);
-            ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3);
-        end
-    else  % individual results
-        for ei = 1 : length(EEGcell)
-            if ip.Results.singleplot && ei == 1 && ~ip.Results.groupmean
-                plot_title = 'PLACEHOLDER by Recording';
-                plot_filename = fullfile(outputdir,['chirp_itcersp_by_recording_' timestamp '.png']);
-            else
-                plot_title_cell{ei} = sprintf('PLACEHOLDER for %s', EEGcell{ei}.setname);
-                plot_filename_cell{ei} = fullfile(outputdir, ...
-                    ['chirp_itcersp_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
-            end
-               itc(:,:,ei) = EEGcell{ei}.etc.htp.chirp.itc1;
-               ersp(:,:,ei) = EEGcell{ei}.etc.htp.chirp.ersp1;
-        end
-    end
-    
-    if ip.Results.singleplot 
-        for gi = 1 : group_no
-            figure('Position', [600 600 1200 700]);
-            subplot(1,2,1)
-            createPlot_chirpItc(t, f, itc(:,:,gi), ...
-                strrep(plot_title_cell{gi},'PLACEHOLDER','ITC'));
-            subplot(1,2,2)
-            createPlot_chirpErsp(t, f, ersp(:,:,gi), ...
-                strrep(plot_title_cell{gi},'PLACEHOLDER','ERSP'));
-            sgtitle(strrep(plot_title_cell{gi},'PLACEHOLDER','Chirp Plots'));
-            saveas(gcf, plot_filename_cell{gi});
-            close all;
+chanItc = {};
+chanErsp = {};
+    % check for multichannel data
+    if ndims(EEGcell{1}.vhtp.eeg_htpCalcChirpItcErsp.itc1) > 2
+        isMultiChannel = true;
+        chanlabels = {EEGcell{1}.chanlocs.labels};
+        for ei = 1 : numel(EEGcell)
+            chanItc{ei} = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
+            chanErsp{ei} = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
         end
     else
-        for si = 1 : size(itc,3)
-            figure('Position', [600 600 1200 700]);
-            subplot(1,2,1)
-            createPlot_chirpItc(t, f, itc(:,:,si), ...
-                strrep(plot_title_cell{si},'PLACEHOLDER','ITC'));
-            subplot(1,2,2)
-            createPlot_chirpErsp(t, f, ersp(:,:,si), ...
-                strrep(plot_title_cell{si},'PLACEHOLDER','ERSP'));
-            sgtitle(strrep(plot_title_cell{si},'PLACEHOLDER','Chirp Plots'));
-            saveas(gcf, plot_filename_cell{si});
-            close all;
+        isMultiChannel = false;
+        chanlabels = {'average'};
+    end
+
+
+    for ci = 1 : numel(chanlabels)
+        channame = chanlabels{ci};
+        if isMultiChannel
+            for ei = 1 : length(EEGcell)
+                chanItcNow = chanItc{ei};
+                chanErspNow = chanErsp{ei};
+                EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1 = chanItcNow(:,:,ci);
+                EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1 = chanErspNow(:,:,ci);
+            end
+        end
+
+        % get groups
+        groups = double(unique(ip.Results.groupids));
+        group_no = numel(groups);
+
+        % consistent indexes regardless of group or inidividual ERP
+        t = EEGcell{1}.vhtp.eeg_htpCalcChirpItcErsp.t_s;
+        f = EEGcell{1}.vhtp.eeg_htpCalcChirpItcErsp.f_s;
+
+        % calculate ERP mean, individual ERPs, or single plot ERPs
+        plot_title = [];
+        if ip.Results.groupmean  % single mean across groups
+            plot_title = ['PLACEHOLDER by Group (' channame ')'];
+            for ei = 1 : length(EEGcell) % all ERPs in single array
+                itcArr(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
+                erspArr(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
+            end
+
+            for gi = 1 : group_no % mean each by group id
+                cur_group_idx = find(ip.Results.groupids == groups(gi));
+                plot_title_cell{gi} = sprintf('PLACEHOLDER for group %d (%s)', gi, channame);
+                plot_filename_cell{gi} = fullfile(outputdir, ...
+                    ['chirp_itcersp_by_group_' channame '_' num2str(gi) '_' timestamp '.png']);
+                itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3);
+                ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3);
+            end
+        else  % individual results
+            for ei = 1 : length(EEGcell)
+                if ip.Results.singleplot && ei == 1 && ~ip.Results.groupmean
+                    plot_title = 'PLACEHOLDER by Recording';
+                    plot_filename = fullfile(outputdir,['chirp_itcersp_by_recording_' channame '_' timestamp '.png']);
+                    plot_title_cell{ei} = sprintf('PLACEHOLDER for %s (%s)', EEGcell{ei}.setname, channame);
+                    plot_filename_cell{ei} = fullfile(outputdir, ...
+                        ['chirp_itcersp_' channame '_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
+
+                else
+                    plot_title_cell{ei} = sprintf('PLACEHOLDER for %s (%s)', EEGcell{ei}.setname, channame);
+                    plot_filename_cell{ei} = fullfile(outputdir, ...
+                        ['chirp_itcersp_' channame '_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
+                end
+                itc(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
+                ersp(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
+            end
+        end
+
+        if ip.Results.singleplot
+            for gi = 1 : group_no
+                figure('Position', [600 600 1200 700]);
+                subplot(1,2,1)
+                createPlot_chirpItc(t, f, itc(:,:,gi), ...
+                    strrep(plot_title_cell{gi},'PLACEHOLDER','ITC'));
+                subplot(1,2,2)
+                createPlot_chirpErsp(t, f, ersp(:,:,gi), ...
+                    strrep(plot_title_cell{gi},'PLACEHOLDER','ERSP'));
+                sgtitle(strrep(plot_title_cell{gi},'PLACEHOLDER','Chirp Plots'));
+                saveas(gcf, plot_filename_cell{gi});
+                close all;
+            end
+        else
+            for si = 1 : size(itc,3)
+                figure('Position', [600 600 1200 700]);
+                subplot(1,2,1)
+                createPlot_chirpItc(t, f, itc(:,:,si), ...
+                    strrep(plot_title_cell{si},'PLACEHOLDER','ITC'));
+                subplot(1,2,2)
+                createPlot_chirpErsp(t, f, ersp(:,:,si), ...
+                    strrep(plot_title_cell{si},'PLACEHOLDER','ERSP'));
+                sgtitle(strrep(plot_title_cell{si},'PLACEHOLDER','Chirp Plots'));
+                saveas(gcf, plot_filename_cell{si});
+                close all;
+            end
         end
     end
     
@@ -170,7 +201,7 @@ function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
     h = colorbar;
     ylabel(h,'Power (microvolts) ');
     %ylim(h,[0 45]);
-    caxis([0 45]);
+    % caxis([0 45]);
     pbaspect([1 1 1]);
     title(plot_title);
     

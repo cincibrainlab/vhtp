@@ -78,8 +78,8 @@ bandDefs = {
     'delta', 2 , 3.5;
     'theta', 3.5, 7.5;
     'alpha1', 8, 10;
-    'alpha2', 10.5, 12.5;
-    'beta', 13, 30;
+    'alpha2', 10.5, 12.5; % edit for whole numbers
+    'beta', 13, 30;  
     'gamma1', 30, 55;
     'gamma2', 65, 90;
     'epsilon', 81, 120;
@@ -92,6 +92,7 @@ f_gamma1 =[bandDefs{6,2}:5:bandDefs{6,3}];
 f_gamma2 = [bandDefs{7,2}:5:bandDefs{7,3}];
 
 freqs2use = [f_theta f_alpha1 f_alpha2 f_gamma1 f_gamma2];
+
 nofreqs = length(freqs2use);
 res_dwpli = zeros(combo_size, nofreqs);
 res_chan = cell(combo_size,1);
@@ -102,7 +103,7 @@ pnts = EEG.pnts;
 trials = EEG.trials;
 labels = {EEG.chanlocs.labels};
 
-parfor ci = 1 : combo_size % parfor
+for ci = 1 : combo_size % parfor
 
     channel1 = combo_left{ci};
     channel2 = combo_right{ci};
@@ -130,7 +131,7 @@ parfor ci = 1 : combo_size % parfor
     wpli    = zeros(length(freqs2use),EEG.trials);
     dwpli   = zeros(length(freqs2use),EEG.trials);
 
-    for fi=1:length(freqs2use)
+    parfor fi=1:length(freqs2use)
 
         % create wavelet and take FFT
         s = num_cycles(fi)/(2*pi*freqs2use(fi));
@@ -175,6 +176,7 @@ parfor ci = 1 : combo_size % parfor
     res_chan2{ci,1} = channel2;
 end
 freq_labels = arrayfun(@(x) ['F',strrep(num2str(x),'.','_')], freqs2use, 'uni',0);
+% freq_labels = arrayfun(@(x) ['F',num2str(x)], 1:numel(freqs2use), 'uni',0);
 % freq_labels = arrayfun(@(x) sprintf('F%d',x*10), freqs2use, 'uni',0); % sprintf('F%1.1f',x)
 summary_table = [table(string(repmat(EEG.setname, combo_size,1)), res_chan, res_chan2, 'VariableNames',{'eegid','chan1','chan2'}) ...
    array2table(res_dwpli,'VariableNames',freq_labels)];

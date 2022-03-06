@@ -17,6 +17,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     %     'outputdir'   - default output for tmp files; default tempdir
     %     'nettype'     - define nettype, default EGI128
     %     'computeheadmodel' - recalculate headmodel (check parameters)
+    %     'headmodelfile' - specify headmodel template
     %     'deletetempfiles' - delete temporary cont. files default:false.
     %     'usepreexisting' - looks for preexisting files in output dir;
     %                       default: false
@@ -63,6 +64,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     defaultDeleteTempfiles = false;
     defaultUsePreexisting = false;
     defaultResetProtocol = false;
+    defaultHeadModelFile = 'Empty';
 
     % MATLAB built-in input validation
     ip = inputParser();
@@ -74,6 +76,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     addParameter(ip, 'confirmplot', defaultConfirmPlot, @logical);
     addParameter(ip, 'saveset', defaultSaveSet, @logical);
     addParameter(ip, 'computeheadmodel', defaultComputeHeadModel, @logical);
+    addParameter(ip, 'headmodelfile', defaultHeadModelFile, @ischar);
     addParameter(ip, 'deletetempfiles', defaultDeleteTempfiles, @logical);
     addParameter(ip, 'usepreexisting', defaultUsePreexisting, @logical);
     addParameter(ip, 'resetprotocol', defaultResetProtocol, @logical);
@@ -83,7 +86,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % BRAINSTORM
     if ~ip.Results.headless
         if brainstorm('status'), warning('GUI Mode: Brainstorm Already Running.')
-        else
+        else 
             error('Please start Brainstorm or Turn on Server Mode (''headless'', true)');
         end
     end
@@ -153,7 +156,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
 
     % Load specific head models
     net_index = selectBstDefaults(chanInfoStruct);
-    source_nettype_headmodel = fullfile(tempdir, openmeeg_file);
+    source_nettype_headmodel = ip.Results.headmodelfile; % fullfile(tempdir, openmeeg_file);
     if ~isfile(source_nettype_headmodel)
         error("No head model available, please download (http://www.dropbox.com/s/0m8oqrnlzodfj2n/headmodel_surf_openmeeg.mat?dl=1).");
     else

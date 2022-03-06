@@ -1,138 +1,154 @@
 function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
-    % eeg_htpCalcChirpItcErsp() - calculate ITC and single trial power (ERSP)
-    %      from epoched ERP data. Original code designed for auditory chirp
-    %      presentation.
-    %      Note: newtimef() is a legacy EEGLAB function that is highly
-    %      dependent on EEGLAB timefreq.m which is frequently updated. Future
-    %      version of this code will embed relevant itc/ersp functions.
-    %
-    % Usage:
-    %    >> [ EEG ] = eeg_htpCalcChirpItcErsp( EEG )
-    %
-    % Require Inputs:
-    %     EEG       - EEGLAB Structure
-    %
-    % Function Specific Inputs:
-    %     'option1' - description
-    %
-    % Outputs:
-    %     EEG       - EEGLAB Structure with modified .etc.htp field
-    %     results   - etc.htp results structure or customized
-    %
-    %  This file is part of the Cincinnati Visual High Throughput Pipeline,
-    %  please see http://github.com/cincibrainlab
-    %
-    %  Contact: kyle.cullion@cchmc.org
+% eeg_htpCalcChirpItcErsp() - calculate ITC and single trial power (ERSP)
+%      from epoched ERP data. Original code designed for auditory chirp
+%      presentation.
+%      Note: newtimef() is a legacy EEGLAB function that is highly
+%      dependent on EEGLAB timefreq.m which is frequently updated. Future
+%      version of this code will embed relevant itc/ersp functions.
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpCalcChirpItcErsp( EEG )
+%
+% Require Inputs:
+%     EEG       - EEGLAB Structure
+%
+% Function Specific Inputs:
+%     'option1' - description
+%
+% Outputs:
+%     EEG       - EEGLAB Structure with modified .etc.htp field
+%     results   - etc.htp results structure or customized
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 
-    timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
-    functionstamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
-    % Inputs: Function Specific
-    % publication parameters: Ethridge et al. 2019
-    defaultTLimits = [-500 2750];
-    defaultFLimits = [2 110];
-    defaultTimesOut = 250;
-    defaultCycles = [1 30];
-    defaultWinSize = 100;
-    defaultNFreqs = 109;
-    defaultSourceOn = false;
-    defaultEmptyEEG = true;
-    defaultAmpThreshold = 120;
+% Inputs: Function Specific
+% publication parameters: Ethridge et al. 2019
+defaultTLimits = [-500 2750];
+defaultFLimits = [2 110];
+defaultTimesOut = 250;
+defaultCycles = [1 30];
+defaultWinSize = 100;
+defaultNFreqs = 109;
+defaultSourceOn = false;
+defaultEmptyEEG = true;
+defaultAmpThreshold = 120;
+defaultByChannel = false;
 
-    % Inputs: Common across Visual HTP functions
-    defaultOutputDir = tempdir;
+% Inputs: Common across Visual HTP functions
+defaultOutputDir = tempdir;
 
-    % MATLAB built-in input validation
-    ip = inputParser();
-    addRequired(ip, 'EEG', @isstruct);
-    addParameter(ip, 'tlimits', defaultTLimits, @isvector);
-    addParameter(ip, 'flimits', defaultFLimits, @isvector);
-    addParameter(ip, 'cycles', defaultCycles, @isvector);
-    addParameter(ip, 'timesout', defaultTimesOut, @isinteger);
-    addParameter(ip, 'winsize', defaultWinSize, @isinteger);
-    addParameter(ip, 'nfreqs', defaultNFreqs, @isinteger);
-    addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
-    addParameter(ip, 'sourceOn', defaultSourceOn, @logical);
-    addParameter(ip, 'emptyEEG', defaultEmptyEEG, @logical)
-    addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+% MATLAB built-in input validation
+ip = inputParser();
+addRequired(ip, 'EEG', @isstruct);
+addParameter(ip, 'tlimits', defaultTLimits, @isvector);
+addParameter(ip, 'flimits', defaultFLimits, @isvector);
+addParameter(ip, 'cycles', defaultCycles, @isvector);
+addParameter(ip, 'timesout', defaultTimesOut, @isinteger);
+addParameter(ip, 'winsize', defaultWinSize, @isinteger);
+addParameter(ip, 'nfreqs', defaultNFreqs, @isinteger);
+addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
+addParameter(ip, 'sourceOn', defaultSourceOn, @islogical);
+addParameter(ip, 'emptyEEG', defaultEmptyEEG, @islogical)
+addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+addParameter(ip, 'byChannel', defaultByChannel, @islogical)
 
-    parse(ip, EEG, varargin{:});
 
-    outputdir = ip.Results.outputdir;
+parse(ip, EEG, varargin{:});
 
-    % base output file can be modified with strrep()
-    outputfile = fullfile(outputdir, [functionstamp '_' EEG.setname '_' timestamp '.mat']);
+outputdir = ip.Results.outputdir;
 
-    % START: Signal Processing
+% base output file can be modified with strrep()
+outputfile = fullfile(outputdir, [functionstamp '_' EEG.setname '_' timestamp '.mat']);
 
-    % create critical values correction
-    for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
+% START: Signal Processing
 
-    if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
+% create critical values correction
+for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
 
-    % amplitude based artifact rejection
-    amp_threshold = ip.Results.ampThreshold;
-    bad_trial_idx = [];
-    bad_trial_count = 0;
+if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
-    for i = 1:EEG.trials
+% amplitude based artifact rejection
+amp_threshold = ip.Results.ampThreshold;
+bad_trial_idx = [];
+bad_trial_count = 0;
 
-        trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
-        trial_index = i;
+for i = 1:EEG.trials
 
-        if any(any(trial_amplitude > amp_threshold))
-            bad_trial_count = bad_trial_count +1;
-            bad_trial_idx(bad_trial_count) = trial_index;
-            bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
-        end
+    trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
+    trial_index = i;
 
+    if any(any(trial_amplitude > amp_threshold))
+        bad_trial_count = bad_trial_count +1;
+        bad_trial_idx(bad_trial_count) = trial_index;
+        bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
     end
 
-    if ~isempty(bad_trial_idx)
-        EEG = pop_select(EEG, 'notrial', bad_trial_idx);
-        disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
-    end
+end
 
-    % define ROI of auditory cortex projection
-    chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
-                        'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
-                            'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
-                            'E7', 'E106'};
+if ~isempty(bad_trial_idx)
+    EEG = pop_select(EEG, 'notrial', bad_trial_idx);
+    disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
+end
 
-    dksource_labels = {EEG.chanlocs.labels};
-    chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
-    chirp_dksource_labels = dksource_labels(chirp_dksource_labels_idx);
+% define ROI of auditory cortex projection
+chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
+    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
+    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
+    'E7', 'E106'};
 
-    if ip.Results.sourceOn
-        chirp_sensors = chirp_dksource_labels;
-    else
-        if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
-        chirp_sensors = chirp_electrode_labels;
-        chan_label = "Frontal";
-    end
+dksource_labels = {EEG.chanlocs.labels};
+chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
+chirp_dksource_labels = dksource_labels(chirp_dksource_labels_idx);
 
-    sensoridx = cell2mat(cellfun(@(x) find(strcmpi(x, {EEG.chanlocs.labels})), ...
-        chirp_sensors, 'uni', 0));
+if ip.Results.sourceOn
+    chirp_sensors = chirp_dksource_labels;
+else
+    if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
+    chirp_sensors = chirp_electrode_labels;
+    chan_label = "Frontal";
+end
 
-    % define analysis parameters
+sensoridx = cell2mat(cellfun(@(x) find(strcmpi(x, {EEG.chanlocs.labels})), ...
+    chirp_sensors, 'uni', 0));
+
+tlimits = ip.Results.tlimits;
+flimits = ip.Results.flimits; % changed from 120 to 110 - LAD 1/19/22
+timesout = ip.Results.timesout;
+cycles = ip.Results.cycles;
+winsize = ip.Results.winsize;
+nfreqs = ip.Results.nfreqs; % changed from 119 to 109 - LAD 1/19/22
+
+Fs = EEG.srate;
+trials = EEG.trials;
+EEG.subject = EEG.setname;
+
+% newtimef() - Return estimates and plots of mean event-related (log) spectral
+% perturbation (ERSP) and inter-trial coherence (ITC) events across
+% event-related trials (epochs) of a single input channel time series.
+
+% define analysis parameters
+if ip.Results.byChannel
+    data = EEG.data;
+else
     data = mean(EEG.data(sensoridx, :, :));
-    tlimits = ip.Results.tlimits;
-    flimits = ip.Results.flimits; % changed from 120 to 110 - LAD 1/19/22
-    timesout = ip.Results.timesout;
-    cycles = ip.Results.cycles;
-    winsize = ip.Results.winsize;
-    nfreqs = ip.Results.nfreqs; % changed from 119 to 109 - LAD 1/19/22
+end
 
-    Fs = EEG.srate;
-    trials = EEG.trials;
-    EEG.subject = EEG.setname;
+for ci = 1 : size(data,1)
+    datax = squeeze(data(ci,:,:));
+    if ip.Results.byChannel
+        channame = dksource_labels{ci};
+    else
+        channame = "Average";
+    end
 
-    % newtimef() - Return estimates and plots of mean event-related (log) spectral
-    % perturbation (ERSP) and inter-trial coherence (ITC) events across
-    % event-related trials (epochs) of a single input channel time series.
-
-    [ersp1, itc, ~, t_s, f_s] = newtimef(double(data), ...
-    EEG.pnts, ... % frames
+    [ersp1, itc, ~, t_s, f_s] = newtimef(double(datax), ...
+        EEG.pnts, ... % frames
         tlimits, ... %tlimits
         Fs, ... %Fs
         cycles, ... % varwin (cycles)
@@ -167,54 +183,63 @@ function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
 
     roi.ITC40_hz = {findHz(30, 35); findHz(35, 40); findHz(40, 45); findHz(45, 50); findHz(50, 55)};
     roi.ITC40_ms = {findTimes(650, 850); findTimes(750, 950); findTimes(850, 1050); ...
-                    findTimes(950, 1150); findTimes(1050, 1250)};
+        findTimes(950, 1150); findTimes(1050, 1250)};
 
     roi.ITC80_hz = {find(f_s >= 70 & f_s <= 100)};
     roi.ITC80_ms = {find(t_s >= 1390 & t_s <= 1930)};
 
     % Summary Functions
     computeMeanERSP = @(roi_hz) sum(cellfun(@(hz) mean2(ersp1(hz, :)), ...
-    roi_hz)) / numel(roi_hz);
+        roi_hz)) / numel(roi_hz);
 
     computeMeanITC = @(roi_hz, roi_ms) sum(cellfun(@(hz, ms) mean2(corrected_itc(hz, ms)), ...
         roi_hz, roi_ms)) / numel(roi_hz);
 
     csvRow = { ...
-            EEG.subject ...
-            EEG.trials ...
-            numel(bad_trial_idx) ...
-            computeMeanERSP(roi.ERSP_gamma_hz) ...
-            computeMeanERSP(roi.ERSP_gamma1_hz) ...
-            computeMeanERSP(roi.ERSP_gamma2_hz) ...
-            computeMeanERSP(roi.ERSP_alpha_hz) ...
-            computeMeanITC(roi.ITC40_hz_og, roi.ITC40_ms_og) ...
-            computeMeanITC(roi.ITC40_hz, roi.ITC40_ms) ...
-            computeMeanITC(roi.ITC80_hz, roi.ITC80_ms) ...
-            computeMeanITC(roi.ItcOnset_hz, roi.ItcOnset_ms) ...
-            computeMeanITC(roi.ItcOffset_hz, roi.ItcOffset_ms) ...
+        EEG.subject ...
+        EEG.trials ...
+        channame ...
+        numel(bad_trial_idx) ...
+        computeMeanERSP(roi.ERSP_gamma_hz) ...
+        computeMeanERSP(roi.ERSP_gamma1_hz) ...
+        computeMeanERSP(roi.ERSP_gamma2_hz) ...
+        computeMeanERSP(roi.ERSP_alpha_hz) ...
+        computeMeanITC(roi.ITC40_hz_og, roi.ITC40_ms_og) ...
+        computeMeanITC(roi.ITC40_hz, roi.ITC40_ms) ...
+        computeMeanITC(roi.ITC80_hz, roi.ITC80_ms) ...
+        computeMeanITC(roi.ItcOnset_hz, roi.ItcOnset_ms) ...
+        computeMeanITC(roi.ItcOffset_hz, roi.ItcOffset_ms) ...
         };
 
-    if ip.Results.emptyEEG, EEG.data = []; end
+    chanCsvRows{ci} = csvRow;
+    chanItc{ci} = corrected_itc;
+    chanErsp{ci} = ersp1;
+    disp(channame);
+end
 
-    csvTable = cell2table(csvRow, "VariableNames", {'eegid', 'trials', 'rejtrials', 'ersp_gamma', 'ersp_gamma1', ...
-                                    'ersp_gamma2', ...
-                                    'ersp_alpha', 'itc40_og', 'itc40', 'itc80', 'itconset', 'itcoffset'});
+csvRow = vertcat(chanCsvRows{:});
 
-    % END: Signal Processing
+if ip.Results.emptyEEG, EEG.data = []; end
 
-    % QI Table
-    qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid', 'scriptname', 'timestamp'});
+csvTable = cell2table(csvRow, "VariableNames", {'eegid', 'trials', 'chan', 'rejtrials', 'ersp_gamma', 'ersp_gamma1', ...
+    'ersp_gamma2', ...
+    'ersp_alpha', 'itc40_og', 'itc40', 'itc80', 'itconset', 'itcoffset'});
 
-    % Outputs:
-    EEG.etc.htp.chirp.itc1 = corrected_itc;
-    EEG.etc.htp.chirp.ersp1 = ersp1;
-    EEG.etc.htp.chirp.t_s = t_s;
-    EEG.etc.htp.chirp.f_s = f_s;
-    EEG.etc.htp.chirp.summary_table = csvTable;
-    EEG.etc.htp.chirp.qi_table = qi_table;
-    EEG.etc.htp.chirp.trials = EEG.trials;
-    EEG.etc.htp.chirp.amp_rej_trials = num2str(bad_trial_idx);
-    EEG.etc.htp.chirp.amp_threshold = amp_threshold;
-    results = EEG.etc.htp.chirp;
+% END: Signal Processing
+
+% QI Table
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid', 'scriptname', 'timestamp'});
+
+% Outputs:
+EEG.vhtp.eeg_htpCalcChirpItcErsp.itc1 = cat(3,chanItc{:});
+EEG.vhtp.eeg_htpCalcChirpItcErsp.ersp1 = cat(3,chanErsp{:});
+EEG.vhtp.eeg_htpCalcChirpItcErsp.t_s = t_s;
+EEG.vhtp.eeg_htpCalcChirpItcErsp.f_s = f_s;
+EEG.vhtp.eeg_htpCalcChirpItcErsp.summary_table = csvTable;
+EEG.vhtp.eeg_htpCalcChirpItcErsp.qi_table = qi_table;
+EEG.vhtp.eeg_htpCalcChirpItcErsp.trials = EEG.trials;
+EEG.vhtp.eeg_htpCalcChirpItcErsp.amp_rej_trials = num2str(bad_trial_idx);
+EEG.vhtp.eeg_htpCalcChirpItcErsp.amp_threshold = amp_threshold;
+results =  EEG.vhtp.eeg_htpCalcChirpItcErsp;
 
 end

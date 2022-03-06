@@ -47,8 +47,9 @@ defaultGpu = 0;
 defaultOutputDir = tempdir;
 defaultBandDefs = {
     'theta', 3.5, 7.5;
-    'alpha1', 8, 10;
-    'alpha2', 10.5, 12.5;
+    'alpha', 8, 13;
+    %'alpha1', 8, 10;
+    %'alpha2', 10.5, 12.5;
     'beta', 13, 30;
     'gamma1', 30, 55;
     'gamma2', 65, 80;
@@ -56,7 +57,7 @@ defaultBandDefs = {
 defaultUseClassLabels = false;
 defaultClassLabels = {'Hit','Miss'};
 defaultFindMethod = 1;
-defaultFVec = [2:80];
+defaultFVec = [2:2:80];
 defaultVis = true;
 defaultWriteCsvFile = true;
 
@@ -138,7 +139,6 @@ vis = ip.Results.vis;
 % Spectral Events #3: Run Analysis                            --
 %---------------------------------------------------------------
 
-
 specEvents = []; TFRs =[]; timeseries = [];
 chanSpectralEvents = []; chanTFRs = []; chantimeseries = [];
 
@@ -163,8 +163,8 @@ for ci = 1 : numel(channames)
 
        if vis
            suffix = [curBand '_' curchan];
-           imgfile1 = fullfile(tempdir, strrep(EEG.filename, '.set', ['_SE_TFR_' suffix '.png']));
-           imgfile2 = fullfile(tempdir, strrep(EEG.filename, '.set', ['_SE_event_' suffix '.png']));
+           imgfile1 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_TFR_' suffix '.png']));
+           imgfile2 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_event_' suffix '.png']));
            saveas(1, imgfile1);
            saveas(2, imgfile2);
            close all;
@@ -276,7 +276,7 @@ qi_table = [qi_table qi_temp];
 EEG.vhtp.eeg_htpCalcSpectralEvents.summary_table = csvtable;
 EEG.vhtp.eeg_htpCalcSpectralEvents.qi_table = qi_table;
 
-matsavefile = fullfile(tempdir, [functionstamp '_' strrep(EEG.filename, '.set', ['_SE_all' timestamp '.mat'])]);
+matsavefile = fullfile(ip.Results.outputdir, [functionstamp '_' strrep(EEG.filename, '.set', ['_SE_all' timestamp '.mat'])]);
 save(matsavefile, 'chanSpectralEvents' );
 disp(['CSV File:' matsavefile]);
 
