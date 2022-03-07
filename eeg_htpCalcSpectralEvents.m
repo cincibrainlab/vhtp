@@ -61,6 +61,7 @@ defaultFVec = [2:2:80];
 defaultVis = false;
 defaultWriteCsvFile = true;
 defaultDuration = 60;
+defaultRegions = {'RF','LF','RPF','LPF', 'RT', 'LT'};
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -75,6 +76,7 @@ addParameter(ip, 'fVec', defaultFVec, @isvector);
 addParameter(ip, 'vis', defaultVis, @islogical);
 addParameter(ip, 'writeCsvFile', defaultWriteCsvFile, @islogical);
 addParameter(ip, 'duration', defaultDuration);
+addParameter(ip, 'selectRegions', defaultRegions);
 
 parse(ip, EEG, varargin{:});
 
@@ -131,8 +133,8 @@ else
     sig = [];
     classLabels = [];
     for ci = channames
-            sig.(ci{1}) = se_exportTrialsByChanName(EEG, ci{1}, EEG.pnts);
-            classLabels.(ci{1}) = 1;
+        sig.(ci{1}) = se_exportTrialsByChanName(EEG, ci{1}, EEG.pnts);
+        classLabels.(ci{1}) = 1;
     end
 end
 
@@ -185,48 +187,56 @@ c('RP') = {'inferiorparietalR' 'precuneusR' 'superiorparietalR' 'supramarginalR'
 c('LC') = {'paracentralL' 'postcentralL' 'precentralL'}; % 3
 c('RC') = {'paracentralR' 'postcentralR' 'precentralR'};
 
-selectedSource = [c('RF') c('LF') c('RPF') c('LPF')]
-selectedSource =    {'superiorfrontalR'};
-   %% 
+runSources = {};
+for ssi = 1 : numel(ip.Results.selectSources)
+    runSources = [runSources c(selectSources{ssi})];
+end
+
+%%
 for ci = 1 : numel(channames)
     curchan = channames{ci}; % current channel
-
+    
     % logic for running selected channels only (i.e. per region)
     % TBD
-    if contains(curchan, selectedSource)
-         disp(curchan);
-    for bi = 1 : numel(bandNames)
-       curBand = bandNames{bi};
-       disp(curBand);
-       eventBand = bandIntervals.(curBand);
-
-       sigX = double(sig.(curchan));
-       clX = classLabels.(curchan);
-
-       [specEvents.(curBand), ~,~] = fx_spectralevents(eventBand,fVec, ...
-           Fs,findMethod, vis, sigX, ...
-           clX);
-       
-       if isempty(specEvents.(curBand).TrialSummary)
-specEvents.(curBand).TrialSummary = "Missing";
-specEvents.(curBand).Events = "Missing";
-specEvents.(curBand).IEI = "Missing";
-
-       end
-       if vis
-           suffix = [curBand '_' curchan];
-           imgfile1 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_TFR_' suffix '.png']));
-           imgfile2 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_event_' suffix '.png']));
-           saveas(1, imgfile1);
-           saveas(2, imgfile2);
-           close all;
-       end
+    if contains(curchan, runSources)
+        disp(curchan);
+        for bi = 1 : numel(bandNames)
+            curBand = bandNames{bi};
+            disp(curBand);
+            eventBand = bandIntervals.(curBand);
+            
+            sigX = double(sig.(curchan));
+            clX = classLabels.(curchan);
+            
+            [specEvents.(curBand), ~,~] = fx_spectralevents(eventBand,fVec, ...
+                Fs,findMethod, vis, sigX, ...
+                clX);
+            
+            if isempty(specEvents.(curBand).TrialSummary)
+                
+                specEvents.(curBand).se_TrialSummary.TrialSummary.eventnumber = 0;
+                specEvents.(curBand).se_IEI.IEI_all = 0;
+                specEvents.(curBand).se_TrialSummary.TrialSummary.meaneventduration = 0;
+                specEvents.(curBand).se_TrialSummary.TrialSummary.meaneventpower = 0;
+                specEvents.(curBand).se_TrialSummary.TrialSummary.coverage = 0;
+                specEvents.(curBand).se_TrialSummary.TrialSummary.meaneventFspan = 0;
+                specEvents.(curBand).Events = 0;
+            end
+            
+            if vis
+                suffix = [curBand '_' curchan];
+                imgfile1 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_TFR_' suffix '.png']));
+                imgfile2 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_event_' suffix '.png']));
+                saveas(1, imgfile1);
+                saveas(2, imgfile2);
+                close all;
+            end
+        end
+        
+        chanSpectralEvents.(curchan) = specEvents;
     end
- 
-    chanSpectralEvents.(curchan) = specEvents;
-       end
     %chanTFRs.(ci{1}) = TFRs;
-    %chantimeseries.(ci{1}) = timeseries;  
+    %chantimeseries.(ci{1}) = timeseries;
 end
 
 %% Create CSV
@@ -239,23 +249,22 @@ for ci = fieldnames(chanSpectralEvents)'
     for bi = fieldnames(se_tmp)'
         eventBand = bi{1};
         se_band_tmp = se_tmp.(eventBand);
-
+        
         se_TrialSummary = se_band_tmp.("TrialSummary");
         se_Events = se_band_tmp.("Events");
         se_IEI = se_band_tmp.("IEI");
-
+        
         % create CSV
         csvout{count, 1} = EEG.setname;
         csvout{count, 2} = bi{1};
         csvout{count, 3} = ci{1};
         csvout{count, 4} = se_TrialSummary.NumTrials;
-
+        
         features = {'eventnumber_median','eventnumber_mean','iei_mean','iei_median',...
             'eventduration_mean', 'noeventtrials_percent', 'eventpower_median','eventpower_mean', ...
             'trialpower_median','trialpower_mean', 'coverage_mean', 'fspan_mean'}; %Fields within specEv_struct
-
+        
         for fi = features
-
             switch fi{1}
                 case 'eventnumber_median'
                     csvout{count, 5} = ...
@@ -294,15 +303,15 @@ for ci = fieldnames(chanSpectralEvents)'
                     csvout{count, 16} = ...
                         sum(se_TrialSummary.TrialSummary.meaneventFspan) / nnz(se_TrialSummary.TrialSummary.meaneventFspan);
             end
-
+            
         end
         count = count + 1;
     end
 end
 
 columnNames = {'eegid','channel','band','notrials','eventnumber_median','eventnumber_mean','iei_mean','iei_median',...
-               'eventduration_mean', 'noeventtrials_percent', 'eventpower_median','eventpower_mean', ...
-               'trialpower_median','trialpower_mean', 'coverage_mean', 'fspan_mean'};
+    'eventduration_mean', 'noeventtrials_percent', 'eventpower_median','eventpower_mean', ...
+    'trialpower_median','trialpower_mean', 'coverage_mean', 'fspan_mean'};
 csvtable = cell2table(csvout, "VariableNames", columnNames);
 
 
@@ -345,8 +354,8 @@ end
 
 function mat = se_exportTrialsByChanName( EEG, channame, samplesPerTrial)
 
-    chanIdx = strcmp(channame, {EEG.chanlocs.labels});
-    tmpmat = EEG.data(chanIdx, :);
-    mat = reshape(tmpmat, samplesPerTrial, []);
+chanIdx = strcmp(channame, {EEG.chanlocs.labels});
+tmpmat = EEG.data(chanIdx, :);
+mat = reshape(tmpmat, samplesPerTrial, []);
 
 end
