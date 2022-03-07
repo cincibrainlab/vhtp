@@ -146,6 +146,12 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             chanInfoStruct.chanNumber = '128';
             chanInfoStruct.chanLabelFormat = 'E1';
             openmeeg_file = 'headmodel_surf_openmeeg_EGI128.mat';
+        case 'EGI32'
+            chanInfoStruct.headModel = 'ICBM152';
+            chanInfoStruct.brand = 'GSN';
+            chanInfoStruct.chanNumber = '32';
+            chanInfoStruct.chanLabelFormat = 'E1';
+            openmeeg_file = 'headmodel_surf_openmeeg_EGI32.mat';
         case 'BioSemi64' %Biosemi 64 A1
             chanInfoStruct.headModel = 'ICBM152';
             chanInfoStruct.brand = 'BioSemi';
@@ -188,8 +194,8 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     cEEG = epoch2cont(EEG);
 
     % temporary storage for continuous data
-    tempContFile = fullfile(tempdir, EEG.filename);
-    pop_saveset(cEEG, tempContFile);
+    tempContFile = fullfile(ip.Results.outputdir, EEG.filename);
+    pop_saveset(cEEG, 'filename', EEG.filename, 'filepath', ip.Results.outputdir);
 
     filetype = 'EEG-EEGLAB';
     sFile = bst_process('CallProcess', ...

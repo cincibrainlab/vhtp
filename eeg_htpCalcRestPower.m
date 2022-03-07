@@ -39,7 +39,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     % Inputs: Function Specific
     defaultGpu = 0;
-    defaultDuration = 80;
+    defaultDuration = 60;
     defaultOffset = 0;
     defaultWindow = 2;
 
@@ -74,9 +74,6 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     win = ceil(ip.Results.window * fs); % window
     nfft = win; % FFT points--
     noverlap = .5 * win; % points overlap
-    samples = t * fs; % if using time, number of samples
-    start_sample = ip.Results.offset * fs; if start_sample == 0, start_sample = 1; end
-    total_samples = EEG.pnts * EEG.trials;
     channo = EEG.nbchan;
     EEG.subject = EEG.setname;
 
@@ -85,6 +82,10 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     % dataset validation
     % is size sufficient for duration and offset?
+    samples = t * fs; % if using time, number of samples
+    start_sample = ip.Results.offset * fs; if start_sample == 0, start_sample = 1; end
+    total_samples = EEG.pnts * EEG.trials;
+    
     if samples >= total_samples - start_sample
         samples = total_samples;
         start_samples = 1; % in samples

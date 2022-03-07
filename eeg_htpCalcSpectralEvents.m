@@ -58,8 +58,9 @@ defaultUseClassLabels = false;
 defaultClassLabels = {'Hit','Miss'};
 defaultFindMethod = 1;
 defaultFVec = [2:2:80];
-defaultVis = true;
+defaultVis = false;
 defaultWriteCsvFile = true;
+defaultDuration = 60;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -73,7 +74,7 @@ addParameter(ip, 'findMethod', defaultFindMethod, @isinteger);
 addParameter(ip, 'fVec', defaultFVec, @isvector);
 addParameter(ip, 'vis', defaultVis, @islogical);
 addParameter(ip, 'writeCsvFile', defaultWriteCsvFile, @islogical);
-
+addParameter(ip, 'duration', defaultDuration);
 
 parse(ip, EEG, varargin{:});
 
@@ -93,6 +94,21 @@ if ndims(EEG.data) > 2
     fprintf('eeg_htpCalcSpectralEvents: Trials present (%d pnts x %d trials)\n', EEG.pnts, EEG.trials)
 else
     warning('eeg_htpCalcSpectralEvents: No Trials Present. Please segment data.')
+end
+
+% Consistent Duration
+t = ip.Results.duration; % time in seconds
+fs = EEG.srate; % sampling rate
+samples = t * fs; % if using time, number of samples
+start_sample = 0 * fs; if start_sample == 0, start_sample = 1; end
+total_samples = EEG.pnts * EEG.trials;
+
+if samples >= total_samples - start_sample
+    samples = total_samples;
+    start_samples = 1; % in samples
+    warning("Insufficient Data, using max samples.")
+else
+    EEG = pop_select(EEG, 'trial', [1 : t / (EEG.pnts/ fs)]); % extract baseline
 end
 
 %---------------------------------------------------------------
@@ -143,12 +159,42 @@ specEvents = []; TFRs =[]; timeseries = [];
 chanSpectralEvents = []; chanTFRs = []; chantimeseries = [];
 
 bandNames = fieldnames(bandIntervals)';
+c = containers.Map;
+c('LT') = {'banksstsL' 'entorhinalL' 'fusiformL' 'inferiortemporalL' ...
+    'insulaL' 'middletemporalL' 'parahippocampalL' 'superiortemporalL' ...
+    'temporalpoleL' 'transversetemporalL'}; % 10
+c('RT') = {'banksstsR' 'entorhinalR' 'fusiformR' 'inferiortemporalR' ...
+    'insulaR' 'middletemporalR' 'parahippocampalR' 'superiortemporalR' ...
+    'temporalpoleR' 'transversetemporalR'};
+c('LL') = {'caudalanteriorcingulateL' 'isthmuscingulateL' ...
+    'posteriorcingulateL' 'rostralanteriorcingulateL'}; % 4
+c('RL') = {'caudalanteriorcingulateR' 'isthmuscingulateR' ...
+    'posteriorcingulateR' 'rostralanteriorcingulateR'};
+c('LF') = {'caudalmiddlefrontalL' 'parsopercularisL' 'parstriangularisL' ...
+    'rostralmiddlefrontalL' 'superiorfrontalL'}; % 5
+c('RF') = {'caudalmiddlefrontalR' 'parsopercularisR' 'parstriangularisR' ...
+    'rostralmiddlefrontalR' 'superiorfrontalR'};
+c('LO') = {'cuneusL' 'lateraloccipitalL' 'lingualL' 'pericalcarineL'}; % 4
+c('RO') = {'cuneusR' 'lateraloccipitalR' 'lingualR' 'pericalcarineR'};
+c('LPF') = {'frontalpoleL' 'lateralorbitofrontalL' ...
+    'medialorbitofrontalL' 'parsorbitalisL'}; % 4
+c('RPF') = {'frontalpoleR' 'lateralorbitofrontalR' ...
+    'medialorbitofrontalR' 'parsorbitalisR'};
+c('LP') = {'inferiorparietalL' 'precuneusL' 'superiorparietalL' 'supramarginalL'}; % 4
+c('RP') = {'inferiorparietalR' 'precuneusR' 'superiorparietalR' 'supramarginalR'};
+c('LC') = {'paracentralL' 'postcentralL' 'precentralL'}; % 3
+c('RC') = {'paracentralR' 'postcentralR' 'precentralR'};
+
+selectedSource = [c('RF') c('LF') c('RPF') c('LPF')]
+selectedSource =    {'superiorfrontalR'};
    %% 
 for ci = 1 : numel(channames)
     curchan = channames{ci}; % current channel
-    disp(curchan);
+
     % logic for running selected channels only (i.e. per region)
     % TBD
+    if contains(curchan, selectedSource)
+         disp(curchan);
     for bi = 1 : numel(bandNames)
        curBand = bandNames{bi};
        disp(curBand);
@@ -160,7 +206,13 @@ for ci = 1 : numel(channames)
        [specEvents.(curBand), ~,~] = fx_spectralevents(eventBand,fVec, ...
            Fs,findMethod, vis, sigX, ...
            clX);
+       
+       if isempty(specEvents.(curBand).TrialSummary)
+specEvents.(curBand).TrialSummary = "Missing";
+specEvents.(curBand).Events = "Missing";
+specEvents.(curBand).IEI = "Missing";
 
+       end
        if vis
            suffix = [curBand '_' curchan];
            imgfile1 = fullfile(ip.Results.outputdir, strrep(EEG.filename, '.set', ['_SE_TFR_' suffix '.png']));
@@ -170,7 +222,9 @@ for ci = 1 : numel(channames)
            close all;
        end
     end
+ 
     chanSpectralEvents.(curchan) = specEvents;
+       end
     %chanTFRs.(ci{1}) = TFRs;
     %chantimeseries.(ci{1}) = timeseries;  
 end

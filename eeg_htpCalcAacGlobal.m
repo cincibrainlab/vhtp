@@ -37,6 +37,8 @@ defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
     'gamma2', 65, 80; 'epsilon', 81, 120; };
 defaultGpu = 0;
 defaultSourceMode = false;
+defaultDuration = 60;
+
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -45,6 +47,8 @@ addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip, 'gpuon', defaultGpu, @islogical);
 addParameter(ip, 'sourcemode', defaultSourceMode, @islogical);
+addParameter(ip, 'duration', defaultDuration);
+
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -61,6 +65,14 @@ if ndims(EEG.data) > 2
     warning("Data is epoched. Converted to continuous.")
     EEG = epoch2cont(EEG);
     % EEG = eeg_regepochs(EEG, 'recurrence', 1);
+end
+
+% Consistent Duration
+totalTime = EEG.pnts / EEG.srate;
+if totalTime < ip.Results.duration
+        warning("Insufficient Data, using max samples.")
+else
+      EEG = pop_select(EEG, 'time', [EEG.xmin EEG.xmin+ip.Results.duration]); % extract baseline
 end
 
 if ip.Results.gpuon

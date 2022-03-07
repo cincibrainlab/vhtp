@@ -29,11 +29,16 @@ functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
+defaultGpu = 0;
+defaultDuration = 60;
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
+addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
+addParameter(ip, 'gpuon', defaultGpu, @islogical);
+addParameter(ip, 'duration', defaultDuration);
+
 parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 
 c = containers.Map;
@@ -64,10 +69,15 @@ c('RC') = {'paracentralR' 'postcentralR' 'precentralR'};
 
 tic;
 combos = combnk([c('LF') c('RF') c('LPF') c('RPF') c('LT') c('RT')]', 2); % 703x2
+combos = combnk([c('LF') c('RF') c('LPF') c('RPF')]', 2); % 703x2
+
 % combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique)
 % 2278x2
 
-EEG.data = gpuArray(EEG.data);
+if ip.Results.gpuon
+    warning('GPU Arrays Enabled.')
+    EEG.data = gpuArray(EEG.data);
+end
 
 combo_left = combos(:,1);
 combo_right = combos(:,2);
@@ -98,10 +108,31 @@ res_dwpli = zeros(combo_size, nofreqs);
 res_chan = cell(combo_size,1);
 res_chan2 = cell(combo_size,1);
 
+% Consistent Duration
+t = ip.Results.duration; % time in seconds
+fs = EEG.srate; % sampling rate
+samples = t * fs; % if using time, number of samples
+start_sample = 0 * fs; if start_sample == 0, start_sample = 1; end
+total_samples = EEG.pnts * EEG.trials;
+
+if samples >= total_samples - start_sample
+    samples = total_samples;
+    start_samples = 1; % in samples
+    warning("Insufficient Data, using max samples.")
+else
+    EEG = pop_select(EEG, 'trial', [1 : t / (EEG.pnts/ fs)]); % extract baseline
+end
+
+% EEG = pop_resample( EEG, 500 );
 srate = EEG.srate;
 pnts = EEG.pnts;
 trials = EEG.trials;
 labels = {EEG.chanlocs.labels};
+
+% dataset validation
+% is size sufficient for duration and offset?
+% Key Parameters
+
 
 for ci = 1 : combo_size % parfor
 
