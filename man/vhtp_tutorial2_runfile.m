@@ -69,20 +69,21 @@ writetable(eeg_htpCalcChirpItcErsp_summary_table, fullfile(myDatasetOuput, "eeg_
 % Spectral Events
 addpath("/srv/TOOLKITS/SpectralEvents");
 % Calculate chirp ITC
-EEGSECell = {};
-EEGPLCell = {};
-for fi = 1 : height(myFileListSource)
+%EEGSECell = {};
+%EEGPLCell = {};
+%%
+for fi = 53 : height(myFileListSource)
     %if fi == 1
 
     EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
     EEG = pop_select(EEG, 'time', [-500 0]); % extract baseline
     EEGSE = eeg_htpCalcSpectralEvents(EEG, 'outputdir', fullfile(myDatasetOuput, "SE"));
-    EEGPL = eeg_htpCalcPhaseLagFrontalTemporal(EEG, 'outputdir', fullfile(myDatasetOuput, "PL"));
+    % EEGPL = eeg_htpCalcPhaseLagFrontalTemporal(EEG, 'outputdir', fullfile(myDatasetOuput, "PL"));
     EEGSECell{fi} = EEGSE; %#ok<SAGROW> 
-    EEGPLCell{fi} = EEGPL;
+    % EEGPLCell{fi} = EEGPL;
     %end
 end
-
+%%
 
   [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( {EEG2,EEG2, EEG2}, 'singleplotOn')
   [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( {EEG2,EEG2, EEG2}, 'singleplot', true, 'groupmean', false)

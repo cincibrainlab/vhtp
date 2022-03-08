@@ -188,8 +188,8 @@ c('LC') = {'paracentralL' 'postcentralL' 'precentralL'}; % 3
 c('RC') = {'paracentralR' 'postcentralR' 'precentralR'};
 
 runSources = {};
-for ssi = 1 : numel(ip.Results.selectSources)
-    runSources = [runSources c(selectSources{ssi})];
+for ssi = 1 : numel(ip.Results.selectRegions)
+    runSources = [runSources c(ip.Results.selectRegions{ssi})];
 end
 
 %%
@@ -198,7 +198,7 @@ for ci = 1 : numel(channames)
     
     % logic for running selected channels only (i.e. per region)
     % TBD
-    if contains(curchan, runSources)
+    if contains(curchan, runSources) % 'caudalmiddlefrontalR') %'precentralR') %
         disp(curchan);
         for bi = 1 : numel(bandNames)
             curBand = bandNames{bi};
@@ -214,13 +214,16 @@ for ci = 1 : numel(channames)
             
             if isempty(specEvents.(curBand).TrialSummary)
                 
-                specEvents.(curBand).se_TrialSummary.TrialSummary.eventnumber = 0;
-                specEvents.(curBand).se_IEI.IEI_all = 0;
-                specEvents.(curBand).se_TrialSummary.TrialSummary.meaneventduration = 0;
-                specEvents.(curBand).se_TrialSummary.TrialSummary.meaneventpower = 0;
-                specEvents.(curBand).se_TrialSummary.TrialSummary.coverage = 0;
-                specEvents.(curBand).se_TrialSummary.TrialSummary.meaneventFspan = 0;
+                specEvents.(curBand).TrialSummary.TrialSummary.eventnumber = 0;
+                specEvents.(curBand).IEI.IEI_all = 0;
+                specEvents.(curBand).TrialSummary.TrialSummary.meaneventduration = 0;
+                specEvents.(curBand).TrialSummary.TrialSummary.meaneventpower = 0;
+                specEvents.(curBand).TrialSummary.TrialSummary.meanpower = 0;
+                specEvents.(curBand).TrialSummary.TrialSummary.coverage = 0;
+                specEvents.(curBand).TrialSummary.TrialSummary.meaneventFspan = 0;
                 specEvents.(curBand).Events = 0;
+                specEvents.(curBand).TrialSummary.NumTrials = 0;
+
             end
             
             if vis
