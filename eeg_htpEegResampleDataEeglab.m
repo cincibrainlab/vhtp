@@ -1,5 +1,20 @@
 function [EEG] = eeg_htpEegResampleDataEeglab(EEG,srate)
-
+% eeg_htpResampleDataEeglab() - Resample data to new specified sampling rate.
+%
+% Usage:
+%    >> [ EEG ] = eeg_ResampleDataEeglab( EEG, srate )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%     srate         - Number specifying new sampling rate
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 
 % MATLAB built-in input validation
 ip = inputParser();

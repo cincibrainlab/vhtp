@@ -1,6 +1,19 @@
 function [EEG] = eeg_htpEegRereferenceEeglab(EEG,varargin)
-%EEG_HTPEEGREREFERENCEEEGLAB Summary of this function goes here
-%   Detailed explanation goes here
+% eeg_htpEegRereferenceEeglab() - Rereference data to Average Reference.
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegRereferenceEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 
 ip = inputParser();
 ip.StructExpand = 0;

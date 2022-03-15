@@ -1,7 +1,33 @@
 function [EEG] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
-%EEG_HTPEEGELECTRODES Summary of this function goes here
-%   Detailed explanation goes here
-
+% eeg_htpEegRemoveChansEeglab - Mark channels for rejection and
+%                               interpolation
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegRemoveChansEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+% Function Specific Inputs:
+%   'type'  - Text for type of data to work with for use in trimming edge effects
+%             e.g. {'Resting, Event'}
+%             default: 'Resting'
+%
+%   'minimumduration' - Number to indicate a minimum duration of data
+%                       required for removal of channels and interpolation
+%                       default: 100
+%
+%   'threshold' - Number to utilize for threshold in automated detection/marking
+%                 of bad channels via various measures (probability, kurtosis,and spectrum) 
+%                 default: 5
+%   
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 
 defaultType = 'Resting';
 defaultMinimumDuration = 100;

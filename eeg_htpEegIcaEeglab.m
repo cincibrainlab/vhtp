@@ -1,7 +1,32 @@
 function [EEG] = eeg_htpEegIcaEeglab(EEG,varargin)
-%EEG_HTPEEGBINICA Summary of this function goes here
-%   Detailed explanation goes here
-
+% eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegIcaEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+% Function Specific Inputs:
+%   'method'  - Text representing method utilized for ICA
+%               e.g. {'binica', cudaica', 'runica'}
+%               default: 'binica'
+%
+%   'rank' - Number representing the data rank of input data
+%            default: getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))))
+%
+%   'icadir' - Directory to store weight-related output files generated
+%              during ICA
+%              default: fullfile(pwd,'icaweights')
+%               
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))));
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');

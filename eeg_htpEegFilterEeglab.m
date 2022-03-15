@@ -1,6 +1,96 @@
 function [EEG] = eeg_htpEegFilterEeglab(EEG,method,varargin)
-%EEG_HTPEEGFILTEREEGLAB Summary of this function goes here
-%   Detailed explanation goes here
+% eeg_htpEegFilterEeglab - Perform various filtering methods
+%                           (hipass, lowpass, notch, and cleanline) on data
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegFilterEeglab( EEG, method)
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+%    method  - Text representing method utilized for Filtering
+%
+% Function Specific Inputs:
+%   'lowpassfilt' - Number representing the higher edge frequency to use in 
+%                   lowpass bandpass filter 
+%                   default: 80
+%
+%   'hipassfilt' - Number representing the lower edge frequency to use in 
+%                  highpass bandpass filter 
+%                  default: .5
+%
+%   'notch' - Array of two numbers utilized for generating the line noise
+%             used in harmonics calculation for notch filtering
+%             default: [55 65]
+%
+%   'filtorder' - Number for filter order (filter length - 1)
+%                 default: 3300
+%
+%   'revfilt' - Numeric boolean to invert filter from bandpass to notch
+%               {0 -> bandpass, 1 -> notch}
+%               default: 0    
+%
+%   'plotfreqz' - Numeric boolean to indicate whether to plot filter's frequency and
+%                 phase response
+%                 default: 0
+%
+%   'minphase' - Boolean for minimum-phase converted causal filter
+%                default: false
+%
+%   'cleanlinebandwidth' - Number for width of spectral peak  for fixed
+%                          frequency
+%                          default: 2
+%
+%   'cleanlinechanlist' - Array of numbers for indices of channels to clean
+%                         default: [1:EEG.nbchan]
+%
+%   'cleanlinecomputepower' - Numeric boolean for visualization of the original and
+%                             cleaned spectra
+%                             default: 0
+%
+%   'cleanlinelinefreqs' - Array of numbers for line frequencies to remove
+%                          default: [60 120 180 240 300]
+%
+%   'cleanlinenormspectrum' - Numeric boolean to normalize log spectrum via
+%                             detrending
+%                             default: 0
+%
+%   'cleanlinep' - Number for p-value used for detection of sinusoid
+%                  default: 0.01
+%
+%   'cleanlinepad' - Number for padding of FFT
+%                    default: 2
+%
+%   'cleanlineplotfigures' - Numeric boolean for plotting figures
+%                            default: 0
+%
+%   'cleanlinescanforlines' - Numeric boolean for scanning for line noise 
+%                             default: 1
+%
+%   'cleanlinesigtype' - Text of signal type to clean 
+%                         e.g. {'Channels','Components'}
+%                        default: 'Channels'
+%               
+%   'cleanlinetau' - Number for smoothing factor of overlapping windows
+%                    default: 100
+%
+%   'cleanlineverb' - Numeric boolean for verbose output
+%                     default: 1
+%
+%   'cleanlinewinsize' - Number to set length of sliding window
+%                        default: 4
+%
+%   'cleanlinewinstep' - Number to determine amount of overlap of sliding
+%                        window
+%                        default: 4
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 
 defaultLoCutoff = 0.5;
 defaultHiCutoff = 80;

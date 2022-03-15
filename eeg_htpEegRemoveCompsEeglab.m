@@ -1,6 +1,24 @@
 function [EEG] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
-%EEG_HTPEEGCOMPREMOVALEEGLAB Summary of this function goes here
-%   Detailed explanation goes here
+% eeg_htpEegRemoveCompsEeglab - Select and reject/keep components from data
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegRemoveCompsEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+% Function Specific Inputs:
+%    'maxcomps'  - Number of maximum components to utilize
+%                  in thresholding and plotting
+%                  default: 24
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 
 defaultMaxComps = 24;
 

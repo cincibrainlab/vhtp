@@ -1,7 +1,26 @@
 function [EEG] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
-%EEG_HTPEEGINTERPOLATEEEGLAB Summary of this function goes here
-%   Detailed explanation goes here
-
+% eeg_htpEegInterpolateChansEeglab - Mark channels for rejection and
+%                               interpolation
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegInterpolateChansEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+% Function Specific Inputs:
+%   'method'  - Text representing method utilized for interpolation 
+%               of channels
+%               e.g. {'invdist'/'v4', 'spherical', 'spacetime'}
+%               default: 'spherical'
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 defaultMethod='spherical';
 
 ip = inputParser();
