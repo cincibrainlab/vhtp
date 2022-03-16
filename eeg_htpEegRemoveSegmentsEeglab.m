@@ -104,7 +104,7 @@ try
         else
             EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_removed_regions = '';
         end
-        EEG.vhtp.SegmentRemoval.completed=1;
+        EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.completed=1;
 
     catch
 

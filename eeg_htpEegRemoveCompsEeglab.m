@@ -190,7 +190,7 @@ try
     cdef = {'g','b'};
     carr = repmat(cdef,1, size(EEG.data,1));
     carr = carr(1:size(EEG.data, 1));
-    carr(EEG.vhtp.ChannelRemoval.proc_autobadchannel) = {'r'};
+    carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
 
     eegplot(EEG.data,'srate',EEG.srate,'winlength',10, ...
         'plottitle', ['View Time Series: '], ...
