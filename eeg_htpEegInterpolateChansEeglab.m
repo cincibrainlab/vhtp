@@ -29,11 +29,11 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method', defaultMethod,@ischar)
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.ChannelInterpolation.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.ChannelInterpolation.functionStamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegInterpolateChansEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
+EEG.vhtp.eeg_htpEegInterpolateChansEeglab.functionStamp = mfilename; % function name for logging/output
 
 try
-    badchannels = EEG.vhtp.ChannelRemoval.proc_badchans;
+    badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
 
     EEGtemp = EEG;  
 
@@ -41,18 +41,18 @@ try
 
         
         EEG = pop_interp(EEGtemp,badchannels,ip.Results.method);
-        EEG.vhtp.ChannelInterpolation.method = ip.Results.method;
-        EEG.vhtp.ChannelInterpolation.dataRank = size(double(EEG.data'),2) - length(badchannels);
+        EEG.vhtp.eeg_htpEegInterpolateChansEeglab.method = ip.Results.method;
+        EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank = size(double(EEG.data'),2) - length(badchannels);
 
-        EEG.vhtp.ChannelInterpolation.nbchan_post = EEG.vhtp.ChannelInterpolation.dataRank;
-        EEG.vhtp.ChannelInterpolation.proc_ipchans = badchannels;
+        EEG.vhtp.eeg_htpEegInterpolateChansEeglab.nbchan_post = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank;
+        EEG.vhtp.eeg_htpEegInterpolateChansEeglab.proc_ipchans = badchannels;
     else
 
-        EEG.vhtp.ChannelInterpolation.dataRank = EEG.nbchan;
-        EEG.vhtp.ChannelInterpolation.nbchan_post = EEG.vhtp.InterpolateChannels.dataRank;
+        EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank = EEG.nbchan;
+        EEG.vhtp.eeg_htpEegInterpolateChansEeglab.nbchan_post = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank;
 
     end
-    EEG.vhtp.ChannelInterpolation.complete=1;
+    EEG.vhtp.eeg_htpEegInterpolateChansEeglab.complete=1;
 
 catch error
     throw(error);

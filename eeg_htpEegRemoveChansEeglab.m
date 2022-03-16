@@ -45,18 +45,18 @@ addParameter(ip,'threshold',defaultThreshold,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.ChannelRemoval.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.ChannelRemoval.functionStamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegRemoveChansEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
+EEG.vhtp.eeg_htpEegRemoveChansEeglab.functionStamp = mfilename; % function name for logging/output
 
 try
    if EEG.xmax < ip.Results.minimumduration
-       EEG.vhtp.ChannelRemoval.completed = 0;
-       EEG.vhtp.ChannelRemoval.failReason = 'Data too short';
+       EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed = 0;
+       EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Data too short';
        return;
    else
        if strcmp(ip.Results.type,'Resting')
            EEG = trim_edges(EEG,10);
-           if isfield(EEG.vhtp.ChannelRemoval,'failReason')
+           if isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
                return;
            end
        end
@@ -64,12 +64,12 @@ try
        gui.position = [0.01 0.20 0.80 0.70];
        EEG=autobadchannel( EEG,ip.Results.threshold );
        
-       if ~isfield(EEG.vhtp.ChannelRemoval,'failReason')
+       if ~isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
        
            cdef = {'g','b'};
            carr = repmat(cdef,1, size(EEG.data,1));
            carr = carr(1:size(EEG.data, 1));
-           carr(EEG.vhtp.ChannelRemoval.proc_autobadchannel) = {'r'};
+           carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
 
            eegplot(EEG.data,'srate',EEG.srate,'winlength',10, ...
                 'plottitle', ['Mark and Remove Bad Channels '], ...
@@ -84,7 +84,7 @@ try
            chanlist = {EEG.chanlocs.labels};
 
 
-           EEG.vhtp.ChannelRemoval.proc_badchans =  '';
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans =  '';
 
            handle = gcf;
            handle.Units = 'normalized';
@@ -93,7 +93,7 @@ try
 
            popup = uicontrol(handle,'Tag', 'chanselect', 'Style', 'listbox', ...
                 'max',10,'min',1, ...
-                'String', chanlist , 'Value', EEG.vhtp.ChannelRemoval.proc_autobadchannel,...
+                'String', chanlist , 'Value', EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel,...
                 'Units', 'normalized', ...
                 'Position', [.05 0.15 0.035 .70], 'BackgroundColor', [0.94 0.94 0.94]);
 
@@ -117,8 +117,8 @@ try
 
 
            waitfor(gcf);
-           EEG.vhtp.ChannelRemoval.completed=1;
-           EEG.vhtp.ChannelRemoval.proc_badchans = proc_badchans;
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=1;
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
        end
    end
    
@@ -187,8 +187,8 @@ function EEG = trim_edges( EEG, time )
         EEGTMP = EEG;
         if time * 6 > EEG.xmax
             validtime = 0;
-            EEGTMP.vhtp.ChannelRemoval.completed=0;
-            EEGTMP.vhtp.ChannelRemoval.failReason = 'Data too short';
+            EEGTMP.vhtp.eeg_htpEegRemoveChansEeglab.completed=0;
+            EEGTMP.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Data too short';
         else
             cut1 = [0 time];
             EEGTMP = eeg_checkset(pop_select(EEGTMP, 'notime', cut1));
@@ -220,13 +220,13 @@ function EEG = autobadchannel( EEG, threshold )
     end
     zerochan = find_zeroed_chans( EEG.data ); if ~isempty( zerochan ), indelec{end+1} = zerochan'; end
     badchans = cell2mat(indelec(1:length(indelec)));
-    EEG.vhtp.ChannelRemoval.proc_autobadchannel = unique( badchans, 'stable' );
-    EEG.vhtp.ChannelRemoval.proc_badchans = unique( badchans, 'stable' );
+    EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel = unique( badchans, 'stable' );
+    EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = unique( badchans, 'stable' );
 
 
-    if length(EEG.vhtp.ChannelRemoval.proc_autobadchannel) > maxchannels
-        EEG.vhtp.ChannelRemoval.completed=0;
-        EEG.vhtp.ChannelRemoval.failReason = 'Max Reject Threshold Exceeded';
+    if length(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) > maxchannels
+        EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=0;
+        EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Max Reject Threshold Exceeded';
     end
 
 end

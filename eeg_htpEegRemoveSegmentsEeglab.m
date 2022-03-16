@@ -22,8 +22,8 @@ addRequired(ip, 'EEG', @isstruct);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.SegmentRemoval.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.SegmentRemoval.functionstamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
+EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.functionstamp = mfilename; % function name for logging/output
 
 try
     
@@ -78,7 +78,7 @@ try
         if ~isempty(rej)
 
             tmprej = eegplot2event(rej, -1);
-            EEG.vhtp.SegmentRemoval.proc_tmprej_cont = tmprej;
+            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_tmprej_cont = tmprej;
             [EEG,~] = eeg_eegrej(EEG,tmprej(:,[3 4]));
 
             events = EEG.event;
@@ -99,17 +99,17 @@ try
                 finalstr = [finalstr tmpstr];
             end
 
-            EEG.vhtp.SegmentRemoval.proc_removed_regions = finalstr;
+            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_removed_regions = finalstr;
 
         else
-            EEG.vhtp.SegmentRemoval.proc_removed_regions = '';
+            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_removed_regions = '';
         end
         EEG.vhtp.SegmentRemoval.completed=1;
 
     catch
 
-        EEG.vhtp.SegmentRemoval.completed=0;
-        EEG.vhtp.SegmentRemoval.failReason = 'Issue in actual removal steps';
+        EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.completed=0;
+        EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.failReason = 'Issue in actual removal steps';
 
     end
     

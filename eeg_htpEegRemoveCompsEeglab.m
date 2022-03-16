@@ -29,8 +29,8 @@ addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.ComponentRemoval.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.ComponentRemoval.functionStamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegRemoveCompsEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
+EEG.vhtp.eeg_htpEegRemoveCompsEeglab.functionStamp = mfilename; % function name for logging/output
 
 try
     scsize=get(0,'ScreenSize');
@@ -218,7 +218,7 @@ try
 
     uiwait(h.ep);
 
-    EEG.vhtp.ComponentRemoval.completed=1;
+    EEG.vhtp.eeg_htpEegRemoveCompsEeglab.completed=1;
 
 catch e
     throw(e)
@@ -332,7 +332,7 @@ function b1_callback(src, event)
     comps = findobj('tag', 'comp_entry');
 
     src.UserData.proc_removeComps = str2num(comps.String);
-    EEG.vhtp.ComponentRemoval.proc_removeComps = str2num(comps.String);
+    EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = str2num(comps.String);
     try
         EEG.etc.clean_channel_mask = true(1,EEG.nbchan);
         EEG.etc.clean_sample_mask = true(1,EEG.pnts * EEG.trials);
@@ -405,7 +405,7 @@ function EEG = compRemove(EEG,varargin)
 
             compIdx = varargin{1};
         else
-            compIdx = EEG.vhtp.ComponentRemoval.proc_removeComps;
+            compIdx = EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps;
         end
       
         try

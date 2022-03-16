@@ -21,8 +21,8 @@ addRequired(ip, 'EEG', @isstruct);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.Rereference.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.Rereference.functionstamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegRereferenceEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
+EEG.vhtp.eeg_htpEegRereferenceEeglab.functionstamp = mfilename; % function name for logging/output
 
 try
     %EEG.data = bsxfun( @minus, EEG.data, sum( EEG.data, 1 ) / ( EEG.nbchan + 1 ) );
@@ -31,8 +31,8 @@ try
     EEG.chanlocs(1,EEG.nbchan).labels = 'initialReference';
     EEG = pop_reref(EEG, []);
     EEG = pop_select( EEG,'nochannel',{'initialReference'});
-    EEG.vhtp.Rereference.method = 'Average';
-    EEG.vhtp.Rereference.completed = 1;
+    EEG.vhtp.eeg_htpEegRereferenceEeglab.method = 'Average';
+    EEG.vhtp.eeg_htpEegRereferenceEeglab.completed = 1;
     
 catch e
     throw(e)

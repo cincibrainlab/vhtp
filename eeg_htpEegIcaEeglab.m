@@ -40,8 +40,8 @@ addParameter(ip,'icadir',defaultIcaDir,@ischar);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.ICA.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.ICA.functionStamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegIcaEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
+EEG.vhtp.eeg_htpEegIcaEeglab.functionStamp = mfilename; % function name for logging/output
 
 try
     scriptdir = pwd;
@@ -65,9 +65,9 @@ try
     
     EEG = iclabel(EEG);
     
-    EEG.vhtp.ICA.completed = 1;
-    EEG.vhtp.ICA.method = ip.Results.method;
-    EEG.vhtp.ICA.rank = ip.Results.rank;
+    EEG.vhtp.eeg_htpEegIcaEeglab.completed = 1;
+    EEG.vhtp.eeg_htpEegIcaEeglab.method = ip.Results.method;
+    EEG.vhtp.eeg_htpEegIcaEeglab.rank = ip.Results.rank;
     cd(scriptdir)
     
 catch e

@@ -24,8 +24,8 @@ addRequired(ip, 'srate',@isnumeric);
 
 parse(ip,EEG,srate);
 
-EEG.vhtp.Resample.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.Resample.functionstamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpResampleDataEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
+EEG.vhtp.eeg_htpResampleDataEeglab.functionstamp = mfilename; % function name for logging/output
 
 try
     
@@ -35,8 +35,8 @@ try
     
     EEG = pop_resample( EEG, srate);
     
-    EEG.vhtp.Resample.complete=1;
-    EEG.vhtp.Resample.newSrate = srate;
+    EEG.vhtp.eeg_htpResampleDataEeglab.complete=1;
+    EEG.vhtp.eeg_htpResampleDataEeglab.newSrate = srate;
 catch e
     throw(e)
 end

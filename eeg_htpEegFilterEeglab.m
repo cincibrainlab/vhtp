@@ -144,27 +144,30 @@ addParameter(ip, 'cleanlinewinstep',defaultCleanlineWinStep,@isnumeric);
 
 parse(ip,EEG,method,varargin{:});
 
+EEG.vhtp.eeg_htpEegFilterEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
+EEG.vhtp.eeg_htpEegFilterEeglab.functionStamp = mfilename; % function name for logging/output
+
 try
     switch method
         case 'Highpass'
             
             EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [], 'filtorder', ip.Results.filtorder);
-            EEG.vhtp.Filter.completed = 1;
-            EEG.vhtp.Filter.locutoff = ip.Results.hipassfilt;
-            EEG.vhtp.Filter.filtorder   = ip.Results.filtorder;
-            EEG.vhtp.Filter.revfilt     = ip.Results.revfilt;
-            EEG.vhtp.Filter.plotfreqz   = ip.Results.plotfreqz;
-            EEG.vhtp.Filter.minphase    = ip.Results.minphase;
+            EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
+            EEG.vhtp.eeg_htpEegFilterEeglab.highpassLocutoff = ip.Results.hipassfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.highpassFiltorder   = ip.Results.filtorder;
+            EEG.vhtp.eeg_htpEegFilterEeglab.highpassRevfilt     = ip.Results.revfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.highpassPlotfreqz   = ip.Results.plotfreqz;
+            EEG.vhtp.eeg_htpEegFilterEeglab.highpassMinPhase    = ip.Results.minphase;
             
         case 'Lowpass'
                        
             EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt, 'filtorder', ip.Results.filtorder);
-            EEG.vhtp.Filter.completed = 1;
-            EEG.vhtp.Filter.hicutoff = ip.Results.lowpassfilt;
-            EEG.vhtp.Filter.filtorder   = ip.Results.filtorder;
-            EEG.vhtp.Filter.revfilt     = ip.Results.revfilt;
-            EEG.vhtp.Filter.plotfreqz   = ip.Results.plotfreqz;
-            EEG.vhtp.Filter.minphase    = ip.Results.minphase;
+            EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
+            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassHicutoff = ip.Results.lowpassfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassFiltorder   = ip.Results.filtorder;
+            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassRevfilt     = ip.Results.revfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassPlotfreqz   = ip.Results.plotfreqz;
+            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassMinPhase    = ip.Results.minphase;
             
         case 'Notch'
             
@@ -176,32 +179,33 @@ try
                     EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'filtorder', ip.Results.filtorder, 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
                 end
             end
-            EEG.vhtp.Filter.completed = 1;
-            EEG.vhtp.Filter.filtorder   = ip.Results.filtorder;
-            EEG.vhtp.Filter.revfilt     = ip.Results.revfilt;
-            EEG.vhtp.Filter.plotfreqz   = ip.Results.plotfreqz;
-            EEG.vhtp.Filter.minphase    = ip.Results.minphase;
+            EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
+            EEG.vhtp.eeg_htpEegFilterEeglab.notchCutoff = ip.Results.notch;
+            EEG.vhtp.eeg_htpEegFilterEeglab.notchFiltorder   = ip.Results.filtorder;
+            EEG.vhtp.eeg_htpEegFilterEeglab.notchRevfilt     = ip.Results.revfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.notchPlotfreqz   = ip.Results.plotfreqz;
+            EEG.vhtp.eeg_htpEegFilterEeglab.notchMinPhase    = ip.Results.minphase;
         case 'Cleanline'
             EEG = pop_cleanline(EEG, 'bandwidth', ip.Results.cleanlinebandwidth,'chanlist', ip.Results.cleanlinechanlist, 'computepower', ip.Results.cleanlinecomputepower, 'linefreqs', ip.Results.cleanlinelinefreqs,...
                 'normSpectrum', ip.Results.cleanlinenormspectrum, 'p', ip.Results.cleanlinep, 'pad', ip.Results.cleanlinepad, 'PlotFigures', ip.Results.cleanlineplotfigures, 'scanforlines', ip.Results.cleanlinescanforlines, 'sigtype', ip.Results.cleanlinesigtype, 'tau', ip.Results.cleanlinetau,...
                 'verb', ip.Results.cleanlineverb, 'winsize', ip.Results.cleanlinewinsize, 'winstep', ip.Results.cleanlinewinstep);
-            EEG.vhtp.Filter.completed = 1;
-            EEG.vhtp.Filter.bandwidth = ip.Results.cleanlinebandwidth;
-            EEG.vhtp.Filter.chanlist = ip.Results.cleanlinechanlist;
-            EEG.vhtp.Filter.computepower = ip.Results.cleanlinecomputepower;
-            EEG.vhtp.Filter.linefreqs = ip.Results.cleanlinelinefreqs;
-            EEG.vhtp.Filter.normspectrum=ip.Results.cleanlinenormspectrum;
-            EEG.vhtp.Filter.p=ip.Results.cleanlinep;
-            EEG.vhtp.Filter.pad = ip.Results.cleanlinepad;
-            EEG.vhtp.Filter.plotfigures=ip.Results.cleanlineplotfigures;
-            EEG.vhtp.Filter.scanforlines=ip.Results.cleanlinescanforlines;
-            EEG.vhtp.Filter.sigtype=ip.Results.cleanlinesigtype;
-            EEG.vhtp.Filter.tau=ip.Results.cleanlinetau;
-            EEG.vhtp.Filter.verb =ip.Results.cleanlineverb;
-            EEG.vhtp.Filter.winsize = ip.Results.cleanlinewinsize;
-            EEG.vhtp.Filter.winstep = ip.Results.cleanlinewinstep;
+            EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineBandwidth = ip.Results.cleanlinebandwidth;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineChanlist = ip.Results.cleanlinechanlist;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineComputePower = ip.Results.cleanlinecomputepower;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineLineFreqs = ip.Results.cleanlinelinefreqs;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineNormSpectrum=ip.Results.cleanlinenormspectrum;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineP=ip.Results.cleanlinep;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlinePad = ip.Results.cleanlinepad;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlinePlotFigures=ip.Results.cleanlineplotfigures;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineScanForLines=ip.Results.cleanlinescanforlines;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineSigType=ip.Results.cleanlinesigtype;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineTau=ip.Results.cleanlinetau;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineVerb =ip.Results.cleanlineverb;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineWinSize = ip.Results.cleanlinewinsize;
+            EEG.vhtp.eeg_htpEegFilterEeglab.cleanlineWinStep = ip.Results.cleanlinewinstep;
         otherwise
-            EEG.vhtp.Filter.completed = 0;
+            EEG.vhtp.eeg_htpEegFilterEeglab.completed = 0;
     end
         
 catch e
