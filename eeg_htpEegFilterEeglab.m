@@ -23,8 +23,6 @@ function [EEG] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 %             used in harmonics calculation for notch filtering
 %             default: [55 65]
 %
-%   'filtorder' - Number for filter order (filter length - 1)
-%                 default: 3300
 %
 %   'revfilt' - Numeric boolean to invert filter from bandpass to notch
 %               {0 -> bandpass, 1 -> notch}
@@ -95,7 +93,6 @@ function [EEG] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 defaultLoCutoff = 0.5;
 defaultHiCutoff = 80;
 defaultNotch = [55 65];
-defaultFiltOrder   = 3300;
 defaultRevFilt     = 0;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
@@ -114,7 +111,7 @@ defaultCleanlineVerb = 1;
 defaultCleanlineWinSize = 4;
 defaultCleanlineWinStep = 4;
     
-validateMethod = @( method ) ischar( method ) && ismember(method, {'Lowpass', 'Highpass', 'Notch', 'Cleanline'});
+validateMethod = @( method ) ischar( method ) && ismember(method, {'lowpass', 'highpass', 'notch', 'cleanline'});
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -123,7 +120,6 @@ addRequired(ip, 'method', validateMethod);
 addParameter(ip, 'lowpassfilt',defaultHiCutoff,@isnumeric);
 addParameter(ip, 'hipassfilt',defaultLoCutoff,@isnumeric);
 addParameter(ip, 'notch',defaultNotch,@isnumeric);
-addParameter(ip, 'filtorder',defaultFiltOrder,@isnumeric);
 addParameter(ip, 'revfilt',defaultRevFilt,@isnumeric);
 addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
 addParameter(ip, 'minphase',defaultMinPhase,@islogical);
@@ -151,20 +147,18 @@ try
     switch method
         case 'Highpass'
             
-            EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [], 'filtorder', ip.Results.filtorder);
+            EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', []);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassLocutoff = ip.Results.hipassfilt;
-            EEG.vhtp.eeg_htpEegFilterEeglab.highpassFiltorder   = ip.Results.filtorder;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassMinPhase    = ip.Results.minphase;
             
         case 'Lowpass'
                        
-            EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt, 'filtorder', ip.Results.filtorder);
+            EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassHicutoff = ip.Results.lowpassfilt;
-            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassFiltorder   = ip.Results.filtorder;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassMinPhase    = ip.Results.minphase;
@@ -176,12 +170,11 @@ try
             harmonics = floor((EEG.srate/2) / linenoise);
             if EEG.srate < 2000
                 for i = 1 : harmonics
-                    EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'filtorder', ip.Results.filtorder, 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
+                    EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
                 end
             end
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchCutoff = ip.Results.notch;
-            EEG.vhtp.eeg_htpEegFilterEeglab.notchFiltorder   = ip.Results.filtorder;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchMinPhase    = ip.Results.minphase;
