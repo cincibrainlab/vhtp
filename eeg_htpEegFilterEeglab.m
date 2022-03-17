@@ -145,7 +145,7 @@ EEG.vhtp.eeg_htpEegFilterEeglab.functionStamp = mfilename; % function name for l
 
 try
     switch method
-        case 'Highpass'
+        case 'highpass'
             
             EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', []);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
@@ -154,7 +154,7 @@ try
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassMinPhase    = ip.Results.minphase;
             
-        case 'Lowpass'
+        case 'lowpass'
                        
             EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
@@ -163,7 +163,7 @@ try
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassMinPhase    = ip.Results.minphase;
             
-        case 'Notch'
+        case 'notch'
             
             
             linenoise = floor((ip.Results.notch(1) + ip.Results.notch(2)) / 2);
@@ -178,7 +178,7 @@ try
             EEG.vhtp.eeg_htpEegFilterEeglab.notchRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchMinPhase    = ip.Results.minphase;
-        case 'Cleanline'
+        case 'cleanline'
             EEG = pop_cleanline(EEG, 'bandwidth', ip.Results.cleanlinebandwidth,'chanlist', ip.Results.cleanlinechanlist, 'computepower', ip.Results.cleanlinecomputepower, 'linefreqs', ip.Results.cleanlinelinefreqs,...
                 'normSpectrum', ip.Results.cleanlinenormspectrum, 'p', ip.Results.cleanlinep, 'pad', ip.Results.cleanlinepad, 'PlotFigures', ip.Results.cleanlineplotfigures, 'scanforlines', ip.Results.cleanlinescanforlines, 'sigtype', ip.Results.cleanlinesigtype, 'tau', ip.Results.cleanlinetau,...
                 'verb', ip.Results.cleanlineverb, 'winsize', ip.Results.cleanlinewinsize, 'winstep', ip.Results.cleanlinewinstep);
