@@ -254,6 +254,7 @@ for ci = 1 : size(data,1)
 
     chanCsvRows{ci} = csvRow;
     chanItc{ci} = corrected_itc;
+    chanRawItc{ci} = uncorrected_itc;
     chanErsp{ci} = ersp1;
     chanStp{ci} = stp1;
     disp(channame);
@@ -276,7 +277,9 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', 
 
 % Outputs:
 EEG.vhtp.eeg_htpCalcChirpItcErsp.itc1 = cat(3,chanItc{:});
+EEG.vhtp.eeg_htpCalcChirpItcErsp.rawitc1 = cat(3,chanRawItc{:});
 EEG.vhtp.eeg_htpCalcChirpItcErsp.ersp1 = cat(3,chanErsp{:});
+EEG.vhtp.eeg_htpCalcChirpItcErsp.stp1 = cat(3,chanStp{:});
 EEG.vhtp.eeg_htpCalcChirpItcErsp.t_s = t_s;
 EEG.vhtp.eeg_htpCalcChirpItcErsp.f_s = f_s;
 EEG.vhtp.eeg_htpCalcChirpItcErsp.summary_table = csvTable;
