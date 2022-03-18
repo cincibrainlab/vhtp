@@ -58,7 +58,6 @@ addParameter(ip, 'emptyEEG', defaultEmptyEEG, @islogical)
 addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
 addParameter(ip, 'byChannel', defaultByChannel, @islogical)
 
-
 parse(ip, EEG, varargin{:});
 
 outputdir = ip.Results.outputdir;

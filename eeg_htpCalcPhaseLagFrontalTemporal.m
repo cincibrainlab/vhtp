@@ -69,7 +69,7 @@ c('RC') = {'paracentralR' 'postcentralR' 'precentralR'};
 
 tic;
 combos = combnk([c('LF') c('RF') c('LPF') c('RPF') c('LT') c('RT')]', 2); % 703x2
-combos = combnk([c('LF') c('RF') c('LPF') c('RPF')]', 2); % 703x2
+%combos = combnk([c('LT') c('RT')]', 2); % 703x2
 
 % combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique)
 % 2278x2
@@ -128,6 +128,8 @@ srate = EEG.srate;
 pnts = EEG.pnts;
 trials = EEG.trials;
 labels = {EEG.chanlocs.labels};
+
+% EEG.data = gpuArray(double(EEG.data));
 
 % dataset validation
 % is size sufficient for duration and offset?
