@@ -1,7 +1,32 @@
 function [EEG] = eeg_htpEegIcaEeglab(EEG,varargin)
-%EEG_HTPEEGBINICA Summary of this function goes here
-%   Detailed explanation goes here
-
+% eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegIcaEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+% Function Specific Inputs:
+%   'method'  - Text representing method utilized for ICA
+%               e.g. {'binica', cudaica', 'runica'}
+%               default: 'binica'
+%
+%   'rank' - Number representing the data rank of input data
+%            default: getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))))
+%
+%   'icadir' - Directory to store weight-related output files generated
+%              during ICA
+%              default: fullfile(pwd,'icaweights')
+%               
+%
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
 defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))));
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');
@@ -15,8 +40,8 @@ addParameter(ip,'icadir',defaultIcaDir,@ischar);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.ICA.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.ICA.functionStamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegIcaEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
+EEG.vhtp.eeg_htpEegIcaEeglab.functionStamp = mfilename; % function name for logging/output
 
 try
     scriptdir = pwd;
@@ -40,9 +65,9 @@ try
     
     EEG = iclabel(EEG);
     
-    EEG.vhtp.ICA.completed = 1;
-    EEG.vhtp.ICA.method = ip.Results.method;
-    EEG.vhtp.ICA.rank = ip.Results.rank;
+    EEG.vhtp.eeg_htpEegIcaEeglab.completed = 1;
+    EEG.vhtp.eeg_htpEegIcaEeglab.method = ip.Results.method;
+    EEG.vhtp.eeg_htpEegIcaEeglab.rank = ip.Results.rank;
     cd(scriptdir)
     
 catch e

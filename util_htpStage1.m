@@ -89,7 +89,7 @@ for i = 1 : height(filelist)
         plotFreqz   = 0;
         minPhase    = false;
         
-        EEG = eeg_EegFilterEeglab(EEG,'Lowpass','lowpassfilt',ip.Results.lowpass);
+        EEG = eeg_EegFilterEeglab(EEG,'Lowpass','lowpassfilt',ip.Results.lowpass,'filtorder',filtOrder, 'revfilt', revFilt, 'plotfreqz',plotFreqz, 'minphase',minPhase);
     end
     if ~isempty(ip.Results.notch) && ip.Results.lowpass >= ip.Results.notch(2) && ~(ip.Results.cleanline)
         filtOrder   = 3300;
