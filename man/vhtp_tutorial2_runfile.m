@@ -48,7 +48,7 @@ for fi = 1 : height(myFileListSource)
     %if fi == 1
 
     EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
-    [EEG2, results] = eeg_htpCalcChirpItcErsp(EEG, 'sourceOn', true, 'byChannel', true);
+    [EEG2, results] = eeg_htpCalcChirpItcErsp(EEG, 'sourceOn', true, 'byChannel', true, 'baselinew', [-500 0]);
 
     EEGCell{fi} = EEG2;
   
