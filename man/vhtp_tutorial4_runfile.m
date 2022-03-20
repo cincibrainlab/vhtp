@@ -27,8 +27,8 @@ headmodelfile = 'C:\Users\ernie\Dropbox\RESEARCH_FOCUS\COMMON_RESOURCES\headmode
 
 % Wavelet Thresholding
 EEG2 = eeg_htpEegWaveletDenoiseHappe( EEG );
-EEG2.srate =1000;
-eeg_htpEegAssessPipelineHAPPE(EEG, EEG2);
+results = eeg_htpEegAssessPipelineHAPPE(EEG, EEG2);
+
 
 test = doChannelVariance(EEG, 0)
 

@@ -1,4 +1,4 @@
-function [EEG, results] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
+function [summary_table] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
 % eeg_htpEegAssessPipelineHAPPE() - adaptation of HAPPE pipeline quality
 % assurance to incorporate additional visualization and export options.
 %
@@ -13,8 +13,10 @@ function [EEG, results] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
 %
 % original code: Alexa D. Monachino, PINE Lab at Northeastern University, 2021
 % https://github.com/PINE-Lab/HAPPE/blob/master/scripts/pipeline_scripts/assessPipelineStep.m
+
 % vHTP adaptation by E. Pedapati 3/19/2022
 
+% vhtp variables
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 msglog = @(x) fprintf('%s: %s\n', functionstamp, x);
@@ -22,13 +24,28 @@ scrsz = get(0,'ScreenSize'); % left, bottom, width, height
 
 % input parsing
 defaultOutputDir = tempdir;
+defaultResampleRate = 500;
 
 ip = inputParser();
 addRequired(ip, 'EEG1', @isstruct);
 addRequired(ip, 'EEG2', @isstruct);
 addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
+addParameter(ip, 'resampleRate', defaultResampleRate, @isint)
 
 parse(ip, EEG1, EEG2, varargin{:});
+
+% ensure common sampling rate and resample for speed
+if  EEG1.srate ~= EEG2.srate
+    error('EEGs have different sampling rates. Use ''resample'',''true'' to resample to lowest sample rate.')
+else
+    srate = EEG1.srate;
+end
+
+if srate >= ip.Results.resampleRate
+    [EEG1] = eeg_htpEegResampleDataEeglab(EEG1,ip.Results.resampleRate);
+    [EEG2] = eeg_htpEegResampleDataEeglab(EEG2,ip.Results.resampleRate);
+    srate = ip.Results.resampleRate;
+end
 
 % check inputs
 EEGCell = {EEG1,EEG2};
@@ -40,10 +57,16 @@ basefilename = sprintf('%s_%s_%s_%s.TBD', functionstamp,timestamp,fn1,fn2);
 
 fprintf('%s: EEG1: %s EEG2: %s Date: %s\n', functionstamp,fn1,fn2, timestamp);
 
-% convert to continous data streams
+% convert epoch to continuous data
 datCell = cell(2,1);
 for i = 1 : numel(EEGCell)
     current_EEG = EEGCell{i};
+    
+    % perform double precision test
+    if ~isa( current_EEG.data,'double')
+        current_EEG.data = double(current_EEG.data);
+    end
+    
     if ndims(current_EEG.data) > 2 %#ok<ISMAT>
         msglog(['EEG ' num2str(i) ' is epoched. Coverting to continuous format.']);
         datCell{i} = reshape(current_EEG.data, size(current_EEG.data, 1),...
@@ -58,11 +81,6 @@ if ~isequal(size(datCell{1}),size(datCell{2}))
     error('EEG data structures have different dimensions.')
 end
 
-% ensure common sampling rate
-if EEG1.srate ~= EEG2.srate
-    error('EEGs have different sampling rates. Use ''resample'',''true'' to resample to lowest sample rate.')
-end
-
 % assign EEGs to sig1 and sig2
 sig1 = datCell{1};
 sig2 = datCell{2};
@@ -75,7 +93,7 @@ cr = diag(cr);
 % QA #2: correlation by frequency x channel
 % cf = channel x freq
 fvec = [0:80];
-cf = mscohere(sig1', sig2', 1000, 0, fvec, EEG1.srate)';
+cf = mscohere(sig1', sig2', 1000, 0, fvec, srate)';
 
 % Other QA Measures from HAPPE2
 % extracted from calcSNR_PSNR.m
@@ -90,6 +108,21 @@ SNR = mean(20*log10(realsqrt(NUM)./realsqrt(DEN))) ;
 PeakSNR = mean(20 * log10(max(orderMod, [], 2)./realsqrt(MSE))) ;
 RMSE = mean(realsqrt(mean((sig1 - sig2) .^ 2, 2)));
 MAE = mean(mean(abs(sig1 - sig2), 2));
+
+%sig1 = double(gather(sig1));
+%sig2 = double(gather(sig2));
+
+% add power spectrum
+customSpectrogram = @(sig) pwelch(sig', srate*2, 0, [0:.25:80], srate);
+
+customSpectrogram2 = @(sig) periodogram(sig,hamming(length(sig)),length(sig),srate,'power');
+
+[pwr1_chan, f] = customSpectrogram(sig1);
+[pwr2_chan, f] = customSpectrogram(sig2);
+
+pwr1 = mean(pwr1_chan,2);
+pwr2 = mean(pwr2_chan,2);
+pwrdiff = pwr1-pwr2;
 
 % Summary Measures
 coefStruct = struct();
@@ -129,7 +162,7 @@ plotno =  numel(coefStruct);
 
 for bi = 1 : plotno
     h1 = subplot(3,4,bi);
-    topoplotIndie(coefStruct(bi).meancf,...
+    topoplotIndie(gather(coefStruct(bi).meancf),...
         EEG1.chanlocs, 'electrodes', 'labels', ...
         'shading','flat');
     if bi == 1, sub1_pos = get(gca,'position'); end
@@ -143,8 +176,10 @@ for bi = 1 : plotno
     %set(h1, 'OuterPosition', [[], [], .8, .2]);
     title(coefStruct(bi).label, 'FontSize', 12);
     caxis([.95 1]);
-    colormap bone;
+
 end
+
+colormap bone;
 
 hp4 = sub_pos;
 cb = colorbar('Position', [.85  .5  0.025 .3], 'FontSize', 14);
@@ -152,7 +187,9 @@ cb.Label.String = 'Corr. Coef.';
 ctitle = sprintf('%s: Channel Cross-Correlation (Run Date:%s)\nEEG1 = %s   EEG2 = %s', ...
     functionstamp, timestamp, EEG1.setname, EEG2.setname);
 allCoefs = horzcat(coefStruct(:).meancf);
-subplot(3,4,9:12);
+
+% add histogram of corr. coefs
+subplot(3,4,9:10);
 hist(allCoefs);
 xlabel('Correlation Coefficent', 'FontSize', 12);
 set(gca,'FontSize',12);
@@ -161,8 +198,35 @@ title('Histogram of Amplitude/Frequency Correlation Coefficents', 'FontSize',14)
 legend( {coefStruct(:).bandname}, 'Location', 'northwest', 'FontSize', 12);
 annotation('textbox', sub1_pos.*[1 1.075 1 1],'String',ctitle, ...
     'FontSize', 14,  'FitBoxToText','on', 'LineStyle','none', 'Interpreter', 'none');
+
+
+% add power spectrogram & difference line plot
+rangediff = sprintf('EEG1-EEG2 Range: %.2f-%.2f dB', min(pwrdiff), max(pwrdiff));
+subplot(3,4,11);
+plot(f, pwr1,'k',f, pwr2,'r','LineWidth', 1)
+set(gca, 'YScale', 'log')
+%ylim([0 max([pwr1; pwr2])*1.3])
+title(sprintf('Spectrogram Comparison (EEG2 = Red)\n%s',rangediff))
+xlabel('Frequency (Hz)')
+ylabel('PSD')
+hold on;
+yyaxis right;
+ylim([-1 1]);
+plot(f, pwrdiff,':b','LineWidth', 1)
+set(gca, 'YScale', 'log','YColor', 'b')
+
+% difference histogram in percentage
+subplot(3,4,12);
+deltaIndex = find(f == 0 | f == 3.5);
+deltaPower = max(pwr1(deltaIndex(1):deltaIndex(2)));
+hist( 100 *(pwrdiff / deltaPower) );
+xlabel('% of Absolute Delta Power');
+ylabel('Count of EEG1-EEG2 Differences');
+title('EEG1-EEG2 as % of Max Delta (0-3.5 Hz) power');
+
 image_filename = fullfile(tempdir, strrep(basefilename,'.TBD','.png'));
 saveas(f1, image_filename);
+
 
 % identify trouble channels/frequencies
 count = 1;
@@ -188,7 +252,8 @@ troubleChannelTable = struct2table(troubleStruct);
 summaryCoefs = rows2vars(struct2table(summarytmp),'VariableNamesSource', 'label');
 summary_table_tmp = horzcat(summaryCoefs, table(SNR, PeakSNR, RMSE, MAE));
 
-summary_table = horzcat(cell2table({EEG1.setname, EEG2.setname}, 'VariableNames', {'EEG1','EEG2'}), ...
+summary_table = horzcat(cell2table({EEG1.setname, EEG2.setname, image_filename}, ...
+    'VariableNames', {'EEG1','EEG2','ImageFilename'}), ...
     summary_table_tmp);
 fprintf('<strong>%s: Quality Assurance Summary\n</strong>', functionstamp);
 disp(summary_table);
@@ -203,8 +268,7 @@ qi_table = cell2table({EEG1.setname, functionstamp, timestamp}, ...
 qi_temp = struct2table(ip.Results, 'AsArray',true);
 
 % Outputs:
-EEG.vhtp.eeg_htpEegAssessPipelineHAPPE.summary_table =  summary_table;
-EEG.vhtp.eeg_htpEegAssessPipelineHAPPE.qi_table = qi_table;
+results.vhtp.eeg_htpEegAssessPipelineHAPPE.summary_table =  summary_table;
+results.vhtp.eeg_htpEegAssessPipelineHAPPE.qi_table = qi_table;
 
-results = EEG.vhtp.eeg_htpEegAssessPipelineHAPPE;
 end
