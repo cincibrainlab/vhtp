@@ -70,9 +70,8 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     ip = inputParser();
     addRequired(ip, 'EEG', @isstruct);
     addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
-    addParameter(ip, 'isERP', defaultOutputDir, @isfolder)
-    addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
-    addParameter(ip, 'wavlvl', defaultWavLvl, @int)
+    addParameter(ip, 'isErp', defaultOutputDir, @isfolder)
+    addParameter(ip, 'wavLvl', defaultWavLvl, @int)
     addParameter(ip, 'wavelet', defaultWavelet, @char)
     addParameter(ip, 'DenoisingMethod', defaultDenoisingMethod, @char)
     addParameter(ip, 'ThresholdRule', defaultThresholdRule, @ischar)
@@ -80,6 +79,10 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     addParameter(ip, 'highpass', defaultHighPass, @int)
     addParameter(ip, 'lowpass', defaultLowPass, @int)
 
+    % perform double precision test
+    if ~isa(EEG.data,'double')
+        EEG.data = double(EEG.data);
+    end
     
     parse(ip, EEG, varargin{:});
 
@@ -88,7 +91,7 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % Uses a global threshold for the wavelets. Wavelet family is coiflet 
     % (level depending). Threshold the wavelet coefficients to generate 
     % artifact signals, reconstructing signal as channels x samples format.
-    if isErp
+    if ip.Results.isErp
         if EEG.srate > 500; wavLvl = 13 ;
             elseif EEG.srate > 250 && EEG.srate <= 500; wavLvl= 12 ;
             elseif EEG.srate <= 250; wavLvl = 11 ;
@@ -101,16 +104,15 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
         end
         ThresholdRule = 'Hard' ;
     end
-
+    
     % Parameter input overrides
     if ~isempty(ip.Results.ThresholdRule)
         ThresholdRule = ip.Results.ThresholdRule;
-        end
+    end
     if ~isempty(ip.Results.wavLvl)
         wavLvl = ip.Results.wavLvl;
-        end
-
-
+    end
+    
     dataCols = reshape(EEG.data, size(EEG.data, 1),[])';
 
     % Wavelet Thresholding Function (requires MATLAB Wavelet Toolbox)
@@ -126,7 +128,7 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % the EEG signal and save the wavcleaned data into an EEGLAB structure. If 
     % conducting ERP analyses, filter the data to the user-specified frequency 
     % range for analyses purposes only.
-    if isErp
+    if ~ip.Results.isErp
         preEEG = reshape(pop_eegfiltnew(EEG, ip.Results.highpass, ...
             ip.Results.lowpass, [], 0, [], 0).data, ...
             size(EEG.data, 1), []) ;
@@ -139,13 +141,20 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
         postEEG = preEEG - artifacts ;
         EEG.data = postEEG ;
     end    
-
     % END: Signal Processing
 
     % QI Table
     qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
         'VariableNames', {'eegid','scriptname','timestamp'});
-
+    qi_temp = struct2table(ip.Results, 'AsArray',true);
+    qi_temp.EEG = [];
+    qi_temp.ThresholdRule = ThresholdRule;
+    qi_temp.wavLvl = wavLvl;
+    qi_temp.pre_post_corr = corr(reshape(preEEG, 1,[])', reshape(postEEG, 1,[])');
+    qi_table = [qi_table qi_temp];
+    
+    summary_table = table();
+    
     % Outputs:
     EEG.vhtp.eeg_htpEegWaveletDenoiseHappe.summary_table =  summary_table;
     EEG.vhtp.eeg_htpEegWaveletDenoiseHappe.qi_table = qi_table;
