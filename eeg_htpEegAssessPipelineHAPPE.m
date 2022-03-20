@@ -10,6 +10,8 @@ function [summary_table] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
 %   4. Lower quality channels are exported to console
 %   5. Topographic plotting of corr. coefs
 %   6. histogram of corr. coef by amplitude/frequency bands
+%   7. comparison spectrogram with difference line plot
+%   8. histogram of differences as % of max delta power
 %
 % original code: Alexa D. Monachino, PINE Lab at Northeastern University, 2021
 % https://github.com/PINE-Lab/HAPPE/blob/master/scripts/pipeline_scripts/assessPipelineStep.m
@@ -122,7 +124,11 @@ customSpectrogram2 = @(sig) periodogram(sig,hamming(length(sig)),length(sig),sra
 
 pwr1 = mean(pwr1_chan,2);
 pwr2 = mean(pwr2_chan,2);
-pwrdiff = pwr1-pwr2;
+%pwrdiff = pwr1-pwr2;
+pwrdiff = 100*(pwr2 ./ pwr1);
+
+% eliminate notch differences for plot scaling
+pwrdiff(find(f > 55 & f < 65)) = 100;
 
 % Summary Measures
 coefStruct = struct();
@@ -211,18 +217,17 @@ xlabel('Frequency (Hz)')
 ylabel('PSD')
 hold on;
 yyaxis right;
-ylim([-1 1]);
+ylim([75 125]);
+ylabel('% EEG2/EEG1');
 plot(f, pwrdiff,':b','LineWidth', 1)
 set(gca, 'YScale', 'log','YColor', 'b')
 
 % difference histogram in percentage
 subplot(3,4,12);
-deltaIndex = find(f == 0 | f == 3.5);
-deltaPower = max(pwr1(deltaIndex(1):deltaIndex(2)));
-hist( 100 *(pwrdiff / deltaPower) );
-xlabel('% of Absolute Delta Power');
+histogram( pwrdiff,25 );
+xlabel('EEG2/EEG1 (%)');
 ylabel('Count of EEG1-EEG2 Differences');
-title('EEG1-EEG2 as % of Max Delta (0-3.5 Hz) power');
+title(sprintf('Percent EEG2/EEG1 PSD\n(omitted 55-65 Hz)'));
 
 image_filename = fullfile(tempdir, strrep(basefilename,'.TBD','.png'));
 saveas(f1, image_filename);
