@@ -14,7 +14,7 @@ addpath(brainstorm_path);
 % run eeglab
 eeglab
 % run brainstorm
-brainstorm;
+%brainstorm;
 
 % load example EEG file
 mySetFile = 'D0179_chirp-ST_postcomp.set';
@@ -44,7 +44,7 @@ myFileListSource    = util_htpDirListing(mySourceOutput,'ext','.set', 'subdirOn'
 
 % Calculate chirp ITC
 EEGCell = {};
-for fi = 1 : height(myFileListSource)
+parfor fi = 1 : height(myFileListSource)
     %if fi == 1
 
     EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
@@ -90,7 +90,7 @@ eeg_htpCalcChirpItcErsp_summary_table = table();
 for ti = 1 : numel(EEGCell)
     eeg_htpCalcChirpItcErsp_summary_table = vertcat(eeg_htpCalcChirpItcErsp_summary_table, EEGCell{ti}.vhtp.eeg_htpCalcChirpItcErsp.summary_table);
 end
-writetable(eeg_htpCalcChirpItcErsp_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcChirpItcErsp_summary_table.csv"));
+writetable(eeg_htpCalcChirpItcErsp_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcChirpItcErsp_summary_table_un.csv"));
 
 % Spectral Events
 addpath("/srv/TOOLKITS/SpectralEvents");
