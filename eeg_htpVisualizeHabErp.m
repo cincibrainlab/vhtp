@@ -41,6 +41,8 @@ defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
 defaultGroupIds = ones(1,length(EEGcell));
 defaultGroupMean = 1;
 defaultSingleplot = 1;
+defaultGroupOverlay = [];
+defaultPlotstyle = 'default';
 
 errorMsg2 = 'EEG input should be either a cell array or struct.';
 validEegArray = @(x) assert(iscell(x) || isstruct(x), errorMsg2);
@@ -54,6 +56,9 @@ addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip,'groupids', defaultGroupIds, @isvector)
 addParameter(ip,'groupmean', defaultGroupMean, @islogical)
 addParameter(ip,'singleplot', defaultSingleplot, @islogical)
+addParameter(ip,'groupOverlay', defaultGroupOverlay, @isvector)
+addParameter(ip,'plotstyle', defaultPlotstyle, @ischar)
+
 
 parse(ip,EEGcell,varargin{:});
 
@@ -72,8 +77,18 @@ outfileCell = cellfun( @(EEG) fullfile(outputdir, ...
 % START: Start Visualization
 
 % get groups
-groups = unique(ip.Results.groupids);
-group_no = numel(groups);
+if ~isempty(ip.Results.groupOverlay)
+    disp("Group Overlay Mode")
+    groups = ip.Results.groupOverlay;
+    group_no = numel(groups);
+    groupname = 'GroupOverlay_';
+    for ni = 1:numel(groups)
+        groupname = [groupname sprintf('%d_',groups(ni))];
+    end
+else
+    groups = unique(ip.Results.groupids);
+    group_no = numel(groups);
+end
 
 % consistent indexes regardless of group or inidividual ERP
 t = EEGcell{1}.etc.htp.hab.times;
@@ -84,18 +99,23 @@ p2idx = EEGcell{1}.etc.htp.hab.p2idx;
 plot_title = [];
 if ip.Results.groupmean  % single mean across groups
     plot_title = 'ERP average waveform by Group';
-    plot_filename = fullfile(outputdir,['hab_erp_by_group_' timestamp '.png']);
     for ei = 1 : length(EEGcell) % all ERPs in single array
         erpArr(ei,:) = EEGcell{ei}.etc.htp.hab.erp;
     end
-
+    if ~isempty(ip.Results.groupOverlay)
+         plot_filename = fullfile(outputdir,['hab_erp_' groupname timestamp '.png']);
+    else
+        plot_filename = fullfile(outputdir,['hab_erp_by_group_' timestamp '.png']);
+    end
     for gi = 1 : group_no % mean each by group id
         cur_group_idx = find(ip.Results.groupids == groups(gi));
         plot_title_cell{gi} = sprintf('Hab_erp_for_group %d', gi);
         plot_filename_cell{gi} = fullfile(outputdir, ...
-            ['hab_erp_by_group' num2str(gi) '_' timestamp '.png']);
+            ['hab_erp_by_group' num2str(groups(gi)) '_' timestamp '.png']);
         % cur_group_idx(gi,:) = find(ip.Results.groupids(ip.Results.groupids == groups(gi)));
         erp(gi,:) = mean(erpArr(cur_group_idx,:),1);
+
+
     end
 else  % individual results
     for ei = 1 : length(EEGcell)
@@ -113,10 +133,59 @@ else  % individual results
 end
 
 if ip.Results.singleplot % all single plot group or multi individual
-    [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
-    createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
-    saveas(gcf, plot_filename);
-    %close gcf;
+    
+    switch ip.Results.plotstyle
+        case 'default'
+            [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
+            createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
+            saveas(gcf, plot_filename);
+        case 'tetra'
+            [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
+            f = createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
+            set(gcf, 'color', 'w')
+            set(gca,'fontname','arial', 'box', 'off', 'LineWidth',2,'FontSize',20, 'YTick',[-5:1:5], 'TickDir','out')
+            xlim([-500 1000])
+            ylabel(['Voltage (' char(0117) 'V)'])
+            ylim([max(P2)*-1 max(P2)*2])
+     
+            axis square
+            lines = findobj(gcf,'Type','Line');
+            for i = 1:numel(lines)
+                lines(i).LineWidth = 2.0;
+            end
+            %legend()
+            axesHandles = findobj(gca, 'Type', 'Line');
+            textHandles = findobj(gca, 'Type', 'Text');
+            allLineIndex = zeros(length(axesHandles),1);
+            allLineIndex(1 : size(erp,1)) = 1;
+            delete(axesHandles(~allLineIndex));
+            delete(textHandles);
+            colorOrderArray = [1 0 0; 0.3010 0.7450 0.9330; 0 0 0];
+            lineStyleArray = {'-','-',':'};
+            displayNameArray = {'Drug','Placebo', 'Baseline'};
+            for pi = 1 : size(erp,1)
+                axesHandles(pi).Color = colorOrderArray(pi,:);
+                axesHandles(pi).LineStyle = lineStyleArray{pi};
+                axesHandles(pi).DisplayName = displayNameArray{pi};
+            end
+            line([0 0], [-10 10], 'Color','k','LineStyle', ':');
+            line([500 500], [-10 10], 'Color','k', 'LineStyle', ':');
+
+            l = legend('Box','off');
+            l.String = l.String(1 : size(erp,1));
+            
+            text(100, min(min(N1))*2, "N1", 'rotation',0,'FontSize',20);
+            text(P2Lat(1), max(max(P2)*1.75), "P2", 'rotation',0,'FontSize',20);
+            text(600, min(min(N1))*2, "N1", 'rotation',0,'FontSize',20);
+            text(P2Lat(2), max(max(P2)*.8), "P2", 'rotation',0,'FontSize',20);
+            ylimVals = get(gca,'ylim');
+            text(-100, ylimVals(1)-ylimVals(1)*.1, "S1", 'rotation',0,'FontSize',20);
+            text(400, ylimVals(1)-ylimVals(1)*.1, "S2", 'rotation',0,'FontSize',20);
+
+            text(P2Lat(1), max(max(P2)*1.75), "P2", 'rotation',0,'FontSize',20);
+            saveas(gcf, plot_filename);
+    end
+    close gcf;
 else
     for si = 1 : size(erp,1)
         [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
@@ -137,7 +206,7 @@ qi_table = cellfun( @(EEG) ...
 results = [];
 end
 
-function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
+function f = createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
 
 stimoffsets = [0 500 1000 1500];
 stimoffsets_actual = [25 545 1061 1579];
@@ -147,7 +216,7 @@ rep_labels = {'S1','R1','R2','R3'};
 xline2 = @(offset) line([offset offset], [-10 10]);
 xtext = @(offset,label) text(offset+25, 0, label, 'rotation',90);
 
-figure('Position', [600 300 1200 900]);
+f = figure('Position', [600 300 1200 900]);
 set(0,'defaultTextInterpreter','none');
 roi_strip = nan(1,length(erp));
 roi_strip2 = roi_strip;
@@ -184,7 +253,18 @@ for i = 1 : length(P2Lat)
     end
 end
 % hold on;
-plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
+% create group labels if multiseries
+if size(erp,1) > 1
+    hold on
+    for li = 1 : size(erp,1)
+        grouplabels{li} = sprintf("Index %d", li);
+        plot(t,erp(li,:),'DisplayName', grouplabels{li});
+    end
+    legend()
+else
+    plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
+end
+xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
 ylim([-10 10])
 title(plot_title);
 end

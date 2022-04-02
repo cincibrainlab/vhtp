@@ -93,7 +93,7 @@ function [EEG] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 defaultLoCutoff = 0.5;
 defaultHiCutoff = 80;
 defaultNotch = [55 65];
-defaultRevFilt     = 0;
+if strcmp(method,'notch'); defaultRevFilt=1; else; defaultRevFilt=0; end;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultCleanlineBandwidth = 2;
@@ -112,6 +112,7 @@ defaultCleanlineWinSize = 4;
 defaultCleanlineWinStep = 4;
     
 validateMethod = @( method ) ischar( method ) && ismember(method, {'lowpass', 'highpass', 'notch', 'cleanline'});
+validateRevFilt = @(revfilt) isnumeric(revfilt) && ((revfilt==1 && strcmp(method,'notch')) || (revfilt==0 && ~strcmp(method,'notch')));
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -119,8 +120,8 @@ addRequired(ip, 'EEG', @isstruct);
 addRequired(ip, 'method', validateMethod);
 addParameter(ip, 'lowpassfilt',defaultHiCutoff,@isnumeric);
 addParameter(ip, 'hipassfilt',defaultLoCutoff,@isnumeric);
-addParameter(ip, 'notch',defaultNotch,@isnumeric);
-addParameter(ip, 'revfilt',defaultRevFilt,@isnumeric);
+addParameter(ip, 'notchfilt',defaultNotch,@isnumeric);
+addParameter(ip, 'revfilt',defaultRevFilt,validateRevFilt);
 addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
 addParameter(ip, 'minphase',defaultMinPhase,@islogical);
 addParameter(ip, 'cleanlinebandwidth',defaultCleanlineBandwidth,@isnumeric);
@@ -155,7 +156,7 @@ try
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassMinPhase    = ip.Results.minphase;
             
         case 'lowpass'
-                       
+            
             EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassHicutoff = ip.Results.lowpassfilt;
@@ -166,7 +167,7 @@ try
         case 'notch'
             
             
-            linenoise = floor((ip.Results.notch(1) + ip.Results.notch(2)) / 2);
+            linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
             harmonics = floor((EEG.srate/2) / linenoise);
             if EEG.srate < 2000
                 for i = 1 : harmonics
@@ -174,7 +175,7 @@ try
                 end
             end
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
-            EEG.vhtp.eeg_htpEegFilterEeglab.notchCutoff = ip.Results.notch;
+            EEG.vhtp.eeg_htpEegFilterEeglab.notchCutoff = ip.Results.notchfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.notchMinPhase    = ip.Results.minphase;
