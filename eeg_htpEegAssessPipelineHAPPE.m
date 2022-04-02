@@ -181,7 +181,7 @@ for bi = 1 : plotno
     %set(h1, 'Units', 'normalized');
     %set(h1, 'OuterPosition', [[], [], .8, .2]);
     title(coefStruct(bi).label, 'FontSize', 12);
-    caxis([.95 1]);
+    caxis([.20 1]);
 
 end
 

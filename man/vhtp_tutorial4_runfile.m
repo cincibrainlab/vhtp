@@ -26,8 +26,13 @@ EEG = pop_loadset(mySetFile, [mySetPath 'Group1-ASD/']);
 headmodelfile = 'C:\Users\ernie\Dropbox\RESEARCH_FOCUS\COMMON_RESOURCES\headmodel_surf_openmeeg_EGI32.mat';
 
 % Wavelet Thresholding
-EEG2 = eeg_htpEegWaveletDenoiseHappe( EEG );
+EEG2 = eeg_htpEegWaveletDenoiseHappe( EEG, 'wavLvl', 10, 'ThresholdRule', 'Hard' );
 results = eeg_htpEegAssessPipelineHAPPE(EEG, EEG2);
+
+pop_eegplot(EEG)
+pop_eegplot(EEG2)
+size(EEG.data)
+eegplot(EEG.data, 'data2', EEG2.data)
 
 
 test = doChannelVariance(EEG, 0)
