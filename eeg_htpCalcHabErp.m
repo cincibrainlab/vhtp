@@ -39,6 +39,8 @@ defaultPlotsOn = 0;
 defaultBaseline = [-500 0];
 defaultFiltOn = 1;
 defaultAmpThreshold = 120;
+defaultTimeFreq = false;
+
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
@@ -55,6 +57,7 @@ addParameter(ip, 'filtOn', defaultFiltOn,@islogical);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell);
 addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+addParameter(ip, 'timefreq', defaultTimeFreq, @islogical);
 
 parse(ip,EEG,varargin{:});
 
@@ -86,8 +89,9 @@ if ~isempty(bad_trial_idx)
 end
 
 % remove baseline
+EEG_og = EEG;
 EEG = pop_rmbase(EEG, ip.Results.baseline);
-if ip.Results.filtOn, EEG = pop_eegfiltnew(EEG, 'hicutoff', 40); end
+if ip.Results.filtOn, EEG = pop_eegfiltnew(EEG, 'hicutoff', 30); end
 
 % define ROI of auditory cortex projection
 chirp_sensor_labels = {'E23','E18','E16','E10','E3',...
@@ -101,11 +105,37 @@ sensoridx = cell2mat(cellfun(@(x) find(strcmpi(x,{EEG.chanlocs.labels})), ...
 
 % define analysis parameters
 data               = squeeze(mean(EEG.data(sensoridx,:,:)));
+data_og            = squeeze(mean(EEG_og.data(sensoridx,:,:)));
 erp                = mean(data,2);
 t                  = EEG.times;
 Fs                 = EEG.srate;
 trials             = EEG.trials;
 
+if ip.Results.timefreq 
+% specifically for ITC/ERSP
+tlimits = [-500 2750];
+cycles = [1 30];
+winsize = 100;
+nfreqs = 109;
+flimits = [1 120];
+baselinew = -500;
+timesout = 250;
+
+% optional ITC and ERSP
+     [ersp1, itc, ~, t_s, f_s] = newtimef(double(data_og), ...
+        EEG.pnts, ... % frames
+        tlimits, ... %tlimits
+        Fs, ... %Fs
+        cycles, ... % varwin (cycles)
+        'winsize', winsize, ...
+        'nfreqs', nfreqs, ...
+        'freqs', flimits, ...
+        'plotersp', 'on', ...
+        'plotitc', 'on', ...
+        'verbose', 'on', ...
+        'baseline', [-500 0], ...
+        'timesout', timesout);
+end
 % define ROI indexes
 tidx = @(idx) find(t >= idx(1) & t <= idx(2));
 

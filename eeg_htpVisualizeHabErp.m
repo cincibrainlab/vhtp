@@ -43,7 +43,7 @@ defaultGroupMean = 1;
 defaultSingleplot = 1;
 defaultGroupOverlay = [];
 defaultPlotstyle = 'default';
-
+defaultDrugNames = {'Drug','Placebo', 'Baseline'};
 errorMsg2 = 'EEG input should be either a cell array or struct.';
 validEegArray = @(x) assert(iscell(x) || isstruct(x), errorMsg2);
 
@@ -58,7 +58,7 @@ addParameter(ip,'groupmean', defaultGroupMean, @islogical)
 addParameter(ip,'singleplot', defaultSingleplot, @islogical)
 addParameter(ip,'groupOverlay', defaultGroupOverlay, @isvector)
 addParameter(ip,'plotstyle', defaultPlotstyle, @ischar)
-
+addParameter(ip, 'drugNames', defaultDrugNames, @iscell)
 
 parse(ip,EEGcell,varargin{:});
 
@@ -162,7 +162,9 @@ if ip.Results.singleplot % all single plot group or multi individual
             delete(textHandles);
             colorOrderArray = [1 0 0; 0.3010 0.7450 0.9330; 0 0 0];
             lineStyleArray = {'-','-',':'};
-            displayNameArray = {'Drug','Placebo', 'Baseline'};
+
+            displayNameArray = ip.Results.drugNames;
+
             for pi = 1 : size(erp,1)
                 axesHandles(pi).Color = colorOrderArray(pi,:);
                 axesHandles(pi).LineStyle = lineStyleArray{pi};
@@ -171,18 +173,25 @@ if ip.Results.singleplot % all single plot group or multi individual
             line([0 0], [-10 10], 'Color','k','LineStyle', ':');
             line([500 500], [-10 10], 'Color','k', 'LineStyle', ':');
 
+            line([0 0], [-10 -1.3], 'Color','k','LineStyle', '-','LineWidth',6);
+            line([500 500], [-10 -1.3], 'Color','k', 'LineStyle', '-', 'LineWidth',6);
+
             l = legend('Box','off');
             l.String = l.String(1 : size(erp,1));
             
             text(100, min(min(N1))*2, "N1", 'rotation',0,'FontSize',20);
             text(P2Lat(1), max(max(P2)*1.75), "P2", 'rotation',0,'FontSize',20);
-            text(600, min(min(N1))*2, "N1", 'rotation',0,'FontSize',20);
+            text(600, min(min(N1))*3.4, "N1", 'rotation',0,'FontSize',20);
             text(P2Lat(2), max(max(P2)*.8), "P2", 'rotation',0,'FontSize',20);
             ylimVals = get(gca,'ylim');
-            text(-100, ylimVals(1)-ylimVals(1)*.1, "S1", 'rotation',0,'FontSize',20);
-            text(400, ylimVals(1)-ylimVals(1)*.1, "S2", 'rotation',0,'FontSize',20);
+            text(0, ylimVals(1)-ylimVals(1)*.1, "Stimulus 1 ", 'rotation',0,'FontSize',20,'HorizontalAlignment','right');
+            text(500, ylimVals(1)-ylimVals(1)*.1, "Stimulus 2 ", 'rotation',0,'FontSize',20,'HorizontalAlignment','right');
 
             text(P2Lat(1), max(max(P2)*1.75), "P2", 'rotation',0,'FontSize',20);
+                        
+            axesHandles = findobj(gca, 'Type', 'Line');
+
+            delete(axesHandles(7));
             saveas(gcf, plot_filename);
     end
     close gcf;
