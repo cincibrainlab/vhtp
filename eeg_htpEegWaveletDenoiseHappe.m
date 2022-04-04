@@ -70,14 +70,14 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     ip = inputParser();
     addRequired(ip, 'EEG', @isstruct);
     addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
-    addParameter(ip, 'isErp', defaultOutputDir, @isfolder)
-    addParameter(ip, 'wavLvl', defaultWavLvl, @int)
+    addParameter(ip, 'isErp', defaultOutputDir, @islogical)
+    addParameter(ip, 'wavLvl', defaultWavLvl, @isnumeric)
     addParameter(ip, 'wavelet', defaultWavelet, @char)
     addParameter(ip, 'DenoisingMethod', defaultDenoisingMethod, @char)
     addParameter(ip, 'ThresholdRule', defaultThresholdRule, @ischar)
     addParameter(ip, 'NoiseEstimate', defaultNoiseEstimate, @ischar)
-    addParameter(ip, 'highpass', defaultHighPass, @int)
-    addParameter(ip, 'lowpass', defaultLowPass, @int)
+    addParameter(ip, 'highpass', defaultHighPass, @isnumeric)
+    addParameter(ip, 'lowpass', defaultLowPass, @isnumeric)
 
     % perform double precision test
     if ~isa(EEG.data,'double')

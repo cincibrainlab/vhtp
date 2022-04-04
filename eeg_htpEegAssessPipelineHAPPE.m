@@ -27,12 +27,15 @@ scrsz = get(0,'ScreenSize'); % left, bottom, width, height
 % input parsing
 defaultOutputDir = tempdir;
 defaultResampleRate = 500;
+defaultGroupLabels = {EEG1.setname,EEG2.setname};
 
 ip = inputParser();
 addRequired(ip, 'EEG1', @isstruct);
 addRequired(ip, 'EEG2', @isstruct);
 addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip, 'resampleRate', defaultResampleRate, @isint)
+addParameter(ip, 'groupLabels', defaultGroupLabels, @iscell)
+
 
 parse(ip, EEG1, EEG2, varargin{:});
 
@@ -53,11 +56,13 @@ end
 EEGCell = {EEG1,EEG2};
 
 % prepare filename
-[~,fn1,~] = fileparts(EEG1.setname);
-[~,fn2,~] = fileparts(EEG2.setname);
-basefilename = sprintf('%s_%s_%s_%s.TBD', functionstamp,timestamp,fn1,fn2);
+[~,fn1,~] = fileparts(ip.Results.groupLabels{1});
+[~,fn2,~] = fileparts(ip.Results.groupLabels{2});
+basefilename = sprintf('%s_%s_%s_%s.TBD', ...
+    functionstamp,timestamp,fn1,fn2);
 
-fprintf('%s: EEG1: %s EEG2: %s Date: %s\n', functionstamp,fn1,fn2, timestamp);
+fprintf('%s: EEG1: %s EEG2: %s Date: %s\n', ...
+    functionstamp,fn1,fn2, timestamp);
 
 % convert epoch to continuous data
 datCell = cell(2,1);
@@ -181,7 +186,7 @@ for bi = 1 : plotno
     %set(h1, 'Units', 'normalized');
     %set(h1, 'OuterPosition', [[], [], .8, .2]);
     title(coefStruct(bi).label, 'FontSize', 12);
-    caxis([.95 1]);
+    %caxis([.20 1]);
 
 end
 
@@ -191,7 +196,9 @@ hp4 = sub_pos;
 cb = colorbar('Position', [.85  .5  0.025 .3], 'FontSize', 14);
 cb.Label.String = 'Corr. Coef.';
 ctitle = sprintf('%s: Channel Cross-Correlation (Run Date:%s)\nEEG1 = %s   EEG2 = %s', ...
-    functionstamp, timestamp, EEG1.setname, EEG2.setname);
+    functionstamp, timestamp, ...
+    ip.Results.groupLabels{1}, ...
+    ip.Results.groupLabels{2});
 allCoefs = horzcat(coefStruct(:).meancf);
 
 % add histogram of corr. coefs
