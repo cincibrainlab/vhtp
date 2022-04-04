@@ -1,6 +1,6 @@
 % vHtp Runfile
-% Getting Started Tutorial
-% Computing an MNE model for event related data
+% Chirp Spectral Events Runfile
+% Computing SE variations on Chirp Source data
 
 % add toolkit paths
 vhtp_path = '/srv/vhtp';
@@ -12,13 +12,16 @@ addpath(eeglab_path);
 addpath(brainstorm_path);
 
 % run eeglab
-eeglab
+eeglab nogui;
 % run brainstorm
 %brainstorm;
 
 % load example EEG file
+% Pre source conversion
 mySetFile = 'D0179_chirp-ST_postcomp.set';
 mySetPath = '/srv/RAWDATA/Grace_Projects/Proj_FxsChirp';
+
+% post source conversion (for SE)
 mySourceOutput = '/srv/RAWDATA/Grace_Projects/Proj_FxsChirpSource/';
 myDatasetOuput = '/srv/BIGBUILD/Proj_FxsChirpSe/';
 
@@ -34,6 +37,7 @@ for fi = 1 : 1 %height(myFileListSource)
 
     EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
     EEG = pop_select(EEG, 'time', [-500 0]); % extract baseline
+
     EEGSE = eeg_htpCalcSpectralEvents(EEG, 'outputdir', fullfile(myDatasetOuput));
     %EEGPL = eeg_htpCalcPhaseLagFrontalTemporal(EEG, 'outputdir', fullfile(myDatasetOuput, "PL"));
     EEGSECell{fi} = EEGSE; %#ok<SAGROW> 
@@ -55,9 +59,6 @@ for ti = 1 : numel(EEGSECell)
         
 end
 writetable(eeg_htpCalcSpectralEvents_table, fullfile(myDatasetOuput, "eeg_htpCalcSpectralEvents_table.csv"));
-writetable(eeg_htpCalcPhaseLagFrontalTemporal_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcPhaseLagFrontalTemporal_Frontal_summary_table.csv"));
+% writetable(eeg_htpCalcPhaseLagFrontalTemporal_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcPhaseLagFrontalTemporal_Frontal_summary_table.csv"));
 
-
-writetable(eeg_htpCalcRestPower_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcRestPower_summary_table.csv"));
-writetable(eeg_htpCalcAacGlobal_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcAacGlobal_summary_table.csv"));
 
