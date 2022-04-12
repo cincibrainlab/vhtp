@@ -141,7 +141,7 @@ EEG=eeg_checkset(EEG);
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 EEG.vhtp.eeg_htpEegRemoveChansEeglab.qi_table = qi_table;
-results = EEG.vhtp.htpEegRemoveChansEeglab;
+results = EEG.vhtp.eeg_htpEegRemoveChansEeglab;
 
 function  EEG=showChanDetail(EEG)
 
