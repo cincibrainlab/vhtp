@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegResampleDataEeglab(EEG,srate)
+function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,srate)
 % eeg_htpResampleDataEeglab() - Resample data to new specified sampling rate.
 %
 % Usage:
@@ -42,6 +42,10 @@ catch e
 end
 
 EEG = eeg_checkset( EEG );
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegResampleDataEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegResampleData;
 
 end
 

@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegRemoveSegmentsEeglab(EEG,varargin)
+function [EEG, results] = eeg_htpEegRemoveSegmentsEeglab(EEG,varargin)
 % eeg_htpEegRemoveSegmentsEeglab - Select and reject atifactual regions in
 %                                 data
 %
@@ -118,5 +118,9 @@ catch e
     throw(e)
 end
 EEG=eeg_checkset(EEG);
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab;
 end
 

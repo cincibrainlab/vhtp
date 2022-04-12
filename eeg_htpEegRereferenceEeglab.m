@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegRereferenceEeglab(EEG,varargin)
+function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 % eeg_htpEegRereferenceEeglab() - Rereference data to Average Reference.
 %
 % Usage:
@@ -38,5 +38,9 @@ catch e
     throw(e)
 end
 EEG=eeg_checkset(EEG);
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegRereferenceEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegRereferenceEeglab;
 end
 

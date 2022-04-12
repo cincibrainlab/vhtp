@@ -372,6 +372,12 @@ function b1_callback(src, event)
 
 end
 
+EEG = eeg_checkset(EEG);
+
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = qi_table;
+results = EEG.vhtp.htpEegRemoveCompsEeglab;
 end
 
 function comps_artifact = get_icview_comps(var, threshold, range,EEG)

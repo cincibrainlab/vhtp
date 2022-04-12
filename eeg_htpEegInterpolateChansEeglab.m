@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
+function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 % eeg_htpEegInterpolateChansEeglab - Mark channels for rejection and
 %                               interpolation
 %
@@ -59,6 +59,10 @@ catch error
 end
 
 EEG = eeg_checkset(EEG);
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegInterpolateChansEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegInterpolateChansEeglab;
 
 end
 

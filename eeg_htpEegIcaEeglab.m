@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegIcaEeglab(EEG,varargin)
+function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 % eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
 %
 % Usage:
@@ -75,7 +75,10 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
-
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegIcaEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegIcaEeglab;
 end
 
 function tmprank2 = getrank(tmpdata)
