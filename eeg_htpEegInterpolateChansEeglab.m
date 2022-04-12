@@ -29,8 +29,8 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method', defaultMethod,@ischar)
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegInterpolateChansEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegInterpolateChansEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;

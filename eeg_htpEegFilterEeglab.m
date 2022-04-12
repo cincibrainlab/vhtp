@@ -141,8 +141,8 @@ addParameter(ip, 'cleanlinewinstep',defaultCleanlineWinStep,@isnumeric);
 
 parse(ip,EEG,method,varargin{:});
 
-EEG.vhtp.eeg_htpEegFilterEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegFilterEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     switch method

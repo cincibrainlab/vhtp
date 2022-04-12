@@ -47,8 +47,8 @@ parse(ip,EEG,varargin{:});
 
 EEG.vhtp.eeg_htpEegRemoveChansEeglab = struct();
 
-EEG.vhtp.eeg_htpEegRemoveChansEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegRemoveChansEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
    if EEG.xmax < ip.Results.minimumduration

@@ -24,8 +24,8 @@ addRequired(ip, 'EEG', @isstruct);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegCreateEpochsEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegCreateEpochsEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try 
     global rej;

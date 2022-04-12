@@ -24,8 +24,8 @@ addRequired(ip, 'srate',@isnumeric);
 
 parse(ip,EEG,srate);
 
-EEG.vhtp.eeg_htpResampleDataEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.eeg_htpResampleDataEeglab.functionstamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     

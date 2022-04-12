@@ -36,8 +36,8 @@ addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegCreateEpochsEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegCreateEpochsEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try 
     EEG = eeg_regepochs(EEG,'recurrence',ip.Results.epochlength,'limits',ip.Results.epochlimits,'extractepochs','on','rmbase',NaN);

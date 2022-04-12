@@ -29,8 +29,8 @@ addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegRemoveCompsEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegRemoveCompsEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     scsize=get(0,'ScreenSize');

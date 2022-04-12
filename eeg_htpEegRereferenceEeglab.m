@@ -21,8 +21,8 @@ addRequired(ip, 'EEG', @isstruct);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegRereferenceEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.eeg_htpEegRereferenceEeglab.functionstamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     %EEG.data = bsxfun( @minus, EEG.data, sum( EEG.data, 1 ) / ( EEG.nbchan + 1 ) );

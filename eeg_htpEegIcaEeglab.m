@@ -40,8 +40,8 @@ addParameter(ip,'icadir',defaultIcaDir,@ischar);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegIcaEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegIcaEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     scriptdir = pwd;

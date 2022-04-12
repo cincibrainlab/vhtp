@@ -22,8 +22,8 @@ addRequired(ip, 'EEG', @isstruct);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.functionstamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     
