@@ -35,7 +35,7 @@ functionstamp = mfilename; % function name for logging/output
 % Inputs: Function Specific
 % publication parameters: Ethridge et al. 2019
 defaultTLimits = [-500 2750];
-defaultBaselineW = nan;
+defaultBaselineW = [-500 0];
 defaultFLimits = [2 110];
 defaultTimesOut = 250;
 defaultCycles = [1 30];

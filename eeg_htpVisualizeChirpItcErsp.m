@@ -82,13 +82,15 @@ end
 % START: Start Visualization
 chanItc = {};
 chanErsp = {};
+chanStp = {};
 % check for multichannel data
 if ndims(EEGcell{1}.vhtp.eeg_htpCalcChirpItcErsp.itc1) > 2
     isMultiChannel = true;
     chanlabels = {EEGcell{1}.chanlocs.labels};
     for ei = 1 : numel(EEGcell)
-        chanItc{ei} = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
+        chanItc{ei}  = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
         chanErsp{ei} = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
+        chanStp{ei}  = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.stp1;
     end
 else
     isMultiChannel = false;
@@ -101,8 +103,10 @@ for ci = 1 : numel(chanlabels)
         for ei = 1 : length(EEGcell)
             chanItcNow = chanItc{ei};
             chanErspNow = chanErsp{ei};
+            chanStpNow = chanStp{ei};
             EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1 = chanItcNow(:,:,ci);
             EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1 = chanErspNow(:,:,ci);
+            EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.stp1 = chanStpNow(:,:,ci);
         end
     end
 
@@ -121,6 +125,7 @@ for ci = 1 : numel(chanlabels)
         for ei = 1 : length(EEGcell) % all ERPs in single array
             itcArr(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
             erspArr(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
+            stpArr(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.stp1;
         end
 
         for gi = 1 : group_no % mean each by group id
@@ -130,6 +135,8 @@ for ci = 1 : numel(chanlabels)
                 ['chirp_itcersp_by_group_' channame '_' num2str(gi) '_' timestamp '.png']);
             itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3);
             ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3);
+            stp(:,:,gi) = mean(stpArr(:,:,cur_group_idx),3);
+
         end
         % Perform contrasts and add as additional groups
         if ~isempty(ip.Results.contrasts)
@@ -140,6 +147,8 @@ for ci = 1 : numel(chanlabels)
 
                 itc(:,:,group_no) = itc(:,:,select_contrast(1)) - itc(:,:,select_contrast(2));
                 ersp(:,:,group_no) = ersp(:,:,select_contrast(1)) - ersp(:,:,select_contrast(2));
+                stp(:,:,group_no) = stp(:,:,select_contrast(1)) - stp(:,:,select_contrast(2));
+
                 plot_title_cell{group_no} = sprintf('PLACEHOLDER for group diff %d_%d (%s)', select_contrast(1), select_contrast(2), channame);
                 plot_filename_cell{group_no} = fullfile(outputdir, ...
                     ['chirp_itcersp_by_groupdiff_' channame '_' sprintf('%d_%d', select_contrast(1), select_contrast(2)) '_' timestamp '.png']);
@@ -165,16 +174,21 @@ for ci = 1 : numel(chanlabels)
             end
             itc(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
             ersp(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
+            stp(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.stp1;
         end
+        
     end
 
     if ip.Results.singleplot
         for gi = 1 : group_no
             figure('Position', [600 600 1200 700]);
-            subplot(1,2,1)
+            subplot(1,3,1)
             createPlot_chirpItc(t, f, itc(:,:,gi), ...
                 strrep(plot_title_cell{gi},'PLACEHOLDER','ITC'));
-            subplot(1,2,2)
+            subplot(1,3,2)
+            createPlot_chirpStp(t, f, stp(:,:,gi), ...
+                strrep(plot_title_cell{gi},'PLACEHOLDER','ERSP'));
+            subplot(1,3,3)
             createPlot_chirpErsp(t, f, ersp(:,:,gi), ...
                 strrep(plot_title_cell{gi},'PLACEHOLDER','ERSP'));
             sgtitle(strrep(plot_title_cell{gi},'PLACEHOLDER','Chirp Plots'));
@@ -184,12 +198,15 @@ for ci = 1 : numel(chanlabels)
     else
         for si = 1 : size(itc,3)
             figure('Position', [600 600 1200 700]);
-            subplot(1,2,1)
+            subplot(1,3,1)
             createPlot_chirpItc(t, f, itc(:,:,si), ...
-                strrep(plot_title_cell{si},'PLACEHOLDER','ITC'));
-            subplot(1,2,2)
+                'ITC');
+            subplot(1,3,2)
+            createPlot_chirpStp(t, f, stp(:,:,si), ...
+                'STP');
+            subplot(1,3,3)
             createPlot_chirpErsp(t, f, ersp(:,:,si), ...
-                strrep(plot_title_cell{si},'PLACEHOLDER','ERSP'));
+                'ERSP');
             sgtitle(strrep(plot_title_cell{si},'PLACEHOLDER','Chirp Plots'));
             saveas(gcf, plot_filename_cell{si});
             close all;
@@ -221,8 +238,41 @@ ylabel(h,'Intertrial Coherence (ITC)');
 if contains(plot_title, 'diff')
     caxis([-.03 .03]); % important
 else
-    caxis([0 .2]); % important
+    max_itc = .2;
+    if max(max(itc)) > max_itc
+        % axis([0 1]); % important
+        plot_title = [plot_title ' (EXCEEDS UPPER LIMIT ' num2str(max_itc) ')' ];
+    else
+        caxis([0 .2]); % important
+    end
 end
+pbaspect([1 1 1]);
+title(plot_title);
+
+end
+
+function fig = createPlot_chirpStp(t, f, stp,plot_title)
+
+set(0,'defaultTextInterpreter','none');
+colormap jet;
+imagesc(t,f,stp); axis xy;
+xlabel('Time (ms)'); ylabel('Frequency (Hz)');
+h = colorbar;
+ylabel(h,'Power (dB/Hz) ');
+%ylim(h,[0 45]);
+if contains(plot_title, 'diff')
+    caxis([-5 5]); % important
+else
+    max_stp = -190;
+    if max(max(stp)) > max_stp
+        % axis([0 1]); % important
+        plot_title = [plot_title ' (EXCEEDS UPPER LIMIT ' num2str(max_stp) ')' ];
+    else
+        caxis([-215 -190]); % important
+    end
+ %   caxis([-215 -190]);
+end
+
 pbaspect([1 1 1]);
 title(plot_title);
 
@@ -235,12 +285,13 @@ colormap jet;
 imagesc(t,f,ersp); axis xy;
 xlabel('Time (ms)'); ylabel('Frequency (Hz)');
 h = colorbar;
-ylabel(h,'Power (microvolts) ');
+ylabel(h,'Power (dB/Hz) Change from Baseline');
 %ylim(h,[0 45]);
 if contains(plot_title, 'diff')
     caxis([-5 5]); % important
 else
-    caxis([-215 -190]);
+    
+%    caxis([-215 -190]);
 end
 
 pbaspect([1 1 1]);
