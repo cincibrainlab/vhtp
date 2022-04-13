@@ -58,7 +58,6 @@ addParameter(ip,'singleplot', defaultSingleplot, @islogical)
 addParameter(ip, 'averageByRegion', defaultAverageByRegion, @islogical)
 addParameter(ip,'contrasts', defaultContrasts, @iscell)
 
-
 parse(ip,EEGcell,varargin{:});
 outputdir = ip.Results.outputdir;
 
@@ -76,9 +75,7 @@ outfileCell = cellfun( @(EEG) fullfile(outputdir, ...
 % averaging into regions.
 if ip.Results.averageByRegion
     for ei = 1 : numel(EEGcell)
-
         EEGcell{ei} = eeg_htpAverageStructByRegion( EEGcell{ei}, 'eeg_htpVisualizeChirpItcErsp');
-
     end
 end
 
@@ -97,7 +94,6 @@ else
     isMultiChannel = false;
     chanlabels = {'average'};
 end
-
 
 for ci = 1 : numel(chanlabels)
     channame = chanlabels{ci};
