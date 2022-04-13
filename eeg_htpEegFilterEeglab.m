@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegFilterEeglab(EEG,method,varargin)
+function [EEG, results] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 % eeg_htpEegFilterEeglab - Perform various filtering methods
 %                           (hipass, lowpass, notch, and cleanline) on data
 %
@@ -141,14 +141,14 @@ addParameter(ip, 'cleanlinewinstep',defaultCleanlineWinStep,@isnumeric);
 
 parse(ip,EEG,method,varargin{:});
 
-EEG.vhtp.eeg_htpEegFilterEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegFilterEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     switch method
         case 'highpass'
-            
-            EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', []);
+            highpassfiltorder = 6600;
+            EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassLocutoff = ip.Results.hipassfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassRevfilt     = ip.Results.revfilt;
@@ -156,8 +156,8 @@ try
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassMinPhase    = ip.Results.minphase;
             
         case 'lowpass'
-            
-            EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt);
+            lowpassfiltorder = 3300;
+            EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',lowpassfiltorder);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassHicutoff = ip.Results.lowpassfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassRevfilt     = ip.Results.revfilt;
@@ -166,12 +166,12 @@ try
             
         case 'notch'
             
-            
+            notchfiltorder = 3300;
             linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
             harmonics = floor((EEG.srate/2) / linenoise);
             if EEG.srate < 2000
                 for i = 1 : harmonics
-                    EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
+                    EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'filtorder',notchfiltorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
                 end
             end
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
@@ -207,6 +207,10 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegFilterEeglab.qi_table = qi_table;
 
+results = EEG.vhtp.eeg_htpEegFilterEeglab;
 end
 

@@ -1,0 +1,99 @@
+function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
+% eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
+%
+% Usage:
+%    >> [ EEG ] = eeg_htpEegRemoveEpochsEeglab( EEG )
+%
+% Require Inputs:
+%     EEG           - EEGLAB Structure
+%
+%
+%           
+% Outputs:
+%     EEG         - Updated EEGLAB structure
+%
+%  This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  please see http://github.com/cincibrainlab
+%
+%  Contact: kyle.cullion@cchmc.org
+
+% MATLAB built-in input validation
+ip = inputParser();
+ip.StructExpand = 0;
+addRequired(ip, 'EEG', @isstruct);
+
+parse(ip,EEG,varargin{:});
+
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
+
+try 
+    global rej;
+
+
+    gui.position = [0.07 0.35 0.4 0.55];
+
+    spevent = EEG.event;
+    spfilename = EEG.filename;
+    titlestr = sprintf('Epoch Rejection: %s ', spfilename);
+
+    eegplot(EEG.data,'srate',EEG.srate,'winlength',8, ...
+        'events', spevent,'wincolor',[1 0.5 0.5], 'limits', [EEG.xmin EEG.xmax]*1000,...
+        'plottitle', titlestr, ...
+        'command','global rej,rej=TMPREJ',...
+        'eloc_file',EEG.chanlocs);
+
+
+    h = findobj('tag', 'eegplottitle');
+    h.FontWeight = 'Bold'; h.FontSize = 16; h.Position = [0.5000 0.93 0];
+
+
+    handle = gcf;
+    handle.Units = 'normalized';
+    handle.Position = gui.position;
+
+
+    waitfor(gcf);
+
+
+    if ~isempty(rej)
+
+        tmprej = eegplot2trial(rej, EEG.pnts, EEG.trials);
+        proc_tmprej_epochs = tmprej;
+        EEG = eeg_checkset( EEG );
+
+    else
+
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials = '';
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badid = '';
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_percent = 100;
+
+    end
+
+
+    if ~exist('tmprej')
+
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials   = 0;
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badid       = '[0]';
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_percent     = 100;
+
+    else
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials = length(find(tmprej));
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badid = ['[' num2str(find(tmprej)) ']'];
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_percent = 100-(EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials / EEG.trials)*100;
+
+    end
+    
+    EEG = pop_rejepoch( EEG, tmprej ,0);
+    EEG = eeg_checkset(EEG);
+    EEG.vhtp.eeg_htpEegRemoveRepochsEeglab.epoch_trials = EEG.trials;
+    
+catch e
+    throw(e)
+end
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegRemoveEpochsEeglab;
+end
+

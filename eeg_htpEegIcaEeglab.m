@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegIcaEeglab(EEG,varargin)
+function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 % eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
 %
 % Usage:
@@ -40,8 +40,8 @@ addParameter(ip,'icadir',defaultIcaDir,@ischar);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegIcaEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegIcaEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     scriptdir = pwd;
@@ -75,7 +75,10 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
-
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegIcaEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegIcaEeglab;
 end
 
 function tmprank2 = getrank(tmpdata)

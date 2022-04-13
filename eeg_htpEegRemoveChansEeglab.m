@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
+function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 % eeg_htpEegRemoveChansEeglab - Mark channels for rejection and
 %                               interpolation
 %
@@ -45,8 +45,10 @@ addParameter(ip,'threshold',defaultThreshold,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegRemoveChansEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegRemoveChansEeglab.functionStamp = mfilename; % function name for logging/output
+EEG.vhtp.eeg_htpEegRemoveChansEeglab = struct();
+
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
    if EEG.xmax < ip.Results.minimumduration
@@ -64,62 +66,67 @@ try
        gui.position = [0.01 0.20 0.80 0.70];
        EEG=autobadchannel( EEG,ip.Results.threshold );
        
-       if ~isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
        
-           cdef = {'g','b'};
-           carr = repmat(cdef,1, size(EEG.data,1));
-           carr = carr(1:size(EEG.data, 1));
-           carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
+       cdef = {'g','b'};
+       carr = repmat(cdef,1, size(EEG.data,1));
+       carr = carr(1:size(EEG.data, 1));
+       carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
 
-           eegplot(EEG.data,'srate',EEG.srate,'winlength',10, ...
-                'plottitle', ['Mark and Remove Bad Channels '], ...
-                'events',EEG.event,'color',carr,'wincolor',[1 0.5 0.5], ...
-                'eloc_file',EEG.chanlocs,  'butlabel', 'Close Window', 'submean', 'on', ...
-                'command', 't = 1', 'position', [400 400 1024 768] ...
-                );
+       eegplot(EEG.data,'srate',EEG.srate,'winlength',10, ...
+            'plottitle', ['Mark and Remove Bad Channels '], ...
+            'events',EEG.event,'color',carr,'wincolor',[1 0.5 0.5], ...
+            'eloc_file',EEG.chanlocs,  'butlabel', 'Close Window', 'submean', 'on', ...
+            'command', 't = 1', 'position', [400 400 1024 768] ...
+            );
 
-           h = findobj('tag', 'eegplottitle');
-           h.FontWeight = 'Bold'; h.FontSize = 16; h.Position = [0.5000 0.93 0];
-           proc_badchans=[];
-           chanlist = {EEG.chanlocs.labels};
-
-
-           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans =  '';
-
-           handle = gcf;
-           handle.Units = 'normalized';
-           handle.Position = gui.position;
+       h = findobj('tag', 'eegplottitle');
+       h.FontWeight = 'Bold'; h.FontSize = 16; h.Position = [0.5000 0.93 0];
+       proc_badchans=[];
+       chanlist = {EEG.chanlocs.labels};
 
 
-           popup = uicontrol(handle,'Tag', 'chanselect', 'Style', 'listbox', ...
-                'max',10,'min',1, ...
-                'String', chanlist , 'Value', EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel,...
-                'Units', 'normalized', ...
-                'Position', [.05 0.15 0.035 .70], 'BackgroundColor', [0.94 0.94 0.94]);
+       EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans =  '';
 
-           showBadDetail = uicontrol(handle,...
-                'Tag', 'detailbutton', ...
-                'Style', 'pushbutton', 'BackgroundColor', [0 1 1],...
-                'Units', 'normalized', ...
-                'Position', [0.7 0.08 0.10 0.05],...
-                'String', 'Detail', 'Callback', @(src,event)showChanDetail(EEG));
-
-           toggleBadChannels = uicontrol(handle,...
-                'Tag', 'savebutton', ...
-                'Style', 'togglebutton', 'BackgroundColor', [0 1 0],...
-                'Units', 'normalized', ...
-                'Position', [0.8 0.08 0.14 0.05],...
-                'String', 'Save', 'Callback', @(src,event)selBadChan(EEG));
-
-           textBadChannels = uicontrol(handle, 'Style', 'text', ...
-                'String', 'Manual Bad Channel Rejection: no channels selected', 'Tag', 'badchantitle', ...
-                'FontSize', 14,    'Units', 'normalized', 'Position', [0.1 0.89 0.3 0.03], 'HorizontalAlignment', 'left');
+       handle = gcf;
+       handle.Units = 'normalized';
+       handle.Position = gui.position;
 
 
-           waitfor(gcf);
-           EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=1;
-           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
+       popup = uicontrol(handle,'Tag', 'chanselect', 'Style', 'listbox', ...
+            'max',10,'min',1, ...
+            'String', chanlist , 'Value', EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel,...
+            'Units', 'normalized', ...
+            'Position', [.05 0.15 0.035 .70], 'BackgroundColor', [0.94 0.94 0.94]);
+
+       showBadDetail = uicontrol(handle,...
+            'Tag', 'detailbutton', ...
+            'Style', 'pushbutton', 'BackgroundColor', [0 1 1],...
+            'Units', 'normalized', ...
+            'Position', [0.7 0.08 0.10 0.05],...
+            'String', 'Detail', 'Callback', @(src,event)showChanDetail(EEG));
+
+       toggleBadChannels = uicontrol(handle,...
+            'Tag', 'savebutton', ...
+            'Style', 'togglebutton', 'BackgroundColor', [0 1 0],...
+            'Units', 'normalized', ...
+            'Position', [0.8 0.08 0.14 0.05],...
+            'String', 'Save', 'Callback', @(src,event)selBadChan(EEG));
+
+       textBadChannels = uicontrol(handle, 'Style', 'text', ...
+            'String', 'Manual Bad Channel Rejection: no channels selected', 'Tag', 'badchantitle', ...
+            'FontSize', 14,    'Units', 'normalized', 'Position', [0.1 0.89 0.3 0.03], 'HorizontalAlignment', 'left');
+
+
+       waitfor(gcf);
+       
+       if length(proc_badchans) > ceil(EEG.nbchan*.05)
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=0;
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Max Reject Threshold Exceeded';
+           return
        end
+       
+       EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=1;
+       EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
    end
    
    
@@ -130,6 +137,11 @@ end
 
 
 EEG=eeg_checkset(EEG);
+
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegRemoveChansEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegRemoveChansEeglab;
 
 function  EEG=showChanDetail(EEG)
 
@@ -222,12 +234,6 @@ function EEG = autobadchannel( EEG, threshold )
     badchans = cell2mat(indelec(1:length(indelec)));
     EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel = unique( badchans, 'stable' );
     EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = unique( badchans, 'stable' );
-
-
-    if length(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) > maxchannels
-        EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=0;
-        EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Max Reject Threshold Exceeded';
-    end
 
 end
 

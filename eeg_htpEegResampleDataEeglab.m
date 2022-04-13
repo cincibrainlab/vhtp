@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegResampleDataEeglab(EEG,srate)
+function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,srate)
 % eeg_htpResampleDataEeglab() - Resample data to new specified sampling rate.
 %
 % Usage:
@@ -24,8 +24,8 @@ addRequired(ip, 'srate',@isnumeric);
 
 parse(ip,EEG,srate);
 
-EEG.vhtp.eeg_htpResampleDataEeglab.timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
-EEG.vhtp.eeg_htpResampleDataEeglab.functionstamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     
@@ -42,6 +42,10 @@ catch e
 end
 
 EEG = eeg_checkset( EEG );
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegResampleDataEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegResampleDataEeglab;
 
 end
 

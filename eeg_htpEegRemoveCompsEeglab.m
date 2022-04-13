@@ -29,8 +29,8 @@ addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegRemoveCompsEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegRemoveCompsEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     scsize=get(0,'ScreenSize');
@@ -372,6 +372,12 @@ function b1_callback(src, event)
 
 end
 
+EEG = eeg_checkset(EEG);
+
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegRemoveCompsEeglab;
 end
 
 function comps_artifact = get_icview_comps(var, threshold, range,EEG)

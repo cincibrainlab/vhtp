@@ -1,4 +1,4 @@
-function [EEG] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
+function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 % eeg_htpEegInterpolateChansEeglab - Mark channels for rejection and
 %                               interpolation
 %
@@ -29,8 +29,8 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method', defaultMethod,@ischar)
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegInterpolateChansEeglab.timestamp = datestr(now,'yymmddHHMMSS'); % timestamp
-EEG.vhtp.eeg_htpEegInterpolateChansEeglab.functionStamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 try
     badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
@@ -59,6 +59,10 @@ catch error
 end
 
 EEG = eeg_checkset(EEG);
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','scriptname','timestamp'});
+EEG.vhtp.eeg_htpEegInterpolateChansEeglab.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpEegInterpolateChansEeglab;
 
 end
 
