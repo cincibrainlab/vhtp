@@ -33,8 +33,10 @@ timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 try
+    try
     badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
-
+    catch
+    end
     EEGtemp = EEG;  
 
     if length(badchannels) >= 1
