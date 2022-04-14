@@ -19,7 +19,7 @@ function [summary_table] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
 % vHTP adaptation by E. Pedapati 3/19/2022
 
 % vhtp variables
-timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+timestamp = ['T' datestr(now, 'yymmddHHMMSS')]; % timestamp
 functionstamp = mfilename; % function name for logging/output
 msglog = @(x) fprintf('%s: %s\n', functionstamp, x);
 scrsz = get(0,'ScreenSize'); % left, bottom, width, height
@@ -28,14 +28,20 @@ scrsz = get(0,'ScreenSize'); % left, bottom, width, height
 defaultOutputDir = tempdir;
 defaultResampleRate = 500;
 defaultGroupLabels = {EEG1.setname,EEG2.setname};
+defaultTableOnly = false;
+defaultSaveOutput = true;
+defaultOutputFile = [];
+
 
 ip = inputParser();
 addRequired(ip, 'EEG1', @isstruct);
 addRequired(ip, 'EEG2', @isstruct);
-addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
-addParameter(ip, 'resampleRate', defaultResampleRate, @isint)
-addParameter(ip, 'groupLabels', defaultGroupLabels, @iscell)
-
+addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
+addParameter(ip, 'resampleRate', defaultResampleRate, @isint);
+addParameter(ip, 'groupLabels', defaultGroupLabels, @iscell);
+addParameter(ip, 'tableonly', defaultTableOnly, @islogical);
+addParameter(ip, 'saveoutput', defaultSaveOutput, @islogical);
+addParameter(ip, 'outputfile', defaultOutputFile, @ischar);
 
 parse(ip, EEG1, EEG2, varargin{:});
 
@@ -58,6 +64,7 @@ EEGCell = {EEG1,EEG2};
 % prepare filename
 [~,fn1,~] = fileparts(ip.Results.groupLabels{1});
 [~,fn2,~] = fileparts(ip.Results.groupLabels{2});
+
 basefilename = sprintf('%s_%s_%s_%s.TBD', ...
     functionstamp,timestamp,fn1,fn2);
 
@@ -125,7 +132,7 @@ customSpectrogram = @(sig) pwelch(sig', srate*2, 0, [0:.25:80], srate);
 customSpectrogram2 = @(sig) periodogram(sig,hamming(length(sig)),length(sig),srate,'power');
 
 [pwr1_chan, f] = customSpectrogram(sig1);
-[pwr2_chan, f] = customSpectrogram(sig2);
+[pwr2_chan] = customSpectrogram(sig2);
 
 pwr1 = mean(pwr1_chan,2);
 pwr2 = mean(pwr2_chan,2);
@@ -168,77 +175,80 @@ end
 coefStruct = [ampStruct coefStruct];
 
 % Visualization
-f1 = figure('Color','white','Position', [100 100 1536 1000]);
-plotno =  numel(coefStruct);
-
-for bi = 1 : plotno
-    h1 = subplot(3,4,bi);
-    topoplotIndie(gather(coefStruct(bi).meancf),...
-        EEG1.chanlocs, 'electrodes', 'labels', ...
-        'shading','flat');
-    if bi == 1, sub1_pos = get(gca,'position'); end
-    sub_pos = get(gca,'position'); % get subplot axis position
-    if bi <=4
-        set(gca,'position',sub_pos.*[.9 .9 1.1 1.1]); % modufy pos of row 1
-    else
-        set(gca,'position',sub_pos.*[.9 .9 1.1 1.1]); % modufy pos of row 1
+if ~ip.Results.tableonly
+    f1 = figure('Color','white','Position', [100 100 1536 1000]);
+    plotno =  numel(coefStruct);
+    
+    for bi = 1 : plotno
+        h1 = subplot(3,4,bi);
+        topoplotIndie(gather(coefStruct(bi).meancf),...
+            EEG1.chanlocs, 'electrodes', 'labels', ...
+            'shading','flat');
+        if bi == 1, sub1_pos = get(gca,'position'); end
+        sub_pos = get(gca,'position'); % get subplot axis position
+        if bi <=4
+            set(gca,'position',sub_pos.*[.9 .9 1.1 1.1]); % modufy pos of row 1
+        else
+            set(gca,'position',sub_pos.*[.9 .9 1.1 1.1]); % modufy pos of row 1
+        end
+        %set(h1, 'Units', 'normalized');
+        %set(h1, 'OuterPosition', [[], [], .8, .2]);
+        title(coefStruct(bi).label, 'FontSize', 12);
+        %caxis([.20 1]);
+        
     end
-    %set(h1, 'Units', 'normalized');
-    %set(h1, 'OuterPosition', [[], [], .8, .2]);
-    title(coefStruct(bi).label, 'FontSize', 12);
-    %caxis([.20 1]);
-
+    
+    colormap bone;
+    
+    hp4 = sub_pos;
+    cb = colorbar('Position', [.85  .5  0.025 .3], 'FontSize', 14);
+    cb.Label.String = 'Corr. Coef.';
+    ctitle = sprintf('%s: Channel Cross-Correlation (Run Date:%s)\nEEG1 = %s   EEG2 = %s', ...
+        functionstamp, timestamp, ...
+        ip.Results.groupLabels{1}, ...
+        ip.Results.groupLabels{2});
+    allCoefs = horzcat(coefStruct(:).meancf);
+    
+    % add histogram of corr. coefs
+    subplot(3,4,9:10);
+    hist(allCoefs);
+    xlabel('Correlation Coefficent', 'FontSize', 12);
+    set(gca,'FontSize',12);
+    ylabel('Count', 'FontSize', 12);
+    title('Histogram of Amplitude/Frequency Correlation Coefficents', 'FontSize',14);
+    legend( {coefStruct(:).bandname}, 'Location', 'northwest', 'FontSize', 12);
+    annotation('textbox', sub1_pos.*[1 1.075 1 1],'String',ctitle, ...
+        'FontSize', 14,  'FitBoxToText','on', 'LineStyle','none', 'Interpreter', 'none');
+    
+    
+    % add power spectrogram & difference line plot
+    rangediff = sprintf('EEG1-EEG2 Range: %.2f-%.2f dB', min(pwrdiff), max(pwrdiff));
+    subplot(3,4,11);
+    plot(f, pwr1,'k',f, pwr2,'r','LineWidth', 1)
+    set(gca, 'YScale', 'log')
+    %ylim([0 max([pwr1; pwr2])*1.3])
+    title(sprintf('Spectrogram Comparison (EEG2 = Red)\n%s',rangediff))
+    xlabel('Frequency (Hz)')
+    ylabel('PSD')
+    hold on;
+    yyaxis right;
+    ylim([75 125]);
+    ylabel('% EEG2/EEG1');
+    plot(f, pwrdiff,':b','LineWidth', 1)
+    set(gca, 'YScale', 'log','YColor', 'b')
+    
+    % difference histogram in percentage
+    subplot(3,4,12);
+    histogram( pwrdiff,25 );
+    xlabel('EEG2/EEG1 (%)');
+    ylabel('Count of EEG1-EEG2 Differences');
+    title(sprintf('Percent EEG2/EEG1 PSD\n(omitted 55-65 Hz)'));
+    
+    image_filename = fullfile(ip.Results.outputdir, strrep(basefilename,'.TBD','.png'));
+    
+else
+    image_filename = 'tblonly';
 end
-
-colormap bone;
-
-hp4 = sub_pos;
-cb = colorbar('Position', [.85  .5  0.025 .3], 'FontSize', 14);
-cb.Label.String = 'Corr. Coef.';
-ctitle = sprintf('%s: Channel Cross-Correlation (Run Date:%s)\nEEG1 = %s   EEG2 = %s', ...
-    functionstamp, timestamp, ...
-    ip.Results.groupLabels{1}, ...
-    ip.Results.groupLabels{2});
-allCoefs = horzcat(coefStruct(:).meancf);
-
-% add histogram of corr. coefs
-subplot(3,4,9:10);
-hist(allCoefs);
-xlabel('Correlation Coefficent', 'FontSize', 12);
-set(gca,'FontSize',12);
-ylabel('Count', 'FontSize', 12);
-title('Histogram of Amplitude/Frequency Correlation Coefficents', 'FontSize',14);
-legend( {coefStruct(:).bandname}, 'Location', 'northwest', 'FontSize', 12);
-annotation('textbox', sub1_pos.*[1 1.075 1 1],'String',ctitle, ...
-    'FontSize', 14,  'FitBoxToText','on', 'LineStyle','none', 'Interpreter', 'none');
-
-
-% add power spectrogram & difference line plot
-rangediff = sprintf('EEG1-EEG2 Range: %.2f-%.2f dB', min(pwrdiff), max(pwrdiff));
-subplot(3,4,11);
-plot(f, pwr1,'k',f, pwr2,'r','LineWidth', 1)
-set(gca, 'YScale', 'log')
-%ylim([0 max([pwr1; pwr2])*1.3])
-title(sprintf('Spectrogram Comparison (EEG2 = Red)\n%s',rangediff))
-xlabel('Frequency (Hz)')
-ylabel('PSD')
-hold on;
-yyaxis right;
-ylim([75 125]);
-ylabel('% EEG2/EEG1');
-plot(f, pwrdiff,':b','LineWidth', 1)
-set(gca, 'YScale', 'log','YColor', 'b')
-
-% difference histogram in percentage
-subplot(3,4,12);
-histogram( pwrdiff,25 );
-xlabel('EEG2/EEG1 (%)');
-ylabel('Count of EEG1-EEG2 Differences');
-title(sprintf('Percent EEG2/EEG1 PSD\n(omitted 55-65 Hz)'));
-
-image_filename = fullfile(tempdir, strrep(basefilename,'.TBD','.png'));
-saveas(f1, image_filename);
-
 
 % identify trouble channels/frequencies
 count = 1;
@@ -264,8 +274,8 @@ troubleChannelTable = struct2table(troubleStruct);
 summaryCoefs = rows2vars(struct2table(summarytmp),'VariableNamesSource', 'label');
 summary_table_tmp = horzcat(summaryCoefs, table(SNR, PeakSNR, RMSE, MAE));
 
-summary_table = horzcat(cell2table({EEG1.setname, EEG2.setname, image_filename}, ...
-    'VariableNames', {'EEG1','EEG2','ImageFilename'}), ...
+summary_table = horzcat(cell2table({timestamp, EEG1.setname, EEG2.setname, image_filename}, ...
+    'VariableNames', {'timestamp','EEG1','EEG2','ImageFilename'}), ...
     summary_table_tmp);
 fprintf('<strong>%s: Quality Assurance Summary\n</strong>', functionstamp);
 disp(summary_table);
@@ -282,5 +292,17 @@ qi_temp = struct2table(ip.Results, 'AsArray',true);
 % Outputs:
 results.vhtp.eeg_htpEegAssessPipelineHAPPE.summary_table =  summary_table;
 results.vhtp.eeg_htpEegAssessPipelineHAPPE.qi_table = qi_table;
+
+if isempty(ip.Results.outputfile) && ip.Results.saveoutput
+    csvfile = fullfile(ip.Results.outputdir, strrep(basefilename, "TBD", "csv"));
+    writetable(summary_table, csvfile)
+else
+    csvfile = fullfile(ip.Results.outputdir, ip.Results.outputfile);
+    writetable(summary_table, csvfile, 'WriteMode','Append')
+end
+if ~ip.Results.tableonly
+    saveas(f1, image_filename);
+    close gcf;
+end
 
 end

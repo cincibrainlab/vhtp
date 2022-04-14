@@ -44,6 +44,7 @@ defaultSingleplot = 1;
 defaultGroupOverlay = [];
 defaultPlotstyle = 'default';
 defaultDrugNames = {'Drug','Placebo', 'Baseline'};
+defaultTag = false;
 errorMsg2 = 'EEG input should be either a cell array or struct.';
 validEegArray = @(x) assert(iscell(x) || isstruct(x), errorMsg2);
 
@@ -59,6 +60,7 @@ addParameter(ip,'singleplot', defaultSingleplot, @islogical)
 addParameter(ip,'groupOverlay', defaultGroupOverlay, @isvector)
 addParameter(ip,'plotstyle', defaultPlotstyle, @ischar)
 addParameter(ip, 'drugNames', defaultDrugNames, @iscell)
+addParameter(ip, 'tag', defaultTag, @ischar);
 
 parse(ip,EEGcell,varargin{:});
 
@@ -66,7 +68,8 @@ if isstruct(EEGcell)
     warning('Struct passed, converting to Cell.')
     EEGcell = num2cell(EEGcell);
 end
-    
+
+   
 outputdir = ip.Results.outputdir;
 bandDefs = ip.Results.bandDefs;
 
@@ -75,7 +78,6 @@ outfileCell = cellfun( @(EEG) fullfile(outputdir, ...
     [functionstamp '_'  EEG.setname '_' timestamp '.mat']), EEGcell, 'uni',0);
 
 % START: Start Visualization
-
 % get groups
 if ~isempty(ip.Results.groupOverlay)
     disp("Group Overlay Mode")
@@ -115,7 +117,6 @@ if ip.Results.groupmean  % single mean across groups
         % cur_group_idx(gi,:) = find(ip.Results.groupids(ip.Results.groupids == groups(gi)));
         erp(gi,:) = mean(erpArr(cur_group_idx,:),1);
 
-
     end
 else  % individual results
     for ei = 1 : length(EEGcell)
@@ -123,8 +124,13 @@ else  % individual results
             plot_title = 'ERP average waveform by Recording';
             plot_filename = fullfile(outputdir,['hab_erp_by_recording_' timestamp '.png']);
         else
-            plot_title_cell{ei} = sprintf('Average ERP for %s (Trials: Ret: %s, Rej: %s)', ...
-                EEGcell{ei}.setname, num2str(EEGcell{ei}.etc.htp.hab.trials), EEGcell{ei}.etc.htp.hab.amp_rej_trials);
+            if ip.Results.tag
+                tag = EEGcell{ei}.etc.vhtp.eeg_htpVisualizeHabErp.tag;
+            else
+                tag = '';
+            end
+            plot_title_cell{ei} = sprintf('Average ERP for %s (Trials: Ret: %s, Rej: %s) Tag: %s', ...
+                EEGcell{ei}.setname, num2str(EEGcell{ei}.etc.htp.hab.trials), numel(str2num(EEGcell{ei}.etc.htp.hab.amp_rej_trials)), tag);
             plot_filename_cell{ei} = fullfile(outputdir, ...
                 ['hab_erp_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
         end
@@ -146,7 +152,7 @@ if ip.Results.singleplot % all single plot group or multi individual
             set(gca,'fontname','arial', 'box', 'off', 'LineWidth',2,'FontSize',20, 'YTick',[-5:1:5], 'TickDir','out')
             xlim([-500 1000])
             ylabel(['Voltage (' char(0117) 'V)'])
-            ylim([max(P2)*-1 max(P2)*2])
+            ylim([max(P2)*-1 max(P2)*2.5])
      
             axis square
             lines = findobj(gcf,'Type','Line');
@@ -176,7 +182,7 @@ if ip.Results.singleplot % all single plot group or multi individual
             line([0 0], [-10 -1.3], 'Color','k','LineStyle', '-','LineWidth',6);
             line([500 500], [-10 -1.3], 'Color','k', 'LineStyle', '-', 'LineWidth',6);
 
-            l = legend('Box','off');
+            l = legend('Box','off','Interpreter','none');
             l.String = l.String(1 : size(erp,1));
             
             text(100, min(min(N1))*2, "N1", 'rotation',0,'FontSize',20);
@@ -191,16 +197,16 @@ if ip.Results.singleplot % all single plot group or multi individual
                         
             axesHandles = findobj(gca, 'Type', 'Line');
 
-            delete(axesHandles(7));
+            % delete(axesHandles(7));
             saveas(gcf, plot_filename);
     end
-    close gcf;
+    %close gcf;
 else
     for si = 1 : size(erp,1)
         [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
         createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si});
         saveas(gcf, plot_filename_cell{si});
-        close gcf;
+       % close gcf;
     end
 end
 
