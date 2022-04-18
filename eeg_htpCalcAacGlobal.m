@@ -35,7 +35,8 @@ defaultOutputDir = tempdir;
 defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
     'alpha2', 10, 12; 'beta', 13, 30;'gamma1', 30, 55;
     'gamma2', 65, 80; 'epsilon', 81, 120; };
-defaultGpu = 0;
+defaultGpuOn = 0;
+defaultMeaOn = 0;
 defaultSourceMode = false;
 defaultDuration = 60;
 
@@ -45,9 +46,11 @@ ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
-addParameter(ip, 'gpuon', defaultGpu, @islogical);
+addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
+addParameter(ip, 'meaOn', defaultMeaOn, @islogical);
 addParameter(ip, 'sourcemode', defaultSourceMode, @islogical);
 addParameter(ip, 'duration', defaultDuration);
+
 
 parse(ip,EEG,varargin{:});
 
@@ -83,6 +86,10 @@ end
 chanlocs = EEG.chanlocs;
 if ~ip.Results.sourcemode
     % create full atlas table in chanlocs order
+    if ip.Results.meaOn
+           chanlocs = EEG.chanlocs;
+ 
+    else
     chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'chan'});
     chanlist.index = (1:height(chanlist)).';
     atlasLookupTable = readtable("GSN-HydroCel-129_dict.csv");
@@ -96,7 +103,7 @@ if ~ip.Results.sourcemode
     chanlocs(~(matchedAtlasTable.position == "OTHER"))
     EEG = pop_select(EEG, 'channel', find(~(matchedAtlasTable.position == "OTHER")));
     chanlocs = EEG.chanlocs;
-
+    end
 else
     % create full atlas table in chanlocs order
     chanlist = cell2table({chanlocs.labels}', 'VariableNames', {'labelclean'});

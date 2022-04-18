@@ -29,16 +29,23 @@ functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
+defaultGpuOn = 1;
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
+addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
+
 parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 tic;
 combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique)
 
-EEG.data = gpuArray(EEG.data);
+
+if ip.Results.gpuon
+    warning('GPU Arrays Enabled.')
+    EEG.data = gpuArray(EEG.data);
+end
 
 combo_left = combos(:,1);
 combo_right = combos(:,2);

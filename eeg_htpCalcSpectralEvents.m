@@ -62,6 +62,7 @@ defaultVis = false;
 defaultWriteCsvFile = true;
 defaultDuration = 60;
 defaultRegions = {'RF','LF','RPF','LPF', 'RT', 'LT'};
+defaultMea = 0;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -74,6 +75,8 @@ addParameter(ip, 'classLabels', defaultClassLabels, @iscell);
 addParameter(ip, 'findMethod', defaultFindMethod, @isinteger);
 addParameter(ip, 'fVec', defaultFVec, @isvector);
 addParameter(ip, 'vis', defaultVis, @islogical);
+addParameter(ip, 'meaOn', defaultMea, @islogical);
+
 addParameter(ip, 'writeCsvFile', defaultWriteCsvFile, @islogical);
 addParameter(ip, 'duration', defaultDuration);
 addParameter(ip, 'selectRegions', defaultRegions);
@@ -123,7 +126,12 @@ end
 % Opt. 1: All trials have a single label
 % Opt. 2: Each trial has a individual label, i.e. 'hit' or 'miss'
 
+for rc = 1 : numel(EEG.chanlocs)
+    EEG.chanlocs(rc).labels = genvarname(EEG.chanlocs(rc).labels);
+end
+
 channames   = {EEG.chanlocs.labels};
+
 
 if ip.Results.useClassLabels == true
     assert( numel(ip.Results.classLabels) == EEG.trials, 'Classification Labels do not equal number of trials.')
@@ -148,6 +156,8 @@ for bi = 1 : length(bandDefs)
     bandIntervals.(bandDefs{bi,1}) = [bandDefs{bi,2} bandDefs{bi,3}];
 end
 
+
+
 Fs = EEG.srate;  % sample rate
 findMethod = ip.Results.findMethod;
 fVec = ip.Results.fVec;
@@ -161,6 +171,7 @@ specEvents = []; TFRs =[]; timeseries = [];
 chanSpectralEvents = []; chanTFRs = []; chantimeseries = [];
 
 bandNames = fieldnames(bandIntervals)';
+bandNames = {'gamma1'};
 c = containers.Map;
 c('LT') = {'banksstsL' 'entorhinalL' 'fusiformL' 'inferiortemporalL' ...
     'insulaL' 'middletemporalL' 'parahippocampalL' 'superiortemporalL' ...
@@ -190,6 +201,10 @@ c('RC') = {'paracentralR' 'postcentralR' 'precentralR'};
 runSources = {};
 for ssi = 1 : numel(ip.Results.selectRegions)
     runSources = [runSources c(ip.Results.selectRegions{ssi})];
+end
+
+if ip.Results.meaOn
+    runSources = channames;
 end
 
 %%

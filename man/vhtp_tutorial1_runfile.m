@@ -23,7 +23,7 @@ EEG.vhtp.eeg_htpCalcRestPower.summary_table
 myRestPath   = '/srv/RAWDATA/exampleBatchData';
 
 % Paradigm #1: 128-channel Resting EEG
-myFileList    = util_htpDirListing(myRestPath,'ext','.set', 'subdirOn', false);
+myFileList    = util_htpDirListing(myRestPath,'ext','.set', 'subdirOn' false);
 
 batch_result_table = table()
 for fi = 1 : height(myFileList)
