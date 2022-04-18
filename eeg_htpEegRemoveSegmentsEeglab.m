@@ -3,13 +3,16 @@ function [EEG, results] = eeg_htpEegRemoveSegmentsEeglab(EEG,varargin)
 %                                 data
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegRemoveSegmentsEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegRemoveSegmentsEeglab( EEG. varargin )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab

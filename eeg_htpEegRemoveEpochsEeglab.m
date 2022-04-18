@@ -2,15 +2,16 @@ function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
 % eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegRemoveEpochsEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegRemoveEpochsEeglab( EEG, varargin) )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
-%
-%
-%           
+%        
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -86,7 +87,8 @@ try
     
     EEG = pop_rejepoch( EEG, tmprej ,0);
     EEG = eeg_checkset(EEG);
-    EEG.vhtp.eeg_htpEegRemoveRepochsEeglab.epoch_trials = EEG.trials;
+    EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.completed = 1;
+    EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_trials = EEG.trials;
     
 catch e
     throw(e)

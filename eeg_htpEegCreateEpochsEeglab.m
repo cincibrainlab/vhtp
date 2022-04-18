@@ -2,7 +2,7 @@ function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 % eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegCreateEpochsEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegCreateEpochsEeglab( EEG, varargin )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
@@ -18,6 +18,9 @@ function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 %           
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -45,6 +48,7 @@ try
     
     for i = 1:length(EEG.epoch); EEG.epoch(i).trialno = i; end
     
+    EEG.vhtp.eeg_htpEegCreateEpochsEeglab.completed = 1;
     EEG.vhtp.eeg_htpEegCreateEpochsEeglab.epochlength = ip.Results.epochlength;
     EEG.vhtp.eeg_htpEegCreateEpochsEeglab.epochlimits = ip.Results.epochlimits;
     EEG.vhtp.eeg_htpEegCreateEpochsEeglab.trials = EEG.trials;

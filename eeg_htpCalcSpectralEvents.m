@@ -48,8 +48,8 @@ defaultOutputDir = tempdir;
 defaultBandDefs = {
     'theta', 3.5, 7.5;
     'alpha', 8, 13;
-    %'alpha1', 8, 10;
-    %'alpha2', 10.5, 12.5;
+    'alpha1', 8, 10;
+    'alpha2', 10.5, 12.5;
     'beta', 13, 30;
     'gamma1', 30, 55;
     'gamma2', 65, 80;

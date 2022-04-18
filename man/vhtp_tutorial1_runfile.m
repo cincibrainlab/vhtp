@@ -3,10 +3,12 @@
 
 % add toolkit paths
 vhtp_path = '/srv/vhtp';
-eeglab_path = '/srv/TOOLKITS/eeglab2021.1';
+eeglab_path = '/srv/TOOLKITS/eeglab-2022.0';
 restoredefaultpath;
 addpath(vhtp_path);
 addpath(eeglab_path);
+
+eeglab nogui;
 
 % load example EEG file
 mySetFile = '128_Rest_EyesOpen_D1004.set';
