@@ -2,7 +2,7 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 % eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegIcaEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegIcaEeglab( EEG, varargin )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
@@ -22,6 +22,9 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab

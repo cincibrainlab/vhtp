@@ -3,10 +3,13 @@ function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 %                               interpolation
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegRemoveChansEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegRemoveChansEeglab( EEG, varargin )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 % Function Specific Inputs:
 %   'type'  - Text for type of data to work with for use in trimming edge effects

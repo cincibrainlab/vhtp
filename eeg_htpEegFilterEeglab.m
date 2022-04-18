@@ -3,7 +3,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 %                           (hipass, lowpass, notch, and cleanline) on data
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegFilterEeglab( EEG, method)
+%    >> [ EEG, results ] = eeg_htpEegFilterEeglab( EEG, method, varargin)
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
@@ -84,6 +84,9 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab

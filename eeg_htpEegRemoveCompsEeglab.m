@@ -1,8 +1,8 @@
-function [EEG] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
+function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 % eeg_htpEegRemoveCompsEeglab - Select and reject/keep components from data
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegRemoveCompsEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegRemoveCompsEeglab( EEG, varargin )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
@@ -14,6 +14,9 @@ function [EEG] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab

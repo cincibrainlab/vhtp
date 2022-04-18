@@ -2,7 +2,7 @@ function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,srate)
 % eeg_htpResampleDataEeglab() - Resample data to new specified sampling rate.
 %
 % Usage:
-%    >> [ EEG ] = eeg_ResampleDataEeglab( EEG, srate )
+%    >> [ EEG, results ] = eeg_ResampleDataEeglab( EEG, srate )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
@@ -10,6 +10,9 @@ function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,srate)
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -35,8 +38,8 @@ try
     
     EEG = pop_resample( EEG, srate);
     
-    EEG.vhtp.eeg_htpResampleDataEeglab.complete=1;
-    EEG.vhtp.eeg_htpResampleDataEeglab.newSrate = srate;
+    EEG.vhtp.eeg_htpResampleDataEeglab.completed=1;
+    EEG.vhtp.eeg_htpResampleDataEeglab.srate = srate;
 catch e
     throw(e)
 end

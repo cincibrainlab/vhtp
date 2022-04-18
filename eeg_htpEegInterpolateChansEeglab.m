@@ -3,7 +3,7 @@ function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 %                               interpolation
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpEegInterpolateChansEeglab( EEG )
+%    >> [ EEG, results ] = eeg_htpEegInterpolateChansEeglab( EEG,varargin )
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
@@ -16,6 +16,9 @@ function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
+%
+%     results   - Updated function-specific structure containing qi table
+%                 and input parameters used
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -54,7 +57,7 @@ try
         EEG.vhtp.eeg_htpEegInterpolateChansEeglab.nbchan_post = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank;
 
     end
-    EEG.vhtp.eeg_htpEegInterpolateChansEeglab.complete=1;
+    EEG.vhtp.eeg_htpEegInterpolateChansEeglab.completed=1;
 
 catch error
     throw(error);
