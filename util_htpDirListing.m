@@ -33,6 +33,7 @@ functionstamp = mfilename; % function name for logging/output
 defaultExt = [];
 defaultKeyword = [];
 defaultSubDirOn = true;
+defaultNotKeyword = false;
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
 
@@ -41,6 +42,7 @@ ip = inputParser();
 addRequired(ip, 'filepath', @isfolder)
 addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
+addParameter(ip,'notKeyword', defaultNotKeyword, @islogical)
 addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
 parse(ip,filepath,varargin{:});
 
@@ -59,7 +61,11 @@ if ~isempty(ip.Results.ext)
 end
 
 if ~isempty(ip.Results.keyword)
-    filelist = filelist(contains(filelist.filename,ip.Results.keyword),:);
+    if ~ip.Results.notKeyword
+        filelist = filelist(contains(filelist.filename,ip.Results.keyword),:);
+    else
+        filelist = filelist(~contains(filelist.filename,ip.Results.keyword),:);
+    end
 end
 
 % END: Utility code

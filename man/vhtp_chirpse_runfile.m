@@ -31,114 +31,81 @@ addpath("/srv/TOOLKITS/SpectralEvents");
 % Get new file lists of source files
 myFileListSource    = util_htpDirListing(mySourceOutput,'ext','.set', 'subdirOn', false);
 
-%%
-for fi = 1 : 1 %height(myFileListSource)
-    %if fi == 1
-
-    EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
-    
-    EEG = pop_select(EEG, 'time', [-500 0]); % extract baseline
-    
-    
-    EEGSE = eeg_htpCalcSpectralEvents(EEG, 'outputdir', fullfile(myDatasetOuput));
-    %EEGPL = eeg_htpCalcPhaseLagFrontalTemporal(EEG, 'outputdir', fullfile(myDatasetOuput, "PL"));
-    EEGSECell{fi} = EEGSE; %#ok<SAGROW> 
-    %EEGPLCell{fi} = EEGPL;
-    %end
-end
-
-
-%%
-
-% Create and save results table
-% eeg_htpCalcPhaseLagFrontalTemporal_summary_table = table();
-eeg_htpCalcSpectralEvents_table = table();
-
-for ti = 1 : numel(EEGSECell)
-    %eeg_htpCalcRestPower_summary_table = vertcat(eeg_htpCalcRestPower_summary_table, EEGRestCell{ti}.vhtp.eeg_htpCalcRestPower.summary_table);
-    %eeg_htpCalcPhaseLagFrontalTemporal_summary_table = vertcat(eeg_htpCalcPhaseLagFrontalTemporal_summary_table, EEGPLCell{ti}.vhtp.eeg_htpCalcPhaseLag.summary_table);
-    %eeg_htpCalcAacGlobal_summary_table = vertcat(eeg_htpCalcAacGlobal_summary_table, EEGAacCell{ti}.vhtp.eeg_htpCalcAacGlobal.summary_table);
-    eeg_htpCalcSpectralEvents_table = vertcat(eeg_htpCalcSpectralEvents_table, EEGSECell{ti}.vhtp.eeg_htpCalcSpectralEvents.summary_table); %#ok<*AGROW> 
-
-        
-end
-writetable(eeg_htpCalcSpectralEvents_table, fullfile(myDatasetOuput, "eeg_htpCalcSpectralEvents_table.csv"));
-% writetable(eeg_htpCalcPhaseLagFrontalTemporal_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcPhaseLagFrontalTemporal_Frontal_summary_table.csv"));
-
-
-
-
 
 
 %% spec events during chirp 
 
-
 for fi = 1 : height(myFileListSource)
 
-    % indicate new file being loaded
+    % print new file being loaded
     fprintf('\nNEW FILE fi=%d\n\n', fi)
 
     EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
     
-  
     % pre stimulus
     %EEG = pop_select(EEG, 'time', [EEG.xmin, 0]);
-
     % entire chirp stimulus
     EEG = pop_select(EEG, 'time', [0, EEG.xmax]);
 
-    % chirp onset
-    %EEG = pop_select(EEG, 'time', [0.092, 0.308]); % time window too small
-    % chirp 40Hz
-    %EEG = pop_select(EEG, 'time', [0.676, 1.066]); % time window too small 
-    % chirp 80Hz
-    %EEG = pop_select(EEG, 'time', [?, ?]);
-    % chirp offset
-    %EEG = pop_select(EEG, 'time', [?, ?]);
-
     % event 3 regions RT LT RF LF RO LO
     EEGSE = eeg_htpCalcSpectralEvents(EEG, 'outputdir', fullfile(myDatasetOuput), ... 
-        'findMethod', int8(1), ...
-        'selectRegions', {'RT', 'LT', 'RF', 'LF', 'RO', 'LO'}, ...
-        'vis', false); 
-        %'selectRegions', {'RT', 'LT', 'RF', 'LF', 'RO', 'LO'}, ...
-        %'fVec', 3:3:80, ...
-        %'selectBandList', {'alpha', 'gamma1', 'gamma2'}, ...
-
-
+        'findMethod', int8(1), ...  % method 1 (overlapping events)
+        'selectRegions', {'RT', 'LT', 'RF', 'LF', 'RO', 'LO'}, ...  % ROI
+        'vis', false, ...   % no figures
+        'bandDefs', {   % only theta, alpha, beta, gamma1, gamma2
+                'theta', 3.5, 7.5;
+                'alpha', 8, 13;
+                'beta', 13, 30;
+                'gamma1', 30, 55;
+                'gamma2', 65, 80;
+            }, ...
+        'writeCsvFile', false, ...
+        'duration', (EEG.pnts/EEG.srate)*EEG.trials); % total duration
 
     % add to cell
     EEGSECell{fi} = EEGSE; %#ok<SAGROW> 
 
 end
 
-%generate and save table
+% generate and save table
 eeg_htpCalcSpectralEvents_table = table();
 for ti = 1 : numel(EEGSECell)
     eeg_htpCalcSpectralEvents_table = vertcat(eeg_htpCalcSpectralEvents_table, EEGSECell{ti}.vhtp.eeg_htpCalcSpectralEvents.summary_table); %#ok<*AGROW>    
 end
-writetable(eeg_htpCalcSpectralEvents_table, fullfile(myDatasetOuput, "eeg_htpCalcSpectralEvents_table_wholechirp_method1_complete.csv"));
+writetable(eeg_htpCalcSpectralEvents_table, fullfile(myDatasetOuput, "eeg_htpCalcSpectralEvents_table_prestimulus_method1_FINAL.csv"));
 
 
 
-%% comparing visualizations
 
+%%
+%% itc40, itc80
 
-for fi = 1 : 1 %height(myFileListSource)
+for fi = 1 : height(myFileListSource)
 
     % indicate new file being loaded
     fprintf('\nNEW FILE fi=%d\n\n', fi)
 
     EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
     
-    % pre stimulus
-    EEG = pop_select(EEG, 'time', [EEG.xmin, 0]);
+    % select whole chirp stimulus, pick events after
+    EEG = pop_select(EEG, 'time', [0, EEG.xmax]);
+    
+    % chirp 80Hz
+    %EEG = pop_select(EEG, 'time', [1.390, 1.930]);
 
-    % method 1
-    EEGSE = eeg_htpCalcSpectralEvents(EEG, 'outputdir', fullfile(myDatasetOuput), ... 
-        'findMethod', int8(2), ...
-        'selectRegions', {'LT'}, ...
-        'vis', true); 
+
+    % tlim - only select events within tlim range
+    % 0 to 600 for 1250 - 650, within the selected time range
+    % could maybe try not using pop_select and only using tlim 
+    EEGSE = eeg_htpCalcSpectralEvents_NEWARG(EEG, 'outputdir', fullfile(myDatasetOuput), ... 
+        'findMethod', int8(1), ...
+        'selectRegions', {'RT', 'LT', 'RF', 'LF'}, ...
+        'bandDefs', {'alpha', 8, 13; ...
+                     'gamma1', 30, 55; ...
+                     'gamma2', 65, 80;}, ...
+        'vis', false, ...
+        'tlim', [2.038 2.254]); %itc40 = 650 ms to 1250 ms
+
 
     % add to cell
     EEGSECell{fi} = EEGSE; %#ok<SAGROW> 
@@ -150,34 +117,7 @@ eeg_htpCalcSpectralEvents_table = table();
 for ti = 1 : numel(EEGSECell)
     eeg_htpCalcSpectralEvents_table = vertcat(eeg_htpCalcSpectralEvents_table, EEGSECell{ti}.vhtp.eeg_htpCalcSpectralEvents.summary_table); %#ok<*AGROW>    
 end
-writetable(eeg_htpCalcSpectralEvents_table, fullfile(myDatasetOuput, "eeg_htpCalcSpectralEvents_table_prestimulus_method3.csv"));
+writetable(eeg_htpCalcSpectralEvents_table, fullficurrowle(myDatasetOuput, "eeg_htpCalcSpectralEvents_table_itcoffset.csv"));
 
-
-%% Pre stimulus power 
-
-for fi = 1 : height(myFileListSource)
-
-
-    EEG = pop_loadset(myFileListSource.filename{fi}, myFileListSource.filepath{fi});
-    
-    EEG = pop_select(EEG, 'time', [EEG.xmin, 0]);
-    
-    
-    EEGPow = eeg_htpCalcRestPower(EEG, 'outputdir', fullfile(myDatasetOuput, "pow"));
-    EEGRestCell{fi} = EEGPow;
-    
-end
-
-
-% Create and save results table
-% eeg_htpCalcPhaseLagFrontalTemporal_summary_table = table();
-eeg_htpCalcRestPower_summary_table = table();
-
-for ti = 1 : numel(EEGRestCell)
-    eeg_htpCalcRestPower_summary_table = vertcat(eeg_htpCalcRestPower_summary_table, EEGRestCell{ti}.vhtp.eeg_htpCalcRestPower.summary_table);
-   
-end
-writetable(eeg_htpCalcRestPower_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcRestPower_summary_table.csv"));
-% writetable(eeg_htpCalcPhaseLagFrontalTemporal_summary_table, fullfile(myDatasetOuput, "eeg_htpCalcPhaseLagFrontalTemporal_Frontal_summary_table.csv"));
 
 
