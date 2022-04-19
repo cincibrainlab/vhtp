@@ -24,6 +24,7 @@ function [results] = utility_htpImportEeg( filepath, varargin )
 %
 % Outputs:
 %     results   - variable outputs
+%     EEG       - if single file, return EEG not file summary
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -80,11 +81,13 @@ changeExtToSet = @( str ) strrep(str, ip.Results.ext, '.set'); % convert new fil
 switch exist(filepath)
     case 7
         filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
+        is_single_file = true;
     case 2
         [tmppath, tmpfile, tmpext] = fileparts(filepath);
         filelist.filename = {[tmpfile tmpext]};
         filelist.filepath = {tmppath};
         filelist = struct2table(filelist);
+        is_single_file = false;
 end
 
 if ~isempty(filelist.filename)
@@ -166,6 +169,8 @@ for i = 1 : height(filelist)
         'raw_xmax','raw_ref','raw_has_events','raw_no_events','raw_event_codes','raw_filename','raw_filepath','raw_subject', 'source_file','source_path'});
     
     EEG.vhtp.inforow = setinfo;
+
+    
     
     if ~ip.Results.dryrun
         try
@@ -185,6 +190,13 @@ for i = 1 : height(filelist)
             'labelpoint', 'plotrad', [], 'chaninfo', EEG.chaninfo, 'whitebk', 'on');
         saveas(f, netverify_filename);
         close all;
+    end
+
+    % Return EEG if single file, if not, EEG is cleared
+    if is_single_file
+        results = EEG;
+    else
+        EEG = [];
     end
     
 end
