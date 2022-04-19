@@ -60,6 +60,7 @@ addParameter(ip,'contrasts', defaultContrasts, @iscell)
 
 parse(ip,EEGcell,varargin{:});
 outputdir = ip.Results.outputdir;
+isDiff = false;
 
 if isstruct(EEGcell)
     warning('Struct passed, converting to Cell.')
@@ -111,8 +112,14 @@ for ci = 1 : numel(chanlabels)
     end
 
     % get groups
-    groups = double(unique(ip.Results.groupids));
-    group_no = numel(groups);
+    if iscell(ip.Results.groupids)
+        groups = unique(categorical(ip.Results.groupids));
+        group_list = ip.Results.groupids;
+    else
+        groups = double(unique(ip.Results.groupids));
+        group_list = categorical(ip.Results.groupids);
+    end
+    group_no = numel(unique(groups));
 
     % consistent indexes regardless of group or inidividual ERP
     t = EEGcell{1}.vhtp.eeg_htpCalcChirpItcErsp.t_s;
@@ -130,17 +137,18 @@ for ci = 1 : numel(chanlabels)
 
         for gi = 1 : group_no % mean each by group id
             cur_group_idx = find(ip.Results.groupids == groups(gi));
-            plot_title_cell{gi} = sprintf('PLACEHOLDER for group %d (%s)', gi, channame);
+            plot_title_cell{gi} = sprintf('PLACEHOLDER for group %s (%s)',  char(groups(gi)), channame);
             plot_filename_cell{gi} = fullfile(outputdir, ...
-                ['chirp_itcersp_by_group_' channame '_' num2str(gi) '_' timestamp '.png']);
-            itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3);
-            ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3);
-            stp(:,:,gi) = mean(stpArr(:,:,cur_group_idx),3);
+                ['chirp_itcersp_by_group_' channame '_' char(groups(gi)) '_' timestamp '.png']);
+            itc(:,:,gi) = nanmean(itcArr(:,:,cur_group_idx),3);
+            ersp(:,:,gi) = nanmean(erspArr(:,:,cur_group_idx),3);
+            stp(:,:,gi) = nanmean(stpArr(:,:,cur_group_idx),3);
 
         end
         % Perform contrasts and add as additional groups
         if ~isempty(ip.Results.contrasts)
             contrasts = ip.Results.contrasts;
+            isDiff = true;
             for contrast_i = 1 : numel(contrasts)
                 select_contrast = contrasts{contrast_i};
                 group_no = group_no + 1;
@@ -152,10 +160,9 @@ for ci = 1 : numel(chanlabels)
                 plot_title_cell{group_no} = sprintf('PLACEHOLDER for group diff %d_%d (%s)', select_contrast(1), select_contrast(2), channame);
                 plot_filename_cell{group_no} = fullfile(outputdir, ...
                     ['chirp_itcersp_by_groupdiff_' channame '_' sprintf('%d_%d', select_contrast(1), select_contrast(2)) '_' timestamp '.png']);
-
             end
-
-        
+        else
+            ifDiff = false;
         end
 
     else  % individual results
@@ -199,14 +206,19 @@ for ci = 1 : numel(chanlabels)
         for si = 1 : size(itc,3)
             figure('Position', [600 600 1200 700]);
             subplot(1,3,1)
+            if isDiff && si > numel(unique(groups))
+                addtitle = plot_title_cell{si};
+            else
+                addtitle = '';
+            end
             createPlot_chirpItc(t, f, itc(:,:,si), ...
-                'ITC');
+                ['ITC ' addtitle]);
             subplot(1,3,2)
             createPlot_chirpStp(t, f, stp(:,:,si), ...
-                'STP');
+                ['STP ' addtitle]);
             subplot(1,3,3)
             createPlot_chirpErsp(t, f, ersp(:,:,si), ...
-                'ERSP');
+                ['ERSP ' addtitle]);
             sgtitle(strrep(plot_title_cell{si},'PLACEHOLDER','Chirp Plots'));
             saveas(gcf, plot_filename_cell{si});
             close all;
@@ -236,7 +248,7 @@ h = colorbar;
 ylabel(h,'Intertrial Coherence (ITC)');
 %ylim(h,[0 .2]);
 if contains(plot_title, 'diff')
-    caxis([-.03 .03]); % important
+  %  caxis([-.03 .03]); % important
 else
     max_itc = .2;
     if max(max(itc)) > max_itc

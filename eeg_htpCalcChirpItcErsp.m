@@ -61,7 +61,7 @@ addParameter(ip, 'nfreqs', defaultNFreqs, @isinteger);
 addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
 addParameter(ip, 'sourceOn', defaultSourceOn, @islogical);
 addParameter(ip, 'emptyEEG', defaultEmptyEEG, @islogical)
-addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+addParameter(ip, 'ampThreshold', defaultAmpThreshold, @isnumeric)
 addParameter(ip, 'byChannel', defaultByChannel, @islogical)
 addParameter(ip, 'baselinew', defaultBaselineW, @isvector);
 

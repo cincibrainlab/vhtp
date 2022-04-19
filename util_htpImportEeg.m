@@ -8,7 +8,7 @@ function [results] = utility_htpImportEeg( filepath, varargin )
 %    >> [results] = utility_htpImportEeg('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
 %
 % Require Inputs:
-%     filepath       - directory to get file list
+%     filepath       - directory to get file list OR filename
 %     'nettype'      - channel input type
 %
 % Function Specific Inputs:
@@ -45,10 +45,10 @@ defaultOutputDir    = tempdir;
 defaultNetType      = 'undefined';
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
-
+validateFileOrFolder = @( filepath ) isfolder(filepath) | exist(filepath, 'file');
 % MATLAB built-in input validation
 ip = inputParser();
-addRequired(ip, 'filepath', @isfolder)
+addRequired(ip, 'filepath', validateFileOrFolder)
 addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
 addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
@@ -77,7 +77,15 @@ end
 % filenames
 changeExtToSet = @( str ) strrep(str, ip.Results.ext, '.set'); % convert new filename to .set
 
-filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
+switch exist(filepath)
+    case 7
+        filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
+    case 2
+        [tmppath, tmpfile, tmpext] = fileparts(filepath);
+        filelist.filename = {[tmpfile tmpext]};
+        filelist.filepath = {tmppath};
+        filelist = struct2table(filelist);
+end
 
 if ~isempty(filelist.filename)
     filelist.success = false(height(filelist),1);
