@@ -4,7 +4,7 @@ function [results] = util_htpDirListing( filepath, varargin )
 %      Add 'help' comments here to be viewed on command line.
 %
 % Usage:
-%    >> [ results ] = utility_htpFunctionTemplate( filepath, varargin )
+%    >> [ results ] = util_htpFunctionTemplate( filepath, varargin )
 %
 % Require Inputs:
 %     filepath       - directory to get file list

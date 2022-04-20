@@ -1,11 +1,11 @@
-function [results] = utility_htpImportEeg( filepath, varargin )
-% utility_htpImportEeg() - main import function
+function [results] = util_htpImportEeg( filepath, varargin )
+% util_htpImportEeg() - main import function
 %
 % Usage:
-%    >> [ results ] = utility_htpImportEeg( filepath, varargin )
+%    >> [ results ] = util_htpImportEeg( filepath, varargin )
 %
 % Example:
-%    >> [results] = utility_htpImportEeg('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
+%    >> [results] = util_htpImportEeg('/srv/rawdata/', 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
 %
 % Require Inputs:
 %     filepath       - directory to get file list OR filename
@@ -67,7 +67,7 @@ if ip.Results.subdirOn, filepath = [filepath '**/']; end
 % STEP 1: Get Net Type
 if ~exist(ip.Results.chanxml,'file'), error('Channel XML File is missing. Download template from GITHUB or add to path'); end
 
-netInfo = utility_htpReadNetCatalog('nettype', ip.Results.nettype);
+netInfo = util_htpReadNetCatalog('nettype', ip.Results.nettype);
 
 % Prompt user to enter net type for correct import
 if strcmpi('undefined',(ip.Results.nettype))

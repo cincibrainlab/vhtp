@@ -3,7 +3,7 @@ function [EEG, results] = util_htpPopulateEegInfo( EEG, varargin )
 % reporting functions.
 %
 % Usage:
-%    >> [ EEG, results ] = eeg_htpFunctionTemplate( EEG )
+%    >> [ EEG, results ] = util_htpPopulateEegInfo( EEG, varargin )
 %
 % Require Inputs:
 %     EEG       - EEGLAB Structure
