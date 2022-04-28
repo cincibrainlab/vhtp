@@ -81,13 +81,13 @@ changeExtToSet = @( str ) strrep(str, ip.Results.ext, '.set'); % convert new fil
 switch exist(filepath)
     case 7
         filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
-        is_single_file = true;
+        is_single_file = false;
     case 2
         [tmppath, tmpfile, tmpext] = fileparts(filepath);
         filelist.filename = {[tmpfile tmpext]};
         filelist.filepath = {tmppath};
         filelist = struct2table(filelist);
-        is_single_file = false;
+        is_single_file = true;
 end
 
 if ~isempty(filelist.filename)
@@ -192,14 +192,7 @@ for i = 1 : height(filelist)
         close all;
     end
 
-    % Return EEG if single file, if not, EEG is cleared
-    if is_single_file
-        results = EEG;
-    else
-        EEG = [];
-    end
-    
-end
+
 
 % END: Utility code
 
@@ -207,7 +200,15 @@ end
 qi_table = cell2table({functionstamp, timestamp, height(filelist), ip.Results.ext, netverify_filename}, ...
     'VariableNames', {'script','timestamp', 'nofiles', 'fileext', 'verifyplot'});
 
-% Outputs:
-results = filelist;
+% Return EEG if single file, if not, EEG is cleared
+if is_single_file
+    results = EEG;
+else
+    % Outputs:
+    results = filelist;    
+end
+    
+end
+
 
 end

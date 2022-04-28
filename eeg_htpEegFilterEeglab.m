@@ -19,7 +19,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 %                  highpass bandpass filter 
 %                  default: .5
 %
-%   'notch' - Array of two numbers utilized for generating the line noise
+%   'notchfilt' - Array of two numbers utilized for generating the line noise
 %             used in harmonics calculation for notch filtering
 %             default: [55 65]
 %
@@ -99,6 +99,7 @@ defaultNotch = [55 65];
 if strcmp(method,'notch'); defaultRevFilt=1; else; defaultRevFilt=0; end;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
+defaultRevFilt = 0;
 defaultCleanlineBandwidth = 2;
 defaultCleanlineChanList = [1:EEG.nbchan];
 defaultCleanlineComputePower = 0;
@@ -114,7 +115,7 @@ defaultCleanlineVerb = 1;
 defaultCleanlineWinSize = 4;
 defaultCleanlineWinStep = 4;
     
-validateMethod = @( method ) ischar( method ) && ismember(method, {'lowpass', 'highpass', 'notch', 'cleanline'});
+validateMethod = @( method ) ischar( method ) & ismember(method, {'lowpass', 'highpass', 'notch', 'cleanline'});
 validateRevFilt = @(revfilt) isnumeric(revfilt) && ((revfilt==1 && strcmp(method,'notch')) || (revfilt==0 && ~strcmp(method,'notch')));
 
 ip = inputParser();
@@ -160,9 +161,10 @@ try
             
         case 'lowpass'
             lowpassfiltorder = 3300;
-            EEG = pop_eegfiltnew(EEG,  'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',lowpassfiltorder);
+            EEG = pop_eegfiltnew(EEG,  ...
+                'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',lowpassfiltorder);
             EEG.vhtp.eeg_htpEegFilterEeglab.completed = 1;
-            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassHicutoff = ip.Results.lowpassfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.lowpassHicutoff    = ip.Results.lowpassfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassMinPhase    = ip.Results.minphase;

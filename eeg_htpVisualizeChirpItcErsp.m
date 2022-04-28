@@ -112,7 +112,7 @@ for ci = 1 : numel(chanlabels)
     end
 
     % get groups
-    if iscell(ip.Results.groupids)
+    if iscell(ip.Results.groupids) || iscategorical(ip.Results.groupids)
         groups = unique(categorical(ip.Results.groupids));
         group_list = ip.Results.groupids;
     else
@@ -194,7 +194,7 @@ for ci = 1 : numel(chanlabels)
                 strrep(plot_title_cell{gi},'PLACEHOLDER','ITC'));
             subplot(1,3,2)
             createPlot_chirpStp(t, f, stp(:,:,gi), ...
-                strrep(plot_title_cell{gi},'PLACEHOLDER','ERSP'));
+                strrep(plot_title_cell{gi},'PLACEHOLDER','STP'));
             subplot(1,3,3)
             createPlot_chirpErsp(t, f, ersp(:,:,gi), ...
                 strrep(plot_title_cell{gi},'PLACEHOLDER','ERSP'));
@@ -248,14 +248,14 @@ h = colorbar;
 ylabel(h,'Intertrial Coherence (ITC)');
 %ylim(h,[0 .2]);
 if contains(plot_title, 'diff')
-  %  caxis([-.03 .03]); % important
+    caxis([-.03 .03]); % important
 else
     max_itc = .2;
     if max(max(itc)) > max_itc
         % axis([0 1]); % important
         plot_title = [plot_title ' (EXCEEDS UPPER LIMIT ' num2str(max_itc) ')' ];
     else
-        caxis([0 .2]); % important
+        caxis([0 .06]); % important
     end
 end
 pbaspect([1 1 1]);
@@ -273,7 +273,7 @@ h = colorbar;
 ylabel(h,'Power (dB/Hz) ');
 %ylim(h,[0 45]);
 if contains(plot_title, 'diff')
-    caxis([-5 5]); % important
+    caxis([-3 3]); % important
 else
     max_stp = -190;
     if max(max(stp)) > max_stp
@@ -300,7 +300,7 @@ h = colorbar;
 ylabel(h,'Power (dB/Hz) Change from Baseline');
 %ylim(h,[0 45]);
 if contains(plot_title, 'diff')
-    caxis([-5 5]); % important
+    caxis([-.8 .8]); % important
 else
     
 %    caxis([-215 -190]);

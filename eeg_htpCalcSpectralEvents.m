@@ -46,11 +46,11 @@ defaultGpu = 0;
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
 defaultBandDefs = {
-    'theta', 3.5, 7.5;
+    %'theta', 3.5, 7.5;
     'alpha', 8, 13;
-    'alpha1', 8, 10;
-    'alpha2', 10.5, 12.5;
-    'beta', 13, 30;
+    %'alpha1', 8, 10;
+    %'alpha2', 10.5, 12.5;
+    %'beta', 13, 30;
     'gamma1', 30, 55;
     'gamma2', 65, 80;
     };
@@ -171,7 +171,7 @@ specEvents = []; TFRs =[]; timeseries = [];
 chanSpectralEvents = []; chanTFRs = []; chantimeseries = [];
 
 bandNames = fieldnames(bandIntervals)';
-bandNames = {'gamma1'};
+%bandNames = {'gamma1'};
 c = containers.Map;
 c('LT') = {'banksstsL' 'entorhinalL' 'fusiformL' 'inferiortemporalL' ...
     'insulaL' 'middletemporalL' 'parahippocampalL' 'superiortemporalL' ...
