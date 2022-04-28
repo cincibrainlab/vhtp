@@ -31,15 +31,17 @@ timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 try
-    
+   
+    orig_srate = EEG.srate;
     if EEG.srate > 2000
         EEG = pop_resample( EEG, 1000);
     end
     
     EEG = pop_resample( EEG, srate);
     
-    EEG.vhtp.eeg_htpResampleDataEeglab.completed=1;
-    EEG.vhtp.eeg_htpResampleDataEeglab.srate = srate;
+    EEG.vhtp.eeg_htpEegResampleDataEeglab.completed=1;
+    EEG.vhtp.eeg_htpEegResampleDataEeglab.rawsrate = orig_srate;
+    EEG.vhtp.eeg_htpEegResampleDataEeglab.srate = srate;
 catch e
     throw(e)
 end

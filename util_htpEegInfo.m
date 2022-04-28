@@ -1,13 +1,13 @@
 function [results] = util_htpEegInfo( filepath, varargin )
-% utility_htpEegInfo() - retreive stored htp reporting data rows from SET
+% util_htpEegInfo() - retreive stored htp reporting data rows from SET
 % files. If no structure is found, data will be attempted to pull from SET
 % structure directly. Does not load data, only SET structure.
 %
 % Usage:
-%    >> [ results ] = utility_htpEegInfo( filepath, varargin )
+%    >> [ results ] = util_htpEegInfo( filepath, varargin )
 %
 % Example:
-%    >> [results] = utility_htpEegInfo('/srv/rawdata/, 'nettype','EGI128', 'keyword', 'Experiment1', 'csvoutput', 'exp1_queue.csv' )
+%    >> [results] = util_htpEegInfo('/srv/rawdata/', 'nettype','EGI128', 'keyword', 'Experiment1', 'csvoutput', 'exp1_queue.csv' )
 %
 % Require Inputs:
 %     filepath       - directory to get file list
@@ -65,7 +65,7 @@ parse(ip,filepath,varargin{:});
 if ip.Results.subdirOn, filepath = [filepath '**/']; end
 
 % STEP 1: Get Net Type
-netInfo = utility_htpReadNetCatalog('nettype', ip.Results.nettype);
+netInfo = util_htpReadNetCatalog('nettype', ip.Results.nettype);
 csvfile = fullfile(ip.Results.outputdir, ip.Results.csvout);
 
 filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
