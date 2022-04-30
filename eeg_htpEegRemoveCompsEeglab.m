@@ -11,6 +11,7 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %    'maxcomps'  - Number of maximum components to utilize
 %                  in thresholding and plotting
 %                  default: 24
+%    'dpreset'   - display size preset ('1080p')
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
@@ -24,11 +25,13 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %  Contact: kyle.cullion@cchmc.org
 
 defaultMaxComps = 24;
+defaultDPreset = 'dynamic';
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
+addParameter(ip,'dpreset',defaultDPreset, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -54,7 +57,16 @@ try
     h.tp = gcf;
     h.tp.Units = 'norm';
     h.tp.Position = [sc_width/200/sc_width .5 main_width main_height];
-
+    
+    switch ip.Results.dpreset
+        case '1080p'
+            h.tp.Position = ...
+                [sc_width/200/sc_width ...
+                .5 ...
+                main_width*1.5 ...
+                main_height*1.3];
+        otherwise
+    end
 
     p = figure('Name','Component Selection Tool',...
         'Position',[800 300 400 200], ...
@@ -63,6 +75,16 @@ try
     p.Units = 'norm';
     p.Position =  [sc_width/200/sc_width  0.3 user_width user_height];
 
+    switch ip.Results.dpreset
+        case '1080p'
+            p.Position = ...
+                [sc_width/200/sc_width ...
+                0.3 ...
+                user_width*2 ...
+                user_height];
+        otherwise
+    end
+    
     title = uicontrol(p,'Style','text',...
         'String', 'Component Removal',...
         'FontSize', 10,...
@@ -166,7 +188,17 @@ try
     h.ep.Units = 'norm';
 
     h.ep.Position = [ main_width*1.05 .5 main_width main_height];
-
+    
+    switch ip.Results.dpreset
+        case '1080p'
+            comp_plot_dim =  h.tp.Position;
+            h.ep.Position = [ ...
+                main_width*1.55 ...
+                .5 ...
+                comp_plot_dim(3) ...
+                comp_plot_dim(4)];
+        otherwise
+    end
 
     g = h.ep.UserData;
 
@@ -190,11 +222,16 @@ try
 
     % draw amplitude time series
 
-    cdef = {'g','b'};
+    cdef = {'b','g'};
     carr = repmat(cdef,1, size(EEG.data,1));
     carr = carr(1:size(EEG.data, 1));
+    
+    try
     carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
-
+    catch
+        disp('No eeg_htpEegRemoveChansEeglab fields found.')
+    end
+    
     eegplot(EEG.data,'srate',EEG.srate,'winlength',10, ...
         'plottitle', ['View Time Series: '], ...
         'events',EEG.event,'color',carr,'wincolor',[1 0.5 0.5], ...
@@ -204,11 +241,20 @@ try
 
     ts.ep = gcf;
     ts.ep.Units = 'norm';
-
+    
     ts.ep.Position = h.ep.Position;
-    ts.ep.Position(2) = ts.ep.Position(2) - 0.28;
+    ts.ep.Position(2) = ts.ep.Position(2) - 0.3;
     ts.ep.Position(3) = ts.ep.Position(3) - 0.02;
-    ts.ep.Position(4) = ts.ep.Position(4) - 0.1;
+    ts.ep.Position(4) = ts.ep.Position(4) *.8;
+        
+    switch ip.Results.dpreset
+        case '1080p'
+            ts.ep.Position = h.ep.Position;
+            ts.ep.Position(2) = ts.ep.Position(2) - 0.28;
+            ts.ep.Position(3) = ts.ep.Position(3) - 0.02;
+            ts.ep.Position(4) = ts.ep.Position(4) - 0.1;
+        otherwise
+    end
 
     allui = {p, h.tp, h.ep, ts.ep};
 
@@ -332,7 +378,7 @@ end
 % analysis in the post processing stages
 function b1_callback(src, event)
 
-    comps = findobj('tag', 'comp_entry');
+    comps = findobj('tag', 'comp_entry2');
 
     src.UserData.proc_removeComps = str2num(comps.String);
     EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = str2num(comps.String);
@@ -358,9 +404,6 @@ function b1_callback(src, event)
     vis_h.Units = 'pixels';
     vis_h.Position(3) = 1000;
     vis_h.Position(4) = 500;
-
-
-
 
     uiwait(vis_h);
     EEGTMP = [];

@@ -124,13 +124,17 @@ else  % individual results
             plot_title = 'ERP average waveform by Recording';
             plot_filename = fullfile(outputdir,['hab_erp_by_recording_' timestamp '.png']);
         else
+            title_trials = num2str(EEGcell{ei}.etc.htp.hab.trials);
+            title_amp_rej_trials = num2str(numel(str2num(EEGcell{ei}.etc.htp.hab.amp_rej_trials)));
+           
+            plot_title_cell{ei} = sprintf('Average ERP for %s (Trials: %s, Rej: %s)', ...
+                EEGcell{ei}.setname, title_trials, title_amp_rej_trials);
+            
             if ip.Results.tag
-                tag = EEGcell{ei}.etc.vhtp.eeg_htpVisualizeHabErp.tag;
-            else
-                tag = '';
+                title_tag = sprintf("Tag: %s", ip.Results.tag);
+                plot_title_cell{ei} = sprintf('%s %s',plot_title_cell{ei}, title_tag);
             end
-            plot_title_cell{ei} = sprintf('Average ERP for %s (Trials: Ret: %s, Rej: %s) Tag: %s', ...
-                EEGcell{ei}.setname, num2str(EEGcell{ei}.etc.htp.hab.trials), numel(str2num(EEGcell{ei}.etc.htp.hab.amp_rej_trials)), tag);
+            
             plot_filename_cell{ei} = fullfile(outputdir, ...
                 ['hab_erp_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
         end
@@ -176,11 +180,11 @@ if ip.Results.singleplot % all single plot group or multi individual
                 axesHandles(pi).LineStyle = lineStyleArray{pi};
                 axesHandles(pi).DisplayName = displayNameArray{pi};
             end
-            line([0 0], [-10 10], 'Color','k','LineStyle', ':');
-            line([500 500], [-10 10], 'Color','k', 'LineStyle', ':');
+            line([0 0], [ymin ymax], 'Color','k','LineStyle', ':');
+            line([500 500], [ymin ymax], 'Color','k', 'LineStyle', ':');
 
-            line([0 0], [-10 -1.3], 'Color','k','LineStyle', '-','LineWidth',6);
-            line([500 500], [-10 -1.3], 'Color','k', 'LineStyle', '-', 'LineWidth',6);
+            line([0 0], [ymin -1.3], 'Color','k','LineStyle', '-','LineWidth',6);
+            line([500 500], [ymin -1.3], 'Color','k', 'LineStyle', '-', 'LineWidth',6);
 
             l = legend('Box','off','Interpreter','none');
             l.String = l.String(1 : size(erp,1));
@@ -222,16 +226,21 @@ results = [];
 end
 
 function f = createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
-
+ymin = -6;
+ymax = 6;
 stimoffsets = [0 500 1000 1500];
+stimoffsets_din = [0 500 1000 1500] - 60;
+
 stimoffsets_actual = [25 545 1061 1579];
 din_labels = {'DIN1','DIN2','DIN3','DIN4'};
 rep_labels = {'S1','R1','R2','R3'};
 
-xline2 = @(offset) line([offset offset], [-10 10]);
-xtext = @(offset,label) text(offset+25, 0, label, 'rotation',90);
+xline2 = @(offset) line([offset offset], [ymin ymax],'color','k');
+xtext = @(offset,label) text(offset+25, ymin+.6, label, 'rotation',90);
 
-f = figure('Position', [600 300 1200 900]);
+f = figure('Position', [600 300 600 450]);
+set(gcf, 'color', 'w')
+
 set(0,'defaultTextInterpreter','none');
 roi_strip = nan(1,length(erp));
 roi_strip2 = roi_strip;
@@ -241,7 +250,7 @@ plot(t,roi_strip,'b.'); hold on;
 plot(t,roi_strip2,'r.');
 if ~verLessThan('matlab','9.5')
     arrayfun(@(x) xline2(x), stimoffsets, 'uni',0)
-    arrayfun(@(x,y) xtext(x,y), stimoffsets,din_labels, 'uni',0)
+    arrayfun(@(x,y) xtext(x,y), stimoffsets_din,din_labels, 'uni',0)
 else
     xline(stimoffsets,'-',din_labels,'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
     xline(stimoffsets_actual,':',rep_labels ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
@@ -250,9 +259,9 @@ end
 for i = 1 : length(N1Lat)
     n1_label = ['N1:' num2str(N1Lat(i)-stimoffsets_actual(i))];
     if ~verLessThan('matlab','9.5')
-        line([N1Lat(i) N1Lat(i)],[-10 10],'Color','blue','LineStyle','--');
-        text(N1Lat(i)+25, 10, n1_label, 'rotation',90, ...
-            'color', 'blue', 'HorizontalAlignment','right');
+        line([N1Lat(i) N1Lat(i)],[ymin ymax],'Color','blue','LineStyle',':');
+        text(N1Lat(i), ymax*.95, n1_label, 'rotation',0, ...
+            'color', 'blue', 'HorizontalAlignment','left');
     else
         xline(N1Lat(i),'b:',{n1_label});
     end
@@ -260,28 +269,36 @@ end
 for i = 1 : length(P2Lat)
     p2_label = ['P2: ' num2str(P2Lat(i)-stimoffsets_actual(i))];
     if ~verLessThan('matlab','9.5')
-        line([P2Lat(i) P2Lat(i)],[-10 10],'Color','red','LineStyle','--');
-        text(P2Lat(i)+25, 10, p2_label, 'rotation',90, ...
-            'color', 'red', 'HorizontalAlignment','right');
+        line([P2Lat(i) P2Lat(i)],[ymin ymax],'Color','red','LineStyle',':');
+        text(P2Lat(i), ymax*.85, p2_label, 'rotation',0, ...
+            'color', 'red', 'HorizontalAlignment','left');
     else
         xline(P2Lat(i),'r:',{p2_label});
     end
 end
 % hold on;
 % create group labels if multiseries
+C = linspecer(size(erp,1));
 if size(erp,1) > 1
     hold on
     for li = 1 : size(erp,1)
         grouplabels{li} = sprintf("Index %d", li);
-        plot(t,erp(li,:),'DisplayName', grouplabels{li});
+        plot(t,erp(li,:), 'color', C(li,:), ...
+            'DisplayName', grouplabels{li});
     end
     legend()
 else
-    plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
+    plot(t,erp, 'color', 'k','LineWidth',1.5); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
 end
+% axes('ColorOrder',C)
 xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
-ylim([-10 10])
-title(plot_title);
+ylim([ymin ymax])
+xlim([-500 2000])
+set(gca,'fontname','arial', 'box', 'off', ...
+    'LineWidth',.75,'FontSize',10, ...
+    'YTick',[-5:1:5], 'TickDir','out')
+
+title(plot_title, 'FontSize',10);
 end
 
 
