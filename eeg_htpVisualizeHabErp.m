@@ -69,7 +69,7 @@ if isstruct(EEGcell)
     EEGcell = num2cell(EEGcell);
 end
 
-   
+
 outputdir = ip.Results.outputdir;
 bandDefs = ip.Results.bandDefs;
 
@@ -93,19 +93,19 @@ else
 end
 
 % consistent indexes regardless of group or inidividual ERP
-t = EEGcell{1}.etc.htp.hab.times;
-n1idx = EEGcell{1}.etc.htp.hab.n1idx; % get window size
-p2idx = EEGcell{1}.etc.htp.hab.p2idx;
+t = EEGcell{1}.vhtp.eeg_htpCalcHabErp.times;
+n1idx = EEGcell{1}.vhtp.eeg_htpCalcHabErp.n1idx; % get window size
+p2idx = EEGcell{1}.vhtp.eeg_htpCalcHabErp.p2idx;
 
 % calculate ERP mean, individual ERPs, or single plot ERPs
 plot_title = [];
 if ip.Results.groupmean  % single mean across groups
     plot_title = 'ERP average waveform by Group';
     for ei = 1 : length(EEGcell) % all ERPs in single array
-        erpArr(ei,:) = EEGcell{ei}.etc.htp.hab.erp;
+        erpArr(ei,:) = EEGcell{ei}.vhtp.eeg_htpCalcHabErp.erp;
     end
     if ~isempty(ip.Results.groupOverlay)
-         plot_filename = fullfile(outputdir,['hab_erp_' groupname timestamp '.png']);
+        plot_filename = fullfile(outputdir,['hab_erp_' groupname timestamp '.png']);
     else
         plot_filename = fullfile(outputdir,['hab_erp_by_group_' timestamp '.png']);
     end
@@ -116,7 +116,7 @@ if ip.Results.groupmean  % single mean across groups
             ['hab_erp_by_group' num2str(groups(gi)) '_' timestamp '.png']);
         % cur_group_idx(gi,:) = find(ip.Results.groupids(ip.Results.groupids == groups(gi)));
         erp(gi,:) = mean(erpArr(cur_group_idx,:),1);
-
+        
     end
 else  % individual results
     for ei = 1 : length(EEGcell)
@@ -124,9 +124,9 @@ else  % individual results
             plot_title = 'ERP average waveform by Recording';
             plot_filename = fullfile(outputdir,['hab_erp_by_recording_' timestamp '.png']);
         else
-            title_trials = num2str(EEGcell{ei}.etc.htp.hab.trials);
-            title_amp_rej_trials = num2str(numel(str2num(EEGcell{ei}.etc.htp.hab.amp_rej_trials)));
-           
+            title_trials = num2str(EEGcell{ei}.vhtp.eeg_htpCalcHabErp.trials);
+            title_amp_rej_trials = num2str(numel(str2num(EEGcell{ei}.vhtp.eeg_htpCalcHabErp.amp_rej_trials)));
+            
             plot_title_cell{ei} = sprintf('Average ERP for %s (Trials: %s, Rej: %s)', ...
                 EEGcell{ei}.setname, title_trials, title_amp_rej_trials);
             
@@ -138,12 +138,13 @@ else  % individual results
             plot_filename_cell{ei} = fullfile(outputdir, ...
                 ['hab_erp_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
         end
-        erp(ei,:) = EEGcell{ei}.etc.htp.hab.erp;
+        erp(ei,:) = EEGcell{ei}.vhtp.eeg_htpCalcHabErp.erp;
     end
 end
 
 if ip.Results.singleplot % all single plot group or multi individual
-    
+    ymin = -6;
+    ymax = 6;
     switch ip.Results.plotstyle
         case 'default'
             [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
@@ -157,7 +158,7 @@ if ip.Results.singleplot % all single plot group or multi individual
             xlim([-500 1000])
             ylabel(['Voltage (' char(0117) 'V)'])
             ylim([max(P2)*-1 max(P2)*2.5])
-     
+            
             axis square
             lines = findobj(gcf,'Type','Line');
             for i = 1:numel(lines)
@@ -172,9 +173,9 @@ if ip.Results.singleplot % all single plot group or multi individual
             delete(textHandles);
             colorOrderArray = [1 0 0; 0.3010 0.7450 0.9330; 0 0 0];
             lineStyleArray = {'-','-',':'};
-
+            
             displayNameArray = ip.Results.drugNames;
-
+            
             for pi = 1 : size(erp,1)
                 axesHandles(pi).Color = colorOrderArray(pi,:);
                 axesHandles(pi).LineStyle = lineStyleArray{pi};
@@ -182,10 +183,10 @@ if ip.Results.singleplot % all single plot group or multi individual
             end
             line([0 0], [ymin ymax], 'Color','k','LineStyle', ':');
             line([500 500], [ymin ymax], 'Color','k', 'LineStyle', ':');
-
+            
             line([0 0], [ymin -1.3], 'Color','k','LineStyle', '-','LineWidth',6);
             line([500 500], [ymin -1.3], 'Color','k', 'LineStyle', '-', 'LineWidth',6);
-
+            
             l = legend('Box','off','Interpreter','none');
             l.String = l.String(1 : size(erp,1));
             
@@ -196,11 +197,11 @@ if ip.Results.singleplot % all single plot group or multi individual
             ylimVals = get(gca,'ylim');
             text(0, ylimVals(1)-ylimVals(1)*.1, "Stimulus 1 ", 'rotation',0,'FontSize',20,'HorizontalAlignment','right');
             text(500, ylimVals(1)-ylimVals(1)*.1, "Stimulus 2 ", 'rotation',0,'FontSize',20,'HorizontalAlignment','right');
-
+            
             text(P2Lat(1), max(max(P2)*1.75), "P2", 'rotation',0,'FontSize',20);
-                        
+            
             axesHandles = findobj(gca, 'Type', 'Line');
-
+            
             % delete(axesHandles(7));
             saveas(gcf, plot_filename);
     end
@@ -210,7 +211,7 @@ else
         [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
         createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si});
         saveas(gcf, plot_filename_cell{si});
-       % close gcf;
+        % close gcf;
     end
 end
 

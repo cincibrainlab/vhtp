@@ -8,6 +8,7 @@ function [EEG, results] = eeg_htpEegCreateHabEpochsEeglab(EEG,varargin)
 %     EEG           - EEGLAB Structure
 %
 % Function Specific Inputs:
+%   'targetdin'    - digital input marker (DIN) event code for epochs
 %   'epochlength'  - Integer representing the recurrence interval in seconds of epochs
 %               default: 2
 %
@@ -25,6 +26,7 @@ function [EEG, results] = eeg_htpEegCreateHabEpochsEeglab(EEG,varargin)
 %  Contact: kyle.cullion@cchmc.org
 
 defaultEpochLength = 2;
+defaultTargetDin = 'DIN8';
 defaultEpochLimits = [0 defaultEpochLength];
 
 % MATLAB built-in input validation
@@ -33,30 +35,46 @@ ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'epochlength',defaultEpochLength,@isnumeric);
 addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
+addParameter(ip, 'targetdin', defaultTargetDin, @ischar);
 
 parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
+target_din = ip.Results.targetdin;
+
 try 
     target_events = zeros(numel(EEG.event),1);
     counter = 1;
+    first_target_din_found = false;
     for ei = 1:numel(EEG.event)
-        if ei == 1
-            target_events(ei) = 1;
-        else
-            counter = counter + 1;
-            if counter == 5
-                check_latency = EEG.event(ei).latency - EEG.event(ei-1).latency;
-                %assert(check_latency > 60, 'Event code latency discrepency');
-                disp(ei);
+        current_din = EEG.event(ei).type;
+        current_latency = EEG.event(ei).latency;
+        if strcmp(current_din, target_din) 
+            if counter == 1
+                first_target_din_found = true;
+                first_target_latency = current_latency;
+                previous_latency = current_latency;
                 target_events(ei) = 1;
+                counter = counter + 1;
+            else
+                check_latency = current_latency - previous_latency;
+                fprintf("%s #%d to previous DIN Latency: %s ms\n", target_din, ei, num2str(check_latency));
+                if counter == 4
+                    fprintf("Fourth DIN of series\n");
+                    fprintf("First to First Latency: %s ms\n", num2str(first_target_latency-current_latency));
                 counter = 1;
+                else
+                    counter = counter + 1;
+                end
+                previous_latency = current_latency;
             end
         end
     end
-    EEG = pop_epoch( EEG,  {'DIN8'}, [-0.5 2.75], 'eventindices', find(target_events), ...
+ 
+    EEG = pop_epoch( EEG, {target_din}, [-0.5 2.75],...
+        'eventindices', find(target_events),  ...
         'newname', EEG.setname, 'epochinfo', 'yes');
     
     EEG.vhtp.eeg_htpEegCreateEpochsEeglab.proc_xmax_epoch = EEG.trials * abs(EEG.xmax-EEG.xmin);

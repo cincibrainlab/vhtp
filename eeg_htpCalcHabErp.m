@@ -234,17 +234,17 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 
 % Outputs: 
-EEG.etc.htp.hab.erp = erp';
-EEG.etc.htp.hab.times = t;
-EEG.etc.htp.hab.n1idx = [n1a_idx n1b_idx n1c_idx n1d_idx];
-EEG.etc.htp.hab.p2idx = [p2a_idx p2b_idx p2c_idx p2d_idx];
-EEG.etc.htp.hab.N1Lat = N1Latency;
-EEG.etc.htp.hab.P2Lat = P2Latency;
-EEG.etc.htp.hab.trials = EEG.trials;
-EEG.etc.htp.hab.amp_rej_trials = num2str(bad_trial_idx);
-EEG.etc.htp.hab.amp_threshold = amp_threshold;
-EEG.etc.htp.hab.summary_table = [inforow resultsrow];
+EEG.vhtp.eeg_htpCalcHabErp.erp = erp';
+EEG.vhtp.eeg_htpCalcHabErp.times = t;
+EEG.vhtp.eeg_htpCalcHabErp.n1idx = [n1a_idx n1b_idx n1c_idx n1d_idx];
+EEG.vhtp.eeg_htpCalcHabErp.p2idx = [p2a_idx p2b_idx p2c_idx p2d_idx];
+EEG.vhtp.eeg_htpCalcHabErp.N1Lat = N1Latency;
+EEG.vhtp.eeg_htpCalcHabErp.P2Lat = P2Latency;
+EEG.vhtp.eeg_htpCalcHabErp.trials = EEG.trials;
+EEG.vhtp.eeg_htpCalcHabErp.amp_rej_trials = num2str(bad_trial_idx);
+EEG.vhtp.eeg_htpCalcHabErp.amp_threshold = amp_threshold;
+EEG.vhtp.eeg_htpCalcHabErp.summary_table = [inforow resultsrow];
 EEG.etc.htc.hab.qi_table = qi_table;
-results = EEG.etc.htp.hab;
+results = EEG.vhtp.eeg_htpCalcHabErp;
 
 end

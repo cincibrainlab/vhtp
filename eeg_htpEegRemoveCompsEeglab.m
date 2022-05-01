@@ -12,6 +12,8 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %                  in thresholding and plotting
 %                  default: 24
 %    'dpreset'   - display size preset ('1080p')
+%    'removeics' - bypass GUI and remove user specified components
+%                  defined as vector of integers.
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
@@ -26,17 +28,21 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 
 defaultMaxComps = 24;
 defaultDPreset = 'dynamic';
+defaultRemoveIcs = [];
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
 addParameter(ip,'dpreset',defaultDPreset, @ischar);
+addParameter(ip,'removeics',defaultRemoveIcs, @isvector);
 
 parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
+
+if isempty(ip.Results.removeics)
 
 try
     scsize=get(0,'ScreenSize');
@@ -273,6 +279,16 @@ catch e
     throw(e)
 end
 
+else
+    try
+        components_to_remove_vector = ip.Results.removeics;
+        EEG = remove_comps_action( EEG, components_to_remove_vector );
+        EEG.vhtp.eeg_htpEegRemoveCompsEeglab.completed=1;
+    catch
+        disp("Error with direct component removal");
+    end
+end
+
 function prop_extended( src, event)
 
     EEG = src.UserData{1};
@@ -381,7 +397,9 @@ function b1_callback(src, event)
     comps = findobj('tag', 'comp_entry2');
 
     src.UserData.proc_removeComps = str2num(comps.String);
+   
     EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = str2num(comps.String);
+    
     try
         EEG.etc.clean_channel_mask = true(1,EEG.nbchan);
         EEG.etc.clean_sample_mask = true(1,EEG.pnts * EEG.trials);
@@ -424,6 +442,17 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = qi_table;
 results = EEG.vhtp.eeg_htpEegRemoveCompsEeglab;
+end
+
+function EEG = remove_comps_action( EEG, components_to_remove_vector )
+% created to separate component removal from callback to have bypass route
+% to run component removal directly (without GUI).
+
+EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = components_to_remove_vector;
+
+% remove components
+EEG=compRemove(EEG);
+
 end
 
 function comps_artifact = get_icview_comps(var, threshold, range,EEG)
