@@ -56,7 +56,7 @@ addParameter(ip,'baseline', defaultBaseline);
 addParameter(ip, 'filtOn', defaultFiltOn,@islogical);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell);
-addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+addParameter(ip, 'ampThreshold', defaultAmpThreshold, @isnumeric)
 addParameter(ip, 'timefreq', defaultTimeFreq, @islogical);
 
 parse(ip,EEG,varargin{:});
