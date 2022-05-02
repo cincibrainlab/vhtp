@@ -101,7 +101,6 @@ defaultNotch = [55 65];
 if any(strcmp(varargin,{'method'})) && strcmp(varargin(find(strcmp(varargin,'method'))+1),'notch'); defaultRevFilt=1; else; defaultRevFilt=0; end;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
-defaultRevFilt = 0;
 defaultCleanlineBandwidth = 2;
 defaultCleanlineChanList = [1:EEG.nbchan];
 defaultCleanlineComputePower = 0;

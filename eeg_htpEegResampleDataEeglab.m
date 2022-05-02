@@ -43,7 +43,7 @@ try
     
     EEG.vhtp.eeg_htpEegResampleDataEeglab.completed=1;
     EEG.vhtp.eeg_htpEegResampleDataEeglab.rawsrate = orig_srate;
-    EEG.vhtp.eeg_htpEegResampleDataEeglab.srate = srate;
+    EEG.vhtp.eeg_htpEegResampleDataEeglab.srate = ip.Results.srate;
 catch e
     throw(e)
 end
