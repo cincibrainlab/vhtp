@@ -77,6 +77,7 @@ try
         EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials   = 0;
         EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badid       = '[0]';
         EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_percent     = 100;
+        tmprej=[];
 
     else
         EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials = length(find(tmprej));

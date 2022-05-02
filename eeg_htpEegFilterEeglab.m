@@ -1,16 +1,17 @@
-function [EEG, results] = eeg_htpEegFilterEeglab(EEG,method,varargin)
+function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 % eeg_htpEegFilterEeglab - Perform various filtering methods
 %                           (hipass, lowpass, notch, and cleanline) on data
 %
 % Usage:
-%    >> [ EEG, results ] = eeg_htpEegFilterEeglab( EEG, method, varargin)
+%    >> [ EEG, results ] = eeg_htpEegFilterEeglab( EEG, varargin)
 %
 % Require Inputs:
 %     EEG           - EEGLAB Structure
 %
-%    method  - Text representing method utilized for Filtering
-%
 % Function Specific Inputs:
+%
+%   'method'  - Text representing method utilized for Filtering
+%
 %   'lowpassfilt' - Number representing the higher edge frequency to use in 
 %                   lowpass bandpass filter 
 %                   default: 80
@@ -93,10 +94,11 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,method,varargin)
 %
 %  Contact: kyle.cullion@cchmc.org
 
+defaultMethod = 'highpass';
 defaultLoCutoff = 0.5;
 defaultHiCutoff = 80;
 defaultNotch = [55 65];
-if strcmp(method,'notch'); defaultRevFilt=1; else; defaultRevFilt=0; end;
+if any(strcmp(varargin,{'method'})) && strcmp(varargin(find(strcmp(varargin,'method'))+1),'notch'); defaultRevFilt=1; else; defaultRevFilt=0; end;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultRevFilt = 0;
@@ -116,12 +118,12 @@ defaultCleanlineWinSize = 4;
 defaultCleanlineWinStep = 4;
     
 validateMethod = @( method ) ischar( method ) & ismember(method, {'lowpass', 'highpass', 'notch', 'cleanline'});
-validateRevFilt = @(revfilt) isnumeric(revfilt) && ((revfilt==1 && strcmp(method,'notch')) || (revfilt==0 && ~strcmp(method,'notch')));
+validateRevFilt = @(revfilt) isnumeric(revfilt) && ((revfilt==1 &&  strcmp(varargin(find(strcmp(varargin,'method'))+1),'notch')) || (revfilt==0 && ~strcmp(varargin(find(strcmp(varargin,'method'))+1),'notch')));
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addRequired(ip, 'method', validateMethod);
+addParameter(ip, 'method', defaultMethod, validateMethod);
 addParameter(ip, 'lowpassfilt',defaultHiCutoff,@isnumeric);
 addParameter(ip, 'hipassfilt',defaultLoCutoff,@isnumeric);
 addParameter(ip, 'notchfilt',defaultNotch,@isnumeric);
@@ -143,13 +145,13 @@ addParameter(ip, 'cleanlineverb',defaultCleanlineVerb,@isnumeric);
 addParameter(ip, 'cleanlinewinsize',defaultCleanlineWinSize,@isnumeric);
 addParameter(ip, 'cleanlinewinstep',defaultCleanlineWinStep,@isnumeric);
 
-parse(ip,EEG,method,varargin{:});
+parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 try
-    switch method
+    switch ip.Results.method
         case 'highpass'
             highpassfiltorder = 6600;
             EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);

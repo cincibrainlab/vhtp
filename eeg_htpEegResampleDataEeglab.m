@@ -1,4 +1,4 @@
-function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,srate)
+function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,varargin)
 % eeg_htpResampleDataEeglab() - Resample data to new specified sampling rate.
 %
 % Usage:
@@ -20,12 +20,14 @@ function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,srate)
 %  Contact: kyle.cullion@cchmc.org
 
 % MATLAB built-in input validation
+defaultSrate=500;
+
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addRequired(ip, 'srate',@isnumeric);
+addParameter(ip, 'srate',defaultSrate,@isnumeric);
 
-parse(ip,EEG,srate);
+parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
@@ -37,7 +39,7 @@ try
         EEG = pop_resample( EEG, 1000);
     end
     
-    EEG = pop_resample( EEG, srate);
+    EEG = pop_resample( EEG, ip.Results.srate);
     
     EEG.vhtp.eeg_htpEegResampleDataEeglab.completed=1;
     EEG.vhtp.eeg_htpEegResampleDataEeglab.rawsrate = orig_srate;
