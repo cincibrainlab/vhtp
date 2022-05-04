@@ -1,4 +1,4 @@
-function [results] = paradigm_RESTORE_noICA(filepath, presets, process, varargin)
+function [results] = paradigm_VD_noICA(filepath, presets, process, varargin)
 % paradigm_Resting() - main import function
 %
 % Usage:
