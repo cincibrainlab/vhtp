@@ -48,7 +48,7 @@ defaultRerunStep = '';
 defaultRerunSourceStep='';
 
 
-validateProcess = @( process ) ismember(process,{'All','Rerun', 'IndividualStep'});
+validateProcess = @( process ) ismember(process,{'All','Continuation', 'IndividualStep'});
 
 validateFileOrFolder = @( filepath ) isfolder(filepath) | exist(filepath, 'file');
 
@@ -65,8 +65,8 @@ addParameter(ip,'subdirOn', defaultSubDirOn, @islogical);
 addParameter(ip,'dryrun', defaultDryrun, @islogical);
 addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 addParameter(ip,'individualstep',defaultIndividualStep,@ischar);
-addParameter(ip,'rerunstep',defaultRerunStep,@ischar);
-addParameter(ip,'rerunsourcestep',defaultRerunSourceStep,@ischar);
+addParameter(ip,'continuationstep',defaultRerunStep,@ischar);
+% addParameter(ip,'rerunsourcestep',defaultRerunSourceStep,@ischar);
 parse(ip,filepath,presets,process,varargin{:});
 
 %util_htpImportEeg(filepath,'nettype',ip.Results.nettype,'outputdir',filepath,'dryrun',false);
@@ -78,8 +78,8 @@ switch exist(filepath)
         filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
         if strcmp(process,'All')
             filelist = filelist(~contains(filelist.filename, fieldnames(stepnames)),:);
-        elseif strcmp(process,'Rerun')
-            filelist = filelist(contains(filelist.filename, ip.Results.rerunstep),:);
+        elseif strcmp(process,'Continuation')
+            filelist = filelist(~contains(filelist.filename, fieldnames(stepnames)),:);
         else
             filelist = filelist(:,:);
         end
@@ -102,11 +102,11 @@ try
             case 'IndividualStep'
                 EEG = pop_loadset('filename',fullfile(filelist.filepath(i),filelist.filename(i)));
                 processIndividualStep(EEG,ip.Results.individualstep,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir);
-            case 'Rerun'
+            case 'Continuation'
 %                 EEG = pop_loadset('filename', filelist.filename{i}, 'filepath', filelist.filepath{i}, 'loadmode', 'info');
 %                 EEG = pop_loadset('filename', fullfile(filelist.filepath{1},EEG.vhtp.prior_file));
-                EEG = pop_loadset(EEG,ip.Results.rerunstep,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir);
-                processRerunStep(EEG,ip.Results.rerunstep,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir);
+                EEG = pop_loadset('filename',fullfile(filelist.filepath(i),regexprep(filelist.filename(i),ip.Results.ext,'.set')));
+                processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir);
             otherwise
         end
         EEG = eeg_emptyset;
@@ -144,10 +144,10 @@ function processIndividualStep(EEG,individualstep,stepnames,options,dryrun,outpu
     
 end
 
-function processRerunStep(EEG,rerunstep,stepnames,options,dryrun,outputdir)
-    if ~isempty(rerunstep)
-        EEG = runStep(EEG,options.(rerunstep),rerunstep,stepnames.(rerunstep),dryrun,outputdir);
+function processRerunStep(EEG,stepnames,options,dryrun,outputdir)
+    steps =fieldnames(stepnames);
+    for i =1:length(steps)
+        EEG = runStep(EEG, options.(steps{i}), steps{i}, stepnames.(steps{i}), dryrun,outputdir);
     end
-    
 end
 

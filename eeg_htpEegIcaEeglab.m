@@ -30,7 +30,7 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 %  please see http://github.com/cincibrainlab
 %
 %  Contact: kyle.cullion@cchmc.org
-defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))));
+if isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'dataRank'); defaultRank = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank; else; defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2))))); end;
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');
 % MATLAB built-in input validation

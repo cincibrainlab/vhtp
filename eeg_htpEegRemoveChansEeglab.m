@@ -48,7 +48,7 @@ addParameter(ip,'threshold',defaultThreshold,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
-EEG.vhtp.eeg_htpEegRemoveChansEeglab = struct();
+%EEG.vhtp.eeg_htpEegRemoveChansEeglab = struct();
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
@@ -70,7 +70,7 @@ try
        EEG=autobadchannel( EEG,ip.Results.threshold );
        
        
-       cdef = {'g','b'};
+       cdef = {'b','b'};
        carr = repmat(cdef,1, size(EEG.data,1));
        carr = carr(1:size(EEG.data, 1));
        carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
@@ -87,8 +87,9 @@ try
        proc_badchans=[];
        chanlist = {EEG.chanlocs.labels};
 
-
-       EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans =  '';
+       if ~isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'proc_badchans')
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans =  '';
+       end
 
        handle = gcf;
        handle.Units = 'normalized';
@@ -129,7 +130,11 @@ try
        end
        
        EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=1;
-       EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
+       if ~isempty(getfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans))
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = sort(unique([EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans, proc_badchans]));
+       else 
+           EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
+       end
    end
    
    
@@ -236,7 +241,7 @@ function EEG = autobadchannel( EEG, threshold )
     zerochan = find_zeroed_chans( EEG.data ); if ~isempty( zerochan ), indelec{end+1} = zerochan'; end
     badchans = cell2mat(indelec(1:length(indelec)));
     EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel = unique( badchans, 'stable' );
-    EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = unique( badchans, 'stable' );
+    %EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = unique( badchans, 'stable' );
 
 end
 
