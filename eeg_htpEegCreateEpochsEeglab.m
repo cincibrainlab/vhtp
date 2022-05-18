@@ -58,9 +58,13 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
-EEG.vhtp.eeg_htpEegCreateEpochsEeglab.qi_table = qi_table;
+if isfield(EEG.vhtp.eeg_htpEegCreateEpochsEeglab,'qi_table')
+    EEG.vhtp.eeg_htpEegCreateEpochsEeglab.qi_table = [EEG.vhtp.eeg_htpEegCreateEpochsEeglab.qi_table; qi_table];
+else
+    EEG.vhtp.eeg_htpEegCreateEpochsEeglab.qi_table = qi_table;
+end
 results = EEG.vhtp.eeg_htpEegCreateEpochsEeglab;
 end
 

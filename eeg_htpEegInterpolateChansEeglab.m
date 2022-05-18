@@ -25,20 +25,31 @@ function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 %
 %  Contact: kyle.cullion@cchmc.org
 defaultMethod='spherical';
+defaultChannels = [];
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method', defaultMethod,@ischar)
+addParameter(ip, 'channels', defaultChannels, @isnumeric)
 parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 try
-    try
-    badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
-    catch
+    if isempty(ip.Results.channels)
+        if isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab')
+            if ~isempty(EEG.vhtp.eeg_htpEegRemoveChansEeglab.('proc_badchans'))
+                badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;            
+            else
+                badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
+            end
+        else
+            badchannels=[];
+        end
+    else
+        badchannels = sort(unique(ip.Results.channels));
     end
     EEGtemp = EEG;  
 
@@ -64,9 +75,13 @@ catch error
 end
 
 EEG = eeg_checkset(EEG);
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
-EEG.vhtp.eeg_htpEegInterpolateChansEeglab.qi_table = qi_table;
+if isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'qi_table')
+    EEG.vhtp.eeg_htpEegInterpolateChansEeglab.qi_table = [EEG.vhtp.eeg_htpEegInterpolateChansEeglab.qi_table; qi_table];
+else
+    EEG.vhtp.eeg_htpEegInterpolateChansEeglab.qi_table = qi_table;
+end
 results = EEG.vhtp.eeg_htpEegInterpolateChansEeglab;
 
 end

@@ -61,7 +61,7 @@ try
    else
        if strcmp(ip.Results.type,'Resting')
            EEG = trim_edges(EEG,10);
-           if isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
+           if isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab') && isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
                return;
            end
        end
@@ -130,7 +130,7 @@ try
        end
        
        EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=1;
-       if ~isempty(getfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans))
+       if ~isempty(EEG.vhtp.eeg_htpEegRemoveChansEeglab.('proc_badchans'))
            EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = sort(unique([EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans, proc_badchans]));
        else 
            EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
@@ -146,9 +146,13 @@ end
 
 EEG=eeg_checkset(EEG);
 
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
-EEG.vhtp.eeg_htpEegRemoveChansEeglab.qi_table = qi_table;
+if isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'qi_table')
+    EEG.vhtp.eeg_htpEegRemoveChansEeglab.qi_table = [EEG.vhtp.eeg_htpEegRemoveChansEeglab.qi_table; qi_table];
+else
+    EEG.vhtp.eeg_htpEegRemoveChansEeglab.qi_table = qi_table;
+end
 results = EEG.vhtp.eeg_htpEegRemoveChansEeglab;
 
 function  EEG=showChanDetail(EEG)
@@ -225,7 +229,7 @@ function EEG = autobadchannel( EEG, threshold )
 
     maxchannels = floor(size(EEG.data, 1) * 0.10);
 
-    measure = {'prob','kurt','spec'}; % 'spec'
+    measure = {'prob','kurt'}; % 'spec'
     indelec = cell(1,length(measure));
     com = cell(1,length(measure));
 
@@ -241,8 +245,6 @@ function EEG = autobadchannel( EEG, threshold )
     zerochan = find_zeroed_chans( EEG.data ); if ~isempty( zerochan ), indelec{end+1} = zerochan'; end
     badchans = cell2mat(indelec(1:length(indelec)));
     EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel = unique( badchans, 'stable' );
-    %EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = unique( badchans, 'stable' );
-
 end
 
  function index = find_zeroed_chans( dat )
