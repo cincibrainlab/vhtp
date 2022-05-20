@@ -52,31 +52,49 @@ parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
-
+repeating = 1;
 try
+   if isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab') && isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
+       EEG.vhtp.eeg_htpEegRemoveChansEeglab=rmfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason');
+   end
+   original = EEG;
    if EEG.xmax < ip.Results.minimumduration
        EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed = 0;
        EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Data too short';
-       return;
-   else
+
        if strcmp(ip.Results.type,'Resting')
+           f = errordlg(sprintf('\t\tYOUR DATA IS SHORTER THAN THE SET MINIMUM DURATION OF %d SECONDS\n\n\t\tYOUR FILE WILL NOT UNDERGO TRIMMING EDGES OR MARKING BAD CHANNELS',ip.Results.minimumduration),'Recording Error');
+       else
+           f = errordlg(sprintf('\t\tYOUR DATA IS SHORTER THAN THE SET MINIMUM DURATION OF %d SECONDS\n\n\t\tYOUR FILE WILL NOT UNDERGO MARKING BAD CHANNELS.',ip.Results.minimumduration),'Recording Error');
+       end
+       uiwait(f);
+       repeating=0;
+           
+   end
+   if strcmp(ip.Results.type,'Resting') 
+       if ~isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab')
            EEG = trim_edges(EEG,10);
            if isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab') && isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')
-               return;
+               f=errordlg(sprintf('\t\tYOUR DATA IS SHORTER THAN THE SET MINIMUM DURATION OF %d SECONDS\n\n\t\tYOUR FILE WILL NOT UNDERGO MARKING BAD CHANNELS.',ip.Results.minimumduration));
+               uiwait(f);
+               repeating = 0;
            end
        end
-       
+   end
+   while repeating
+       EEG = original;
+
        gui.position = [0.01 0.20 0.80 0.70];
        EEG=autobadchannel( EEG,ip.Results.threshold );
-       
-       
+
+
        cdef = {'b','b'};
        carr = repmat(cdef,1, size(EEG.data,1));
        carr = carr(1:size(EEG.data, 1));
        carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
 
        eegplot(EEG.data,'srate',EEG.srate,'winlength',10, ...
-            'plottitle', ['Mark and Remove Bad Channels '], ...
+            'plottitle', [sprintf('Mark and Remove Bad Channels for Subject %s',regexprep(EEG.subject,'^*\.\w+$',''))], ...
             'events',EEG.event,'color',carr,'wincolor',[1 0.5 0.5], ...
             'eloc_file',EEG.chanlocs,  'butlabel', 'Close Window', 'submean', 'on', ...
             'command', 't = 1', 'position', [400 400 1024 768] ...
@@ -97,7 +115,7 @@ try
 
 
        popup = uicontrol(handle,'Tag', 'chanselect', 'Style', 'listbox', ...
-            'max',10,'min',1, ...
+            'max',EEG.nbchan,'min',1, ...
             'String', chanlist , 'Value', EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel,...
             'Units', 'normalized', ...
             'Position', [.05 0.15 0.035 .70], 'BackgroundColor', [0.94 0.94 0.94]);
@@ -122,21 +140,25 @@ try
 
 
        waitfor(gcf);
-       
+
        if length(proc_badchans) > ceil(EEG.nbchan*.05)
-           EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=0;
-           EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Max Reject Threshold Exceeded';
-           return
+           f=warndlg('YOU HAVE REMOVED MORE THAN 5% OF THE TOTAL NUMBER OF CHANNELS');
+           uiwait(f);
        end
-       
+
        EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed=1;
        if ~isempty(EEG.vhtp.eeg_htpEegRemoveChansEeglab.('proc_badchans'))
            EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = sort(unique([EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans, proc_badchans]));
        else 
            EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
        end
+       answer = questdlg(sprintf('Would you like to Re-do the Marking Bad Channel Process for Subject %s?',regexprep(EEG.subject,'^*\.\w+$','')),'Channel Removal Repeat','Repeat','Continue','Continue');
+       if isempty(answer) || strcmp(answer, 'Repeat')
+           repeating = 1;
+       else
+           repeating = 0;
+       end
    end
-   
    
 catch e
     throw(e)
