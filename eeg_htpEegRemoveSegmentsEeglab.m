@@ -81,7 +81,7 @@ try
         if ~isempty(rej)
 
             tmprej = eegplot2event(rej, -1);
-            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_tmprej_cont = tmprej;
+            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_tmprej_cont = tmprej(:,[3 4]);
             [EEG,~] = eeg_eegrej(EEG,tmprej(:,[3 4]));
 
             events = EEG.event;
