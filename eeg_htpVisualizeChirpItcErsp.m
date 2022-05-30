@@ -40,6 +40,7 @@ defaultGroupMean = 1;
 defaultSingleplot = 1;
 defaultAverageByRegion = false;
 defaultContrasts = {};
+defaultDiffColorLimits = [];
 EEGno =  numel(EEGcell);
 
 % MATLAB built-in input validation
@@ -51,12 +52,13 @@ errorMsg2 = 'EEG input should be either a cell array or struct.';
 validEegArray = @(x) assert(iscell(x) || isstruct(x), errorMsg2);
 
 addRequired(ip, 'EEGcell', validEegArray);
-addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
-addParameter(ip,'groupids', defaultGroupIds, validGroupIds)
-addParameter(ip,'groupmean', defaultGroupMean, @islogical)
-addParameter(ip,'singleplot', defaultSingleplot, @islogical)
-addParameter(ip, 'averageByRegion', defaultAverageByRegion, @islogical)
-addParameter(ip,'contrasts', defaultContrasts, @iscell)
+addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
+addParameter(ip,'groupids', defaultGroupIds, validGroupIds);
+addParameter(ip,'groupmean', defaultGroupMean, @islogical);
+addParameter(ip,'singleplot', defaultSingleplot, @islogical);
+addParameter(ip, 'averageByRegion', defaultAverageByRegion, @islogical);
+addParameter(ip,'contrasts', defaultContrasts, @iscell);
+addParameter(ip,'diffColorLimits', defaultDiffColorLimits, @isvector);
 
 parse(ip,EEGcell,varargin{:});
 outputdir = ip.Results.outputdir;
@@ -137,6 +139,7 @@ for ci = 1 : numel(chanlabels)
 
         for gi = 1 : group_no % mean each by group id
             cur_group_idx = find(ip.Results.groupids == groups(gi));
+            group_names{gi} =  char(groups(gi));
             plot_title_cell{gi} = sprintf('PLACEHOLDER for group %s (%s)',  char(groups(gi)), channame);
             plot_filename_cell{gi} = fullfile(outputdir, ...
                 ['chirp_itcersp_by_group_' channame '_' char(groups(gi)) '_' timestamp '.png']);
@@ -146,6 +149,8 @@ for ci = 1 : numel(chanlabels)
 
         end
         % Perform contrasts and add as additional groups
+        get_id = @(x) find(strcmp(group_names, x));
+
         if ~isempty(ip.Results.contrasts)
             contrasts = ip.Results.contrasts;
             isDiff = true;
@@ -153,13 +158,16 @@ for ci = 1 : numel(chanlabels)
                 select_contrast = contrasts{contrast_i};
                 group_no = group_no + 1;
 
-                itc(:,:,group_no) = itc(:,:,select_contrast(1)) - itc(:,:,select_contrast(2));
-                ersp(:,:,group_no) = ersp(:,:,select_contrast(1)) - ersp(:,:,select_contrast(2));
-                stp(:,:,group_no) = stp(:,:,select_contrast(1)) - stp(:,:,select_contrast(2));
+                id1 = get_id(select_contrast(1));
+                id2 = get_id(select_contrast(2));
+                
+                itc(:,:,group_no) = itc(:,:,id1) - itc(:,:,id2);
+                ersp(:,:,group_no) = ersp(:,:,id1) - ersp(:,:,id2);
+                stp(:,:,group_no) = stp(:,:,id1) - stp(:,:,id2);
 
-                plot_title_cell{group_no} = sprintf('PLACEHOLDER for group diff %d_%d (%s)', select_contrast(1), select_contrast(2), channame);
+                plot_title_cell{group_no} = sprintf('PLACEHOLDER for group diff\n%s_%s (%s)',select_contrast{1}, select_contrast{2}, channame);
                 plot_filename_cell{group_no} = fullfile(outputdir, ...
-                    ['chirp_itcersp_by_groupdiff_' channame '_' sprintf('%d_%d', select_contrast(1), select_contrast(2)) '_' timestamp '.png']);
+                    ['chirp_itcersp_by_groupdiff_' channame '_' sprintf('%s_%s',select_contrast{1}, select_contrast{2}) '_' timestamp '.png']);
             end
         else
             ifDiff = false;
@@ -248,14 +256,14 @@ h = colorbar;
 ylabel(h,'Intertrial Coherence (ITC)');
 %ylim(h,[0 .2]);
 if contains(plot_title, 'diff')
-    caxis([-.03 .03]); % important
+        caxis([-.1 .1]); % important
 else
     max_itc = .2;
     if max(max(itc)) > max_itc
         % axis([0 1]); % important
         plot_title = [plot_title ' (EXCEEDS UPPER LIMIT ' num2str(max_itc) ')' ];
     else
-        caxis([0 .06]); % important
+        caxis([0 .1]); % important
     end
 end
 pbaspect([1 1 1]);
@@ -277,7 +285,7 @@ if contains(plot_title, 'diff')
 else
     max_stp = -190;
     if max(max(stp)) > max_stp
-        % axis([0 1]); % important
+        caxis([0 50]); % important
         plot_title = [plot_title ' (EXCEEDS UPPER LIMIT ' num2str(max_stp) ')' ];
     else
         caxis([-215 -190]); % important
@@ -300,9 +308,9 @@ h = colorbar;
 ylabel(h,'Power (dB/Hz) Change from Baseline');
 %ylim(h,[0 45]);
 if contains(plot_title, 'diff')
-    caxis([-.8 .8]); % important
+    caxis([-2 2]); % important
 else
-    
+    caxis([-2 2]); % important
 %    caxis([-215 -190]);
 end
 
