@@ -46,21 +46,6 @@ function [fEEG, results] = eeg_htpEegFilterFastFc(EEG, filttype, filtfreq)
 %
 %  Contact: kyle.cullion@cchmc.org
 
-
-
-% where
-%   dat        data matrix (Nchans X Ntime)
-%   Fsample    sampling frequency in Hz
-%   Flp        filter frequency
-%   N          optional filter order, default is 6 (but) or 25 (fir)
-%   type       optional filter type, can be
-%                'but' Butterworth IIR filter (default)
-%                'fir' FIR filter using MATLAB fir1 function
-%   dir        optional filter direction, can be
-%                'onepass'         forward filter only
-%                'onepass-reverse' reverse filter only, i.e. backward in time
-%                'twopass'         zero-phase forward and reverse filter (default)
-
 validateFiltType =  @( filttype ) ischar( filttype ) & ismember(filttype, {'highpass', 'lowpass', 'notch', 'bandpass'});
 
 ip = inputParser();
@@ -76,6 +61,15 @@ functionstamp = mfilename; % function name for logging/output
 
 Fs = EEG.srate;     % sample rate
 Fn = Fs / 2;        % nyquist
+
+% check if FastFc toolbox is present
+if exist('fastfc_filt','file')
+    useFastFc = true;
+    disp('Using FastFc Toolbox (http://juangpc.github.io/FastFC/).')
+else
+    useFastFc = false;
+    disp('Missing FastFc Toolbox (http://juangpc.github.io/FastFC/). Using MATLAB filtfilt.')
+end
 
 switch filttype
     case 'lowpass'
@@ -103,7 +97,11 @@ else
     dat = double(EEG.data');
 end
 
-Fd = filtfilt(b, a, dat)';
+if useFastFc
+    Fd = fastfc_filt(b,dat,1)';
+else
+    Fd = filtfilt(b, a, dat)';
+end
 
 fEEG = EEG;
 fEEG.data = Fd;
