@@ -42,6 +42,7 @@ defaultGroupIds = ones(1,length(EEGcell));
 defaultGroupMean = 1;
 defaultSingleplot = 1;
 defaultGroupOverlay = [];
+defaultGroupLabels = {};
 defaultPlotstyle = 'default';
 defaultDrugNames = {'Drug','Placebo', 'Baseline'};
 defaultTag = false;
@@ -60,6 +61,7 @@ addParameter(ip,'singleplot', defaultSingleplot, @islogical)
 addParameter(ip,'groupOverlay', defaultGroupOverlay, @isvector)
 addParameter(ip,'plotstyle', defaultPlotstyle, @ischar)
 addParameter(ip, 'drugNames', defaultDrugNames, @iscell)
+addParameter(ip, 'groupLabels', defaultGroupLabels, @iscell);
 addParameter(ip, 'tag', defaultTag, @ischar);
 
 parse(ip,EEGcell,varargin{:});
@@ -148,11 +150,34 @@ if ip.Results.singleplot % all single plot group or multi individual
     switch ip.Results.plotstyle
         case 'default'
             [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
-            createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
+            createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title, ip);
+            % remove extra lines
+            axesHandles = findobj(gca, 'Type', 'Line');
+            allLineIndex = zeros(length(axesHandles),1);
+            allLineIndex(1 : size(erp,1)) = 1;
+            delete(axesHandles(~allLineIndex));
+
+            stimoffsets = [0 500 1000 1500];
+            stimoffsets_din = [0 500 1000 1500] - 60;
+
+            stimoffsets_actual = [25 545 1061 1579];
+            din_labels = {'DIN1','DIN2','DIN3','DIN4'};
+            rep_labels = {'S1','R1','R2','R3'};
+
+            xline2 = @(offset) line([offset offset], [ymin ymax],'color','k');
+            xtext = @(offset,label) text(offset+25, ymin+.6, label, 'rotation',90);
+
+            if ~verLessThan('matlab','9.5')
+                arrayfun(@(x) xline2(x), stimoffsets, 'uni',0)
+                arrayfun(@(x,y) xtext(x,y), stimoffsets_din,din_labels, 'uni',0)
+            else
+                xline(stimoffsets,'-',din_labels,'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
+                xline(stimoffsets_actual,':',rep_labels ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
+            end
             saveas(gcf, plot_filename);
         case 'tetra'
             [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
-            f = createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
+            f = createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title, ip);
             set(gcf, 'color', 'w')
             set(gca,'fontname','arial', 'box', 'off', 'LineWidth',2,'FontSize',20, 'YTick',[-5:1:5], 'TickDir','out')
             xlim([-500 1000])
@@ -174,7 +199,7 @@ if ip.Results.singleplot % all single plot group or multi individual
             colorOrderArray = [1 0 0; 0.3010 0.7450 0.9330; 0 0 0];
             lineStyleArray = {'-','-',':'};
             
-            displayNameArray = ip.Results.drugNames;
+            displayNameArray = flip(ip.Results.drugNames);
             
             for pi = 1 : size(erp,1)
                 axesHandles(pi).Color = colorOrderArray(pi,:);
@@ -209,7 +234,7 @@ if ip.Results.singleplot % all single plot group or multi individual
 else
     for si = 1 : size(erp,1)
         [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
-        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si});
+        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si},ip);
         saveas(gcf, plot_filename_cell{si});
         % close gcf;
     end
@@ -226,7 +251,7 @@ qi_table = cellfun( @(EEG) ...
 results = [];
 end
 
-function f = createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
+function f = createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title, ip)
 ymin = -6;
 ymax = 6;
 stimoffsets = [0 500 1000 1500];
@@ -283,7 +308,11 @@ C = linspecer(size(erp,1));
 if size(erp,1) > 1
     hold on
     for li = 1 : size(erp,1)
-        grouplabels{li} = sprintf("Index %d", li);
+        if ~isempty(ip.Results.groupLabels)
+            grouplabels{li} = char(string(ip.Results.groupLabels{li}));
+        else
+            grouplabels{li} = sprintf("Index %d", li);
+        end
         plot(t,erp(li,:), 'color', C(li,:), ...
             'DisplayName', grouplabels{li});
     end

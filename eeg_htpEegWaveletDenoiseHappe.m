@@ -1,4 +1,4 @@
-function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
+function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % eeg_htpEegWaveletDenoiseHappe() - standalone implementation of HAPPE 2.0 wavelet
     %      thresholding to EEG SET data. Original implementation by Dr. Gabard-Durham:
     %       https://github.com/PINE-Lab/HAPPE/blob/master/scripts/pipeline_scripts/happe_wavThresh.m
@@ -41,6 +41,7 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % Outputs:
     %     EEG       - EEGLAB Structure with modified .vhtp field
     %     results   - .vhtp structure
+    %     aEEG      - EEGLAB Structure with artifact data
     %
     %  This file is part of the Cincinnati Visual High Throughput Pipeline,
     %  please see http://github.com/cincibrainlab
@@ -135,23 +136,39 @@ function [EEG, results] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
             ip.Results.lowpass, [], 0, [], 0).data, ...
             size(EEG.data, 1), []) ;
         EEG.data = reshape(EEG.data, size(EEG.data,1), []) - artifacts ;
+        
+        % create artifact only EEG SET
+        aEEG = EEG;
+        aEEG.data = artifacts;
+
         postEEG = reshape(pop_eegfiltnew(EEG, ip.Results.highpass, ...
             ip.Results.lowpass, [], 0, [], 0).data, ...
             size(EEG.data, 1), []) ;
+
     else
         if ndims(EEG.data) >2
             isEpoched = true;
             samples_per_trial = size(EEG.data,2);
+        else 
+            isEpoched = false;
+            samples_per_trial = size(EEG.data,2);
         end
         preEEG = reshape(EEG.data, size(EEG.data,1), []) ;
         postEEG = preEEG - artifacts ;
+
+        % create artifact only EEG SET
+        aEEG = EEG;
+        aEEG.data = artifacts;
         
         % bring back trials if needed
         if isEpoched
         postEEG = reshape(postEEG, size(EEG.data,1), samples_per_trial,[]) ;
         end
         EEG.data = postEEG ;
-    end    
+    end 
+
+
+
     % END: Signal Processing
 
     % QI Table
