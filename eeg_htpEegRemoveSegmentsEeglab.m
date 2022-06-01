@@ -81,7 +81,7 @@ try
         if ~isempty(rej)
 
             tmprej = eegplot2event(rej, -1);
-            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_tmprej_cont = tmprej;
+            EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_tmprej_cont = tmprej(:,[3 4]);
             [EEG,~] = eeg_eegrej(EEG,tmprej(:,[3 4]));
 
             events = EEG.event;
@@ -121,9 +121,13 @@ catch e
     throw(e)
 end
 EEG=eeg_checkset(EEG);
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
-EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.qi_table = qi_table;
+if isfield(EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab,'qi_table')
+    EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.qi_table = [EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.qi_table; qi_table];
+else
+    EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.qi_table = qi_table;
+end
 results = EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab;
 end
 

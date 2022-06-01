@@ -233,7 +233,7 @@ try
     carr = carr(1:size(EEG.data, 1));
     
     try
-    carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_autobadchannel) = {'r'};
+    carr(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans) = {'r'};
     catch
         disp('No eeg_htpEegRemoveChansEeglab fields found.')
     end
@@ -394,11 +394,15 @@ end
 % analysis in the post processing stages
 function b1_callback(src, event)
 
-    comps = findobj('tag', 'comp_entry2');
+    comps = findobj('tag', 'comp_entry');
 
     src.UserData.proc_removeComps = str2num(comps.String);
    
-    EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = str2num(comps.String);
+    if isfield(EEG.vhtp, 'eeg_htpEegRemoveCompsEeglab') && isfield(EEG.vhtp.eeg_htpEegRemoveCompsEeglab,'proc_removeComps')
+        EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = [EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps, str2num(comps.String)];
+    else
+        EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps = str2num(comps.String);
+    end
     
     try
         EEG.etc.clean_channel_mask = true(1,EEG.nbchan);
@@ -410,7 +414,7 @@ function b1_callback(src, event)
     EEGTMP = EEG;
 
     % remove components
-    EEG=compRemove(EEG);
+    EEG=compRemove(EEG, str2num(comps.String));
 
     % replot components
     vis_artifacts( EEG, EEGTMP);
@@ -438,9 +442,13 @@ end
 
 EEG = eeg_checkset(EEG);
 
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
-EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = qi_table;
+if isfield(EEG.vhtp.eeg_htpEegRemoveCompsEeglab,'qi_table')
+    EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = [EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table; qi_table];
+else
+    EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = qi_table;
+end
 results = EEG.vhtp.eeg_htpEegRemoveCompsEeglab;
 end
 
