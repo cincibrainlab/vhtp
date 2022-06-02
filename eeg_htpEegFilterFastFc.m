@@ -1,4 +1,4 @@
-function [fEEG, results] = eeg_htpEegFilterFastFc(EEG, filttype, filtfreq)
+function [fEEG, results] = eeg_htpEegFilterFastFc(EEG, filttype, filtfreq, varargin)
 % eeg_htpEegFilterFastFc - Perform various filtering methods
 %                          using fast_fc toolbox
 %
@@ -11,29 +11,8 @@ function [fEEG, results] = eeg_htpEegFilterFastFc(EEG, filttype, filtfreq)
 %    method  - Text representing method utilized for Filtering
 %
 % Function Specific Inputs:
-%   'lowpassfilt' - Number representing the higher edge frequency to use in
-%                   lowpass bandpass filter
-%                   default: 80
 %
-%   'hipassfilt' - Number representing the lower edge frequency to use in
-%                  highpass bandpass filter
-%                  default: .5
-%
-%   'notchfilt' - Array of two numbers utilized for generating the line noise
-%             used in harmonics calculation for notch filtering
-%             default: [55 65]
-%
-%
-%   'revfilt' - Numeric boolean to invert filter from bandpass to notch
-%               {0 -> bandpass, 1 -> notch}
-%               default: 0
-%
-%   'plotfreqz' - Numeric boolean to indicate whether to plot filter's frequency and
-%                 phase response
-%                 default: 0
-%
-%   'minphase' - Boolean for minimum-phase converted causal filter
-%                default: false
+%       order       force filter order
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure
@@ -48,13 +27,16 @@ function [fEEG, results] = eeg_htpEegFilterFastFc(EEG, filttype, filtfreq)
 
 validateFiltType =  @( filttype ) ischar( filttype ) & ismember(filttype, {'highpass', 'lowpass', 'notch', 'bandpass'});
 
+defaultOrder = missing;
+
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addRequired(ip, 'filttype', validateFiltType);
 addRequired(ip, 'filtfreq', @isnumeric);
+addParameter(ip, 'order', defaultOrder, @isnumeric);
 
-parse(ip,EEG, filttype, filtfreq);
+parse(ip,EEG, filttype, filtfreq, varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
@@ -71,18 +53,30 @@ else
     disp('Missing FastFc Toolbox (http://juangpc.github.io/FastFC/). Using MATLAB filtfilt.')
 end
 
+% filter order override
+if ~ismissing(ip.Results.order)
+    n = ip.Results.order;
+else
+    switch filttype
+        case 'lowpass'
+            n = 3300;
+        case 'highpass'
+            n = 6600;
+        case 'notch'
+            n = 3300;
+        case 'bandpass'
+            n = 3300;
+    end
+end
+
 switch filttype
     case 'lowpass'
-        n = 3300;
         b = fir1(n, max(filtfreq)/Fn,"low");
     case 'highpass'
-        n = 6600;
         b = fir1(n, max(filtfreq)/Fn,"high");
     case 'notch'
-        n = 3300;
         b = fir1(n, [min(filtfreq)/Fn max(filtfreq)/Fn], 'stop');
     case 'bandpass'
-        n = 3300;
         b = fir1(n, [min(filtfreq)/Fn max(filtfreq)/Fn], 'bandpass');
 end
 
