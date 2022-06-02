@@ -53,8 +53,8 @@ else
 end
 
 if srate >= ip.Results.resampleRate
-    [EEG1] = eeg_htpEegResampleDataEeglab(EEG1,ip.Results.resampleRate);
-    [EEG2] = eeg_htpEegResampleDataEeglab(EEG2,ip.Results.resampleRate);
+    [EEG1] = eeg_htpEegResampleDataEeglab(EEG1,'srate',ip.Results.resampleRate);
+    [EEG2] = eeg_htpEegResampleDataEeglab(EEG2,'srate',ip.Results.resampleRate);
     srate = ip.Results.resampleRate;
 end
 
