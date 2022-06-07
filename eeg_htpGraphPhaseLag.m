@@ -93,11 +93,6 @@ label_chans = {EEG.chanlocs.labels};
 %     end
 % end
 
-results.wpli = wpli;
-results.fwpli = fwpli;
-results.freq = label_freqband;
-results.chan = categorical(label_chans);
-
 bandtable = [];
 for fi = 1 : size(wpli,3)
     tmptable = [table(string(repmat(EEG.setname, size(wpli,2),1)), string(repmat(label_freqband{fi}, size(wpli,2),1)), string(label_chans'), ...
@@ -143,11 +138,14 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
 
 % Outputs: 
 EEG.vhtp.eeg_htpGraphPhaseLag.qi_table = qi_table;
+EEG.vhtp.eeg_htpGraphPhaseLag.wpli = wpli;
+EEG.vhtp.eeg_htpGraphPhaseLag.fwpli = fwpli;
+EEG.vhtp.eeg_htpGraphPhaseLag.freqbands = label_freqband;
 EEG.vhtp.eeg_htpGraphPhaseLag.summarytable = freqtable;
 EEG.vhtp.eeg_htpGraphPhaseLag.bandtable = bandtable;
 EEG.vhtp.eeg_htpGraphPhaseLag.graphWU = EEG.vhtp.eeg_htpGraphBraphWU.summary_table;
-EEG.vhtp.graphWU.eeg_htpGraphPhaseLag.A = fwpli;
-EEG.vhtp.graphWU.eeg_htpGraphPhaseLag.chanlabels = label_chans;
-EEG.vhtp.graphWU.eeg_htpGraphPhaseLag.freqlabels = label_frex;
+EEG.vhtp.eeg_htpGraphPhaseLag.chanlabels = label_chans;
+EEG.vhtp.eeg_htpGraphPhaseLag.freqlabels = label_frex;
 
+results = EEG.vhtp.eeg_htpGraphPhaseLag;
 end
