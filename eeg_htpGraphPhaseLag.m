@@ -10,10 +10,11 @@ function [EEG, results] = eeg_htpGraphPhaseLag(EEG, varargin)
 % Usage:
 %    >> [ EEG, results ] = eeg_htpGraphPhaseLag( EEG )
 %
-% Require Inputs:
+% Required Inputs:
 %     EEG       - EEGLAB Structure
 % Function Specific Inputs:
-%     'outputdir' - description
+%     'filterorder' - integer, override filter order
+%     'threshold'   - thresholding type 'mediansd' implemented
 %
 % Outputs:
 %     EEG       - EEGLAB Structure with modified .vhtp field
@@ -28,12 +29,13 @@ timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 defaultFilterOrder = 1625;
+defaultThreshold = missing;
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'filterorder', defaultFilterOrder, @isnumeric);
-
+addParameter(ip, 'threshold', defaultThreshold, @ischar);
 parse(ip, EEG, varargin{:});
 
 % take source signal
@@ -128,6 +130,24 @@ for fi = 1 : size(fwpli,3)
     end
 end
 
+% Thresholding
+if ~ismissing(ip.Results.threshold)
+    % based on cohen ANTS Chapter 31
+    switch ip.Results.threshold % per frequency 
+        case 'mediansd'
+            for fi = 1 : size(fwpli, 3)
+                fwpli_current = fwpli(:,:,fi);
+            pli_thresh = std(reshape(fwpli_current,1,[]))+ median(reshape(fwpli_current,1,[]));
+            fwpli_current(fwpli_current < pli_thresh) = 0;
+            fwpli(:,:,fi) = fwpli_current;
+            disp(['WPLI Threshold Set at Median + SD (' num2str(frex(fi)) 'Hz): ' num2str(pli_thresh)]);
+            threshold_vector(fi) = pli_thresh;
+            end
+    end
+else
+    threshold_vector = repmat(0,length(frex),1);
+end
+
 % Calculate Graph Measures
 EEG = eeg_htpGraphBraphWU(EEG, fwpli, label_chans, frex);
 
@@ -146,6 +166,7 @@ EEG.vhtp.eeg_htpGraphPhaseLag.bandtable = bandtable;
 EEG.vhtp.eeg_htpGraphPhaseLag.graphWU = EEG.vhtp.eeg_htpGraphBraphWU.summary_table;
 EEG.vhtp.eeg_htpGraphPhaseLag.chanlabels = label_chans;
 EEG.vhtp.eeg_htpGraphPhaseLag.freqlabels = label_frex;
+EEG.vhtp.eeg_htpGraphPhaseLag.thresholds = threshold_vector;
 
 results = EEG.vhtp.eeg_htpGraphPhaseLag;
 end
