@@ -1,12 +1,14 @@
 function [EEG, results] = eeg_htpGraphBraphWU( EEG, A, chanlabels, freqlabels )
 % eeg_htpGraphBraphWU() - Comprehensive graph measures using
-%       Braph 1.0 toolbox. G is defined as a chan x chan x freq
+%       Braph 1.0 toolbox and Brain Connectivity Toolbox (can be found in fieldtrip). 
+%       G is defined as a chan x chan x freq
 %       matrix of WEIGHTED UNDIRECTED graphs.
 %
 % Dependencies:
 %    Braph 1.0 Toolbox     https://github.com/softmatterlab/BRAPH
 %       instructions: download source code and add to matlab path
-
+%    Fieldtrip or BCT (https://sites.google.com/site/bctnet)
+%
 % Usage:
 %    >> [ EEG, results ] = eeg_htpGraphBraphWU( EEG, A, chanlabels, freqlabels )
 %
@@ -89,9 +91,28 @@ assort_coef             = prealloc_global();
 zscore                  = prealloc_node();
 smallworld              = prealloc_global();
 
+% optional Fieldtrip/BCT Measures (scripts must be in matlab path)
+% eigenvector_centrality_und.m (BCT or external/bct directory with
+% fieldtrip)
+
+if exist('eigenvector_centrality_und.m', 'file') == 2
+    use_bct = true;
+    fprintf('Additional Graph Measures:\n');
+    fprintf('FOUND: eigenvector_centrality_und.m\n');
+    eigencentrality_node               = prealloc_node();
+else
+    use_bct = false;
+end
+
+
 parfor ib = 1 : size( A, 3)
 
     WUgraph = GraphWU( A(:,:,ib) );
+
+    % Additional optional measures (if toolboxes installed)
+    if use_bct
+         eigencentrality_node(:,ib)  = WUgraph.strength();
+    end
 
     % Calculate the strength using Braph methods
 
@@ -199,6 +220,10 @@ G.assort_coef             = assort_coef          ;
 G.zscore                  = zscore               ;
 
 G.smallworld              = smallworld           ;
+
+if use_bct
+    G.eigencentrality = eigencentrality_node;
+end
 
 csvout = {};
 Gfields = fieldnames(G);
