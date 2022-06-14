@@ -85,13 +85,14 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % Dependency Check: Requires Brainstorm and EEGLAB Functions
     % BRAINSTORM
     if ~ip.Results.headless
-        if brainstorm('status'), warning('GUI Mode: Brainstorm Already Running.')
+        fprintf('Brainstorm found.\n');
+        if brainstorm('status'), warning('GUI Mode: Brainstorm Already Running.');
         else 
             error('Please start Brainstorm or Turn on Server Mode (''headless'', true)');
         end
     end
     % EEGLAB
-    if exist('eeglab', 'file') == 0,  error('Please add EEGLAB to path.'); end
+    if exist('eeglab', 'file') == 0,  error('Please add EEGLAB to path.'); else, fprintf('EEGLAB found.\n'); end
     % Access to Headmodel
     % see under nettype switch
 
@@ -99,24 +100,22 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
 
     iProtocol = bst_get('Protocol', 'eeg_htp');
 
+    % default settings (modify for individual headmodels)
+    ProtocolAnatSelection = 1;
+    ProtocolChannelSelection = 2;
+
     % Get the protocol index of an existing protocol (already loaded previously in Brainstorm)
     if isempty(iProtocol)
         % Create a new protocol if needed
-        ProtocolAnatSelection = 1;
-        ProtocolChannelSelection = 2;
         gui_brainstorm('CreateProtocol', 'eeg_htp', ...
             ProtocolAnatSelection, ProtocolChannelSelection);
     else
         gui_brainstorm('SetCurrentProtocol', iProtocol);
         % get all recordings
-        files_to_delete = bst_process('CallProcess', 'process_select_files_data', [], [], ...
-            'Comment', 'Link to raw file');
         if ip.Results.resetprotocol
-            if ~isempty(files_to_delete)
-                % Process: Delete subjects
-                bst_process('CallProcess', 'process_delete', files_to_delete, [], ...
-                    'target', 1); % Delete subjects
-            end
+            gui_brainstorm('DeleteProtocol', 'eeg_htp');
+            gui_brainstorm('CreateProtocol', 'eeg_htp', ...
+                ProtocolAnatSelection, ProtocolChannelSelection);
         end
         % use preexisting data
         if ip.Results.usepreexisting
@@ -146,28 +145,24 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             chanInfoStruct.chanNumber = '128';
             chanInfoStruct.chanLabelFormat = 'E1';
             openmeeg_file = 'headmodel_surf_openmeeg_EGI128.mat';
+            openmeeg_url = 'https://figshare.com/ndownloader/files/35889050';
         case 'EGI32'
             chanInfoStruct.headModel = 'ICBM152';
             chanInfoStruct.brand = 'GSN';
             chanInfoStruct.chanNumber = '32';
             chanInfoStruct.chanLabelFormat = 'E1';
             openmeeg_file = 'headmodel_surf_openmeeg_EGI32.mat';
+            openmeeg_url = 'https://figshare.com/ndownloader/files/35889047';
         case 'BioSemi64' %Biosemi 64 A1
             chanInfoStruct.headModel = 'ICBM152';
             chanInfoStruct.brand = 'BioSemi';
             chanInfoStruct.chanNumber = '64';
             chanInfoStruct.chanLabelFormat = 'A1';
             openmeeg_file = 'headmodel_surf_openmeeg_BioSemi64.mat'; 
+            openmeeg_url = 'https://figshare.com/ndownloader/files/35889044';
     end
 
-    % Load specific head models
-    net_index = selectBstDefaults(chanInfoStruct);
-    source_nettype_headmodel = ip.Results.headmodelfile; % fullfile(tempdir, openmeeg_file);
-    if ~isfile(source_nettype_headmodel)
-        error("No head model available, please download (http://www.dropbox.com/s/0m8oqrnlzodfj2n/headmodel_surf_openmeeg.mat?dl=1).");
-    else
-        disp([ip.Results.nettype ' precomputed headmodel available at' source_nettype_headmodel]);
-    end
+
 
     % refresh protocol number
     if isempty(iProtocol), iProtocol = bst_get('Protocol', 'eeg_htp'); end
@@ -175,12 +170,39 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     default_dir = fullfile(Protocol_Info.STUDIES, ...
         bst_get('DirDefaultStudy'));
 
-    % check if headfile is already copied into default directory
-    target_default_headmodel = fullfile(default_dir, 'headmodel_surf_openmeeg.mat');
-    isDefaultHeadModelAvailable = exist(target_default_headmodel, 'file');
+    % Load specific head models
+    net_index = selectBstDefaults(chanInfoStruct);
 
-    % add one copy of headmodel to default directory
-    if ~isDefaultHeadModelAvailable, copyfile(source_nettype_headmodel, target_default_headmodel); end
+    % Check for headmodel in default directory
+    default_headmodel_target =  fullfile(default_dir, 'headmodel_surf_openmeeg.mat');
+    isDefaultHeadModelAvailable = exist(default_headmodel_target, 'file');
+
+    % see if user requests file to be overwritten
+    isExternalHeadmodelAvailable = isempty(ip.Results.headmodelfile);
+
+    % download or copy headmodel
+    if isDefaultHeadModelAvailable ~= 2 && isExternalHeadmodelAvailable == false
+        fprintf('Headmodel: No default file available & No external file provided. \nHeadmodel: Will attempt download from figshare.\n');
+        fprintf('Headmodel: Default file available & No external file provided.\n');
+        fprintf('Dowloading %s to %s\nFigshare URL: %s\n', openmeeg_file, default_headmodel_target, openmeeg_url);
+        try
+            websave(default_headmodel_target, openmeeg_url);
+            disp("Headmodel: Successful download and save of headmodel to default protocol directory.");
+        catch
+            error("Headmodel: Unable to successfully download and save headmodel.");
+        end
+
+    else
+        if isDefaultHeadModelAvailable == 2 && isExternalHeadmodelAvailabe == false
+            disp("Headmodel: Headmodel available in default protocol directory.");
+        end
+
+        if isExternalHeadmodelAvailable == true
+            fprintf('Headmodel: External file provided. \nHeadmodel: Will copy to default protocol directory.\n');
+            % add one copy of headmodel to default directory
+            copyfile(ip.Results.headmodelfile, target_default_headmodel);
+        end
+    end
 
     % Check if subject is already present, if so delete.
     [dupSub, iSub] = bst_get('Subject', EEG.setname);
@@ -191,7 +213,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
 
     % EEG SET to Brainstrom
     % generate continuous data for source model
-    cEEG = epoch2cont(EEG);
+    cEEG = eeg_htpEegEpoch2Cont(EEG);
 
     % temporary storage for continuous data
     tempContFile = fullfile(ip.Results.outputdir, EEG.filename);
@@ -227,7 +249,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     isSubjectHeadModelAvailable = exist(subject_default_headmodel, 'file');
 
     % add one copy of headmodel to subject directory
-    if ~isSubjectHeadModelAvailable, copyfile(target_default_headmodel, subject_default_headmodel); end
+    if ~isSubjectHeadModelAvailable, copyfile(default_headmodel_target, subject_default_headmodel); end
     db_reload_database('current');
 
     % Reselect all recordings
