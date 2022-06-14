@@ -162,6 +162,10 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             openmeeg_url = 'https://figshare.com/ndownloader/files/35889044';
     end
 
+    % verify data channels
+    if str2double(chanInfoStruct.chanNumber) ~= EEG.nbchan
+        error('Net Type: Incorrect Electrode Montage; number of channels in EEG files do not match headmodel.')
+    end
 
 
     % refresh protocol number
