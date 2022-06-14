@@ -18,7 +18,7 @@ EEG = pop_loadset('filename', filename, 'filepath', filepath);
 %%
 % Source localize
 % output of source localized datsets
-mySourceOutput = '/srv/Analysis/'
+mySourceOutput = '/srv/Analysis/';
 % specify precomputed headmodel file
 headmodelfile = '/srv/RESOURCES/headmodel_surf_openmeeg.mat';
 

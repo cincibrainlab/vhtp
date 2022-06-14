@@ -193,7 +193,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
         end
 
     else
-        if isDefaultHeadModelAvailable == 2 && isExternalHeadmodelAvailabe == false
+        if isDefaultHeadModelAvailable == 2 && isExternalHeadmodelAvailable == false
             disp("Headmodel: Headmodel available in default protocol directory.");
         end
 
