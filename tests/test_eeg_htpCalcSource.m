@@ -19,14 +19,9 @@ EEG = pop_loadset('filename', filename, 'filepath', filepath);
 % Source localize
 % output of source localized datsets
 mySourceOutput = '/srv/Analysis/';
-% specify precomputed headmodel file
-headmodelfile = '/srv/RESOURCES/headmodel_surf_openmeeg.mat';
 
 % run single source generation as test
-EEG = eeg_htpCalcSource( EEG, 'nettype', 'EGI128', 'headmodelfile',  headmodelfile, ...
-    'outputdir', mySourceOutput, 'resetprotocol', true);
-
-
 sEEG = eeg_htpCalcSource( EEG, 'resetprotocol', true );
 
-sEEG = eeg_htpCalcSource( EEG );
+% generated head model
+sEEG = eeg_htpCalcSource( EEG, 'resetprotocol', true, 'computeheadmodel', true );

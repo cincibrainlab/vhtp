@@ -37,11 +37,9 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     %  This file is part of the Cincinnati Visual High Throughput Pipeline,
     %  please see http://github.com/cincibrainlab
     %
-    %  Contact: kyle.cullion@cchmc.org
+    %  Contact: ernest.pedapati@cchmc.org
     %
-    % download_headmodel = ...
-    %    'http://www.dropbox.com/s/0m8oqrnlzodfj2n/headmodel_surf_openmeeg.mat?dl=1';
-    % urlwrite(download_headmodel, precomputed_openmeeg);
+    % Headmodels are available at https://figshare.com/articles/dataset/Precomputed_Headmodels_for_EEG_Source_Localization/20067350
 
     timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
     functionstamp = mfilename; % function name for logging/output
@@ -61,7 +59,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     defaultConfirmPlot = false;
     defaultSaveSet = true;
     defaultComputeHeadModel = false;
-    defaultDeleteTempfiles = false;
+    defaultDeleteTempfiles = true;
     defaultUsePreexisting = false;
     defaultResetProtocol = false;
     defaultHeadModelFile = 'Empty';
@@ -73,13 +71,13 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     addParameter(ip, 'bandDefs', defaultBandDefs, @iscell)
     addParameter(ip, 'headless', defaultHeadless, @islogical);
     addParameter(ip, 'nettype', defaultNetType, @ischar);
-    addParameter(ip, 'confirmplot', defaultConfirmPlot, @logical);
-    addParameter(ip, 'saveset', defaultSaveSet, @logical);
-    addParameter(ip, 'computeheadmodel', defaultComputeHeadModel, @logical);
+    addParameter(ip, 'confirmplot', defaultConfirmPlot, @islogical);
+    addParameter(ip, 'saveset', defaultSaveSet, @islogical);
+    addParameter(ip, 'computeheadmodel', defaultComputeHeadModel, @islogical);
     addParameter(ip, 'headmodelfile', defaultHeadModelFile, @ischar);
-    addParameter(ip, 'deletetempfiles', defaultDeleteTempfiles, @logical);
-    addParameter(ip, 'usepreexisting', defaultUsePreexisting, @logical);
-    addParameter(ip, 'resetprotocol', defaultResetProtocol, @logical);
+    addParameter(ip, 'deletetempfiles', defaultDeleteTempfiles, @islogical);
+    addParameter(ip, 'usepreexisting', defaultUsePreexisting, @islogical);
+    addParameter(ip, 'resetprotocol', defaultResetProtocol, @islogical);
     parse(ip, EEG, varargin{:});
 
     % Dependency Check: Requires Brainstorm and EEGLAB Functions
@@ -164,7 +162,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
 
     % verify data channels
     if str2double(chanInfoStruct.chanNumber) ~= EEG.nbchan
-        error('Net Type: Incorrect Electrode Montage; number of channels in EEG files do not match headmodel.')
+        error('Net Type: Incorrect Electrode Montage; number of channels in EEG files do not match headmodel. Specify nettype parameter.')
     end
 
 
@@ -184,27 +182,34 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % see if user requests file to be overwritten
     isExternalHeadmodelAvailable = isempty(ip.Results.headmodelfile);
 
-    % download or copy headmodel
-    if isDefaultHeadModelAvailable ~= 2 && isExternalHeadmodelAvailable == false
-        fprintf('Headmodel: No default file available & No external file provided. \nHeadmodel: Will attempt download from figshare.\n');
-        fprintf('Headmodel: Default file available & No external file provided.\n');
-        fprintf('Dowloading %s to %s\nFigshare URL: %s\n', openmeeg_file, default_headmodel_target, openmeeg_url);
-        try
-            websave(default_headmodel_target, openmeeg_url);
-            disp("Headmodel: Successful download and save of headmodel to default protocol directory.");
-        catch
-            error("Headmodel: Unable to successfully download and save headmodel.");
-        end
-
+    if ip.Results.computeheadmodel
+        delete(default_headmodel_target);  % remove any existing headmodel 
+        sFile = computeHeadModel( sFile ); % calculate headmodel
     else
-        if isDefaultHeadModelAvailable == 2 && isExternalHeadmodelAvailable == false
-            disp("Headmodel: Headmodel available in default protocol directory.");
-        end
 
-        if isExternalHeadmodelAvailable == true
-            fprintf('Headmodel: External file provided. \nHeadmodel: Will copy to default protocol directory.\n');
-            % add one copy of headmodel to default directory
-            copyfile(ip.Results.headmodelfile, target_default_headmodel);
+
+        % download or copy headmodel
+        if isDefaultHeadModelAvailable ~= 2 && isExternalHeadmodelAvailable == false
+            fprintf('Headmodel: No default file available & No external file provided. \nHeadmodel: Will attempt download from figshare.\n');
+            fprintf('Headmodel: Default file available & No external file provided.\n');
+            fprintf('Dowloading %s to %s\nFigshare URL: %s\n', openmeeg_file, default_headmodel_target, openmeeg_url);
+            try
+                websave(default_headmodel_target, openmeeg_url);
+                disp("Headmodel: Successful download and save of headmodel to default protocol directory.");
+            catch
+                error("Headmodel: Unable to successfully download and save headmodel.");
+            end
+
+        else
+            if isDefaultHeadModelAvailable == 2 && isExternalHeadmodelAvailable == false
+                disp("Headmodel: Headmodel available in default protocol directory.");
+            end
+
+            if isExternalHeadmodelAvailable == true
+                fprintf('Headmodel: External file provided. \nHeadmodel: Will copy to default protocol directory.\n');
+                % add one copy of headmodel to default directory
+                copyfile(ip.Results.headmodelfile, target_default_headmodel);
+            end
         end
     end
 
@@ -243,6 +248,10 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
         'channelalign', 1, ...
         'fixunits', 1, ...
         'vox2ras', 1);
+
+     if ip.Results.computeheadmodel
+        sFile = computeHeadModel( sFile ); % calculate headmodel
+     end
 
     % Get subject directory to copy headfile
     subject_subdir = sFile.SubjectName;
