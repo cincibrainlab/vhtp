@@ -104,6 +104,7 @@ else
     use_bct = false;
 end
 
+assert( exist('GraphWU', 'file') == 2, 'Missing Braph Toolbox in MATLAB Path.');
 
 parfor ib = 1 : size( A, 3)
 

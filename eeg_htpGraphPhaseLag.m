@@ -58,18 +58,39 @@ stds = linspace(.5,3,nsteps);       % std for gaussian
 
 filterorder = ip.Results.filterorder;
 
+%% Filter data by frequency band
 fwpli = zeros(EEG.nbchan, EEG.nbchan, nsteps);
-
+fEEG = cell(nsteps,1);
 parfor fi = 1 : nsteps
     current_freq = [frex(fi) - stds(fi) frex(fi) + stds(fi)];
     fprintf("Filter Freq (order: 3300): %s\n", num2str(current_freq));
 
-    fEEG = eeg_htpEegCreateEpochsEeglab( ...
+    fEEG{fi} = eeg_htpEegCreateEpochsEeglab( ...
         eeg_htpEegFilterFastFc( EEG, 'bandpass', current_freq, 'order', filterorder));
-
-    fwpli(:,:, fi) = fastfc_wpli(eeg_htpCalcReturnColumnMatrix(fEEG));
 end
 
+% separate computational steps to avoid precision errors with parfor
+for fi = 1 : nsteps
+    fwpli(:,:, fi) = fastfc_wpli(eeg_htpCalcReturnColumnMatrix(fEEG{fi}));
+end 
+
+% check for NaN
+nanCheckArr = zeros(size(fwpli,3),3);
+for fi = 1 : size(fwpli,3)
+    nanCheckArr(fi,1) = fi;
+    nanCheckArr(fi,2) = frex(fi);
+    nanCheckArr(fi,3) = any(any(isnan(fwpli(:,:,fi))));
+
+end
+number_of_nans = sum(nanCheckArr(:,3));
+
+if number_of_nans > 0 
+    error('NaNs introduced into connectivity matrix. Check code.')
+end
+
+fEEG = [];
+
+%%
 % average by band
 wpli = zeros(EEG.nbchan, EEG.nbchan, length(freqbands));
 for fi = 1 : length(freqbands)
@@ -148,6 +169,9 @@ else
     threshold_vector = repmat(0,length(frex),1);
 end
 
+
+
+% any(any(isnan(fwpli(:,:,44))))
 % Calculate Graph Measures
 EEG = eeg_htpGraphBraphWU(EEG, fwpli, label_chans, frex);
 
