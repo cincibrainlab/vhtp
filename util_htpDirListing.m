@@ -48,8 +48,8 @@ parse(ip,filepath,varargin{:});
 
 % START: Utilty code
 
-if ip.Results.subdirOn, filepath = [filepath '**/']; end
-
+if ip.Results.subdirOn, filepath = fullfile(filepath, '**/'); end
+ 
 dirdump = dir(filepath);
 results = dirdump(~cellfun('isempty', {dirdump.date}));
 
