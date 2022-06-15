@@ -70,19 +70,26 @@ parfor fi = 1 : nsteps
 end
 
 % separate computational steps to avoid precision errors with parfor
-for fi = 1 : nsteps
-    fwpli(:,:, fi) = fastfc_wpli(eeg_htpCalcReturnColumnMatrix(fEEG{fi}));
-end 
+number_of_nans = 1;
+while number_of_nans ~= 0
+    parfor fi = 1 : nsteps
+        bcm = eeg_htpCalcReturnColumnMatrix(fEEG{fi});
+        fwpli(:,:, fi) = fastfc_wpli(bcm);
+    end
 
-% check for NaN
-nanCheckArr = zeros(size(fwpli,3),3);
-for fi = 1 : size(fwpli,3)
-    nanCheckArr(fi,1) = fi;
-    nanCheckArr(fi,2) = frex(fi);
-    nanCheckArr(fi,3) = any(any(isnan(fwpli(:,:,fi))));
+    % check for NaN
+    nanCheckArr = zeros(size(fwpli,3),3);
+    for fi = 1 : size(fwpli,3)
+        nanCheckArr(fi,1) = fi;
+        nanCheckArr(fi,2) = frex(fi);
+        nanCheckArr(fi,3) = any(any(isnan(fwpli(:,:,fi))));
 
+    end
+    number_of_nans = sum(nanCheckArr(:,3));
+    
+    fprintf("Mean: %d, Number of NaNs: %d\n", mean2(fwpli), number_of_nans);
 end
-number_of_nans = sum(nanCheckArr(:,3));
+
 
 if number_of_nans > 0 
     error('NaNs introduced into connectivity matrix. Check code.')
