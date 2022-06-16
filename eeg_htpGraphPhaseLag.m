@@ -61,18 +61,23 @@ filterorder = ip.Results.filterorder;
 %% Filter data by frequency band
 fwpli = zeros(EEG.nbchan, EEG.nbchan, nsteps);
 fEEG = cell(nsteps,1);
-parfor fi = 1 : nsteps
-    current_freq = [frex(fi) - stds(fi) frex(fi) + stds(fi)];
-    fprintf("Filter Freq (order: 3300): %s\n", num2str(current_freq));
-
-    fEEG{fi} = eeg_htpEegCreateEpochsEeglab( ...
-        eeg_htpEegFilterFastFc( EEG, 'bandpass', current_freq, 'order', filterorder));
-end
+% parfor fi = 1 : nsteps
+%     current_freq = [frex(fi) - stds(fi) frex(fi) + stds(fi)];
+%     fprintf("Filter Freq (order: 3300): %s\n", num2str(current_freq));
+% 
+%     fEEG{fi} = eeg_htpEegCreateEpochsEeglab( ...
+%         eeg_htpEegFilterFastFc( EEG, 'bandpass', current_freq, 'order', filterorder));
+% end
 
 % separate computational steps to avoid precision errors with parfor
 number_of_nans = 1;
 while number_of_nans ~= 0
     parfor fi = 1 : nsteps
+        current_freq = [frex(fi) - stds(fi) frex(fi) + stds(fi)];
+        fprintf("Filter Freq (order: 3300): %s\n", num2str(current_freq));
+
+        fEEG{fi} = eeg_htpEegCreateEpochsEeglab( ...
+            eeg_htpEegFilterFastFc( EEG, 'bandpass', current_freq, 'order', filterorder));
         bcm = eeg_htpCalcReturnColumnMatrix(fEEG{fi});
         fwpli(:,:, fi) = fastfc_wpli(bcm);
     end
@@ -101,7 +106,6 @@ fEEG = [];
 % average by band
 wpli = zeros(EEG.nbchan, EEG.nbchan, length(freqbands));
 for fi = 1 : length(freqbands)
-
     select_freq = frex > freqbands{fi,2} & frex < freqbands{fi,3};
    % disp(select_freq)
     wpli(:,:,fi) = mean(fwpli(:,:,select_freq),3);

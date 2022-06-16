@@ -25,7 +25,13 @@ filelist = util_htpDirListing(filepath, 'ext', '.set');
 %%
 % workflow loop
 result_array = {};
-for i = 1 : height(filelist)
+number_of_files = height(filelist);
+subj_percent = 0;
+ f = waitbar(0,'Dataset');
+
+for i = 1 : number_of_files
+    
+    waitbar(subj_percent, f, sprintf('Dataset: %1.0f of %1.0f', i,number_of_files ));
 
     current_set = filelist{i,2}{1};
     current_subfolder = filelist{i,1}{1};
@@ -39,4 +45,10 @@ for i = 1 : height(filelist)
 
     result_array{i} = results;
 
+    subj_percent = i / number_of_files;
+
 end
+
+% phaselag
+
+SEEG3 = eeg_htpGraphDwpli( SEEG )
