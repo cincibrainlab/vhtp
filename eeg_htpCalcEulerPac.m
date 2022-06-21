@@ -1,7 +1,7 @@
 function results = eeg_htpCalcEulerPac(EEG)
 tic;
 %% now for traditional Euler PAC (this time using a debiasing term from van Driel et al., 2015)
-EEG.data = gpuarray(EEG.data);
+EEG.data = gpuArray(EEG.data);
 frex = linspace(10,90,70);
 thetafreq = 6;
 dpac = zeros(EEG.nbchan,length(frex));
@@ -11,7 +11,7 @@ cutpoints = randsample(10:EEG.pnts-10,nperm);
 permpac   = zeros(1,nperm);
 
 % takes a while for all electrodes, or just run POz
-for chani=1:1 %EEG.nbchan
+for chani=1:EEG.nbchan
 
     % filter for 6 Hz
     phase = angle(hilbert(filterFGx(EEG.data(chani,:),EEG.srate,thetafreq,5)));

@@ -271,4 +271,6 @@ end
 
 EEG.vhtp.eeg_htpGraphBraphWU.summary_table = cell2table(csvout, "VariableNames", CsvFields);
 EEG.vhtp.eeg_htpGraphBraphWU.G = G;
+
+results = EEG.vhtp.eeg_htpGraphBraphWU;
 end

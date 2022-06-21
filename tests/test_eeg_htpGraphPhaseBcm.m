@@ -10,24 +10,24 @@ addpath(genpath(fullfile('/srv/TOOLKITS/BRAPH/')))
 
 % load toolkits
 eeglab nogui;
-brainstorm;
+% brainstorm;
 
 % input data
-filepath = 'C:\srv\RAWDATA\Proj_Eden';
+filepath = 'C:\srv\RAWDATA\MEA\S04_POSTCOMP';
 
 % output directory for source files
-sourcedatapath = 'C:\srv\BIGBUILD\Proj_Eden\source_datasets';
-resultspath = 'C:\srv\BIGBUILD\Proj_Eden\results';
+sourcedatapath = '';
+resultspath = 'C:\srv\BIGBUILD\MEA';
 
 % load filelist
-filelist = util_htpDirListing(filepath, 'ext', '.set');
+filelist = util_htpDirListing(filepath, 'ext', '.set', 'subdirOn', true );
 
 %%
 % workflow loop
 result_array = {};
 number_of_files = height(filelist);
 subj_percent = 0;
- f = waitbar(0,'Dataset');
+f = waitbar(0,'Dataset');
 
 for i = 1 : number_of_files
     
@@ -39,16 +39,15 @@ for i = 1 : number_of_files
     EEG = pop_loadset('filename', current_set, ... % load data
         'filepath', current_subfolder);
 
-    SEEG = eeg_htpCalcSource( EEG ); % generate source timeseries
+    % SEEG = eeg_htpCalcSource( EEG ); % generate source timeseries
+    
+    EEG = eeg_htpCalcRestPower( EEG, 'outputdir', resultspath );
+    
+    % [SEEG, results] = eeg_htpGraphPhaseBcm( EEG, 'outputdir', resultspath );
 
-    [SEEG, results] = eeg_htpGraphPhaseLag( SEEG );
-
-    result_array{i} = results;
+   % result_array{i} = results;
 
     subj_percent = i / number_of_files;
 
 end
 
-% phaselag
-
-SEEG3 = eeg_htpGraphPhaseBcm( SEEG )

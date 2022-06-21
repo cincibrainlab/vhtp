@@ -15,7 +15,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     %     duration  - [integer] duration to calculate on. default: 80 seconds
     %                 if duration is greater sample, will default to max size.
     %     offset    - [integer] start time in seconds. default: 0
-    %
+    %     outputdir - default, same as EEG path
     % Common Visual HTP Inputs:
     %     'bandDefs'   - cell-array describing frequency band definitions
     %     {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 'alpha2', 10.5, 12.5;
@@ -44,7 +44,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     defaultWindow = 2;
 
     % Inputs: Common across Visual HTP functions
-    defaultOutputDir = tempdir;
+    defaultOutputDir = EEG.filepath;
     defaultBandDefs = {'delta', 2, 3.5; 'theta', 3.5, 7.5; 'alpha1', 8, 10;
                     'alpha2', 10.5, 12.5; 'beta', 13, 30; 'gamma1', 30, 55;
                     'gamma2', 65, 80; 'epsilon', 81, 120; };
@@ -63,8 +63,11 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     outputdir = ip.Results.outputdir;
     bandDefs = ip.Results.bandDefs;
 
-    % base output file can be modified with strrep()
-    outputfile = fullfile(outputdir, [functionstamp '_' EEG.setname '_' timestamp '.mat']);
+
+    % File Management
+    [~, basename, ~] = fileparts(EEG.filename);
+    pow_file   = fullfile(ip.Results.outputdir, [basename '_pow.csv']);
+    
 
     % START: Signal Processing
 
@@ -169,5 +172,8 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     EEG.vhtp.eeg_htpCalcRestPower.pow.spectro = [spectro_info, spectro_values];
     EEG.vhtp.eeg_htpCalcRestPower.qi_table = qi_table;
     results = EEG.vhtp.eeg_htpCalcRestPower;
+
+    % file management
+    writetable(results.summary_table, pow_file);
 
 end
