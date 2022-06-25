@@ -37,6 +37,8 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
     functionstamp = mfilename; % function name for logging/output
 
+    [note] = htp_utilities();
+
     % Inputs: Function Specific
     defaultGpu = 0;
     defaultDuration = 60;
@@ -44,7 +46,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     defaultWindow = 2;
 
     % Inputs: Common across Visual HTP functions
-    defaultOutputDir = EEG.filepath;
+    defaultOutputDir = [];
     defaultBandDefs = {'delta', 2, 3.5; 'theta', 3.5, 7.5; 'alpha1', 8, 10;
                     'alpha2', 10.5, 12.5; 'beta', 13, 30; 'gamma1', 30, 55;
                     'gamma2', 65, 80; 'epsilon', 81, 120; };
@@ -56,8 +58,9 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     addParameter(ip, 'duration', defaultDuration);
     addParameter(ip, 'offset', defaultOffset);
     addParameter(ip, 'window', defaultWindow);
-    addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
-    addParameter(ip, 'bandDefs', defaultBandDefs, @iscell)
+    addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
+    addParameter(ip, 'bandDefs', defaultBandDefs, @iscell);
+
     parse(ip, EEG, varargin{:});
 
     outputdir = ip.Results.outputdir;
@@ -66,7 +69,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     % File Management
     [~, basename, ~] = fileparts(EEG.filename);
-    pow_file   = fullfile(ip.Results.outputdir, [basename '_pow.csv']);
+    pow_file   = fullfile(outputdir, [basename '_eeg_htpCalcRestPower.csv']);
     
 
     % START: Signal Processing
@@ -174,6 +177,17 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     results = EEG.vhtp.eeg_htpCalcRestPower;
 
     % file management
-    writetable(results.summary_table, pow_file);
+    if ~isempty(ip.Results.outputdir)
+        writetable(results.summary_table, pow_file);
+        note(sprintf('%s saved in %s.\n', EEG.setname, ip.Results.outputdir))
 
+    else
+        note('Results not saved. No output dir specified.\n')
+    end
+
+    function note = htp_utilities()
+            note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
+            rimport     = create_rfile();
+    end
+    
 end

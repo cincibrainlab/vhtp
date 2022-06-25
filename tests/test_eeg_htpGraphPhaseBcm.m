@@ -2,6 +2,10 @@
 % test will loop through data, source localize, and create graph tables
 
 restoredefaultpath;
+
+add_path_without_subfolders = @( filepath ) addpath(fullfile( filepath ));
+add_path_with_subfolders = @( filepath ) addpath(fullfile( filepath ));
+
 addpath(genpath(fullfile('/srv/vhtp')));
 addpath(fullfile('/srv/TOOLKITS/eeglab/'))
 addpath(fullfile('/srv/TOOLKITS/brainstorm3/'));
@@ -27,14 +31,21 @@ filelist = util_htpDirListing(filepath, 'ext', '.set', 'subdirOn', true );
 result_array = {};
 number_of_files = height(filelist);
 subj_percent = 0;
-f = waitbar(0,'Dataset');
+waitbar_fig = waitbar(0,'Dataset');
+waitbar_msg = @(current_set) sprintf('Progress: %d of %d', current_set, number_of_files);
 
 for i = 1 : number_of_files
-    
-    waitbar(subj_percent, f, sprintf('Dataset: %1.0f of %1.0f', i,number_of_files ));
-
     current_set = filelist{i,2}{1};
     current_subfolder = filelist{i,1}{1};
+        EEG = pop_loadset('filename', current_set, ... % load data
+        'filepath', current_subfolder);
+
+   
+    waitbar( i / number_of_files, waitbar_fig, sprintf('Progress: %1.0f of %1.0f', i,number_of_files ));
+
+end
+
+close (waitbar_fig)% waitbar
 
     EEG = pop_loadset('filename', current_set, ... % load data
         'filepath', current_subfolder);
@@ -43,7 +54,7 @@ for i = 1 : number_of_files
     
     EEG = eeg_htpCalcRestPower( EEG, 'outputdir', resultspath );
     
-    % [SEEG, results] = eeg_htpGraphPhaseBcm( EEG, 'outputdir', resultspath );
+     [SEEG, results] = eeg_htpGraphPhaseBcm( EEG, 'outputdir', resultspath );
 
    % result_array{i} = results;
 
