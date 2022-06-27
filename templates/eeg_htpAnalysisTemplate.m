@@ -10,7 +10,8 @@
     add_path_without_subfolders, ...
     add_path_with_subfolders, ...
     is_interactive] = load_helper_functions();
-
+note('Starting analysis template.')
+note('Loading helper functions (see comments).')
 %  1. note - usage: note( string ); display 'string' to screen
 %  2. pickdir - usage: pickdir(); select folder and copy to clipboard
 %  3. projcode - usage: projcode(); enter details and paste code
@@ -20,23 +21,33 @@
 
 %% 1. ADD DATASET DETAILS ------------------------------------------------|
 %  Run Section, then enter details in GUI, and paste code below.
-if is_interactive(), codegen_details(); end
-project_name	='TBD';
-author_name		='TBD';
-description		='TBD';
+try 
+    if is_interactive(), codegen_details(); end 
+catch
+end
+%  Paste results from codegen_details() 
+% start:
+	project_name	='Spectral Events (auditory chirp)';
+	author_name		='Jack L';
+	description		='Working on new SE analysis';
+% end
 note(sprintf('Proj. Name: %s\n\t\t\t Author: %s\n\t\t\t Description: %s', ...
      project_name, author_name, description));
 
 %% 2. ADD TOOLBOX PATHS --------------------------------------------------|
+% Run section multiple times to copy and paste path name below
+if is_interactive(), codegen_pickdir(); end
+
 eeglab_dir     = 'C:\srv\TOOLKITS\eeglab'; % https://tinyurl.com/59h6ksjs
 brainstorm_dir = 'C:\srv\TOOLKITS\brainstorm3'; % https://tinyurl.com/2f3ek5yd
 vhtp_dir       = 'C:\srv\vhtp'; % https://tinyurl.com/3fcbexp8
+se_dir          = '';
 
 % Load toolkits - reset matlab paths
 restoredefaultpath;  
 add_path_without_subfolders( eeglab_dir );
 add_path_without_subfolders( brainstorm_dir );
-add_path_without_subfolders( vhtp_dir );
+add_path_with_subfolders( vhtp_dir );
 
 try eeglab nogui; catch, error('Check EEGLAB install'); end
 try brainstorm nogui; catch, error('Check Brainstorm install'); end
@@ -44,7 +55,7 @@ note('Loaded EEG Toolkits.');
 
 %% 3. UPDATE DATASET PATHS AND TOOLBOXES ---------------------------------|
 % Run section multiple times to copy and paste path name below
-if is_interactive(), codegen_pickdir; end
+if is_interactive(), codegen_pickdir(); end
 
 % Project Directories
 set_dir      = fullfile('C:\srv\RAWDATA\MEA');  % *.SET input to process; subfolders OK
@@ -60,9 +71,9 @@ end
 
 %% RUN ANALYSIS LOOPS -----------------------------------------------------|
 number_of_input_files = height( input_filelist );
-waitf = progress_bar('create');
 
 % Main analysis loop
+waitf = progress_bar('create');
 for i = 1 : number_of_input_files
 
     % active SET file
@@ -73,21 +84,47 @@ for i = 1 : number_of_input_files
     EEG = pop_loadset('filename', current_set, ...
         'filepath', current_subfolder);
 
-    % begin function chain, i.e. EEG in and EEG out
-    [EEG, results] = eeg_htpCalcRestPower( EEG,'useParquet', true, 'gpuOn', true, 'outputdir', results_dir );
+    % = begin function chain, i.e. EEG in and EEG out ====================
+    [EEG, results{i}] = eeg_htpCalcRestPower( EEG,'useParquet', true, 'gpuOn', true, 'outputdir', results_dir );
 
     % update progress bar
     progress_bar('update',waitf, i, number_of_input_files)
 
 end
-
 close(waitf); % waitbar
 
-%% CREATE R FILES FOR STATISTICS -----------------------------------------|
-create_r_project( fullfile( results_dir, [genvarname(project_name) '.Rproj'] ))
+%% SUBSEQUENT ANALYSIS LOOPS
+%  Description Here
 
-util_htpCreateRFile('makeProject', results_dir)
+% test various user functions
+assert(calc_sum(5,6) == 11, 'User function invalid.')
+calc_sum_handle = get_calc_sum_handle();
+assert(calc_sum_handle(5,6) == 11, 'User function invalid.')
+
+%% CREATE R FILES FOR STATISTICS -----------------------------------------|
+util_htpCreateRFile('makeProject', results_dir);
 util_htpCreateRFile('makeImport', results_dir, 'functionname', 'eeg_htpCalcRestPower')
+
+%% GENERATING SUMMARY RESULT TABLES
+%  vHTP functions create individual CSV or Parquet Files.
+%  Use the generated R code to import and wrangle (filter, select, pivot).
+%  Resave merged dataset for further analysis (or import back to MATLAB)
+
+%  User created datasets:
+%  Example 1: groupRestingPower.csv (source: eeg_htpCalcRestPower.R)
+
+%% USER DEFINED FUNCTIONS ------------------------------------------------|
+%  to replicability can list external or user functions here
+%  Example 1: simple comment
+%  External_Function_Name:  Description
+%  Example 2: define inline function (use run section or script)
+function example_result = calc_sum( num1, num2)
+example_result = num1 + num2;
+end
+% Example 3: get handle to any function
+function f_handle = get_calc_sum_handle( )
+f_handle = @calc_sum;
+end
 
 %% HELPER FUNCTIONS =======================================================
 %  Support code only
