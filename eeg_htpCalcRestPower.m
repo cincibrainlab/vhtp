@@ -16,6 +16,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     %                 if duration is greater sample, will default to max size.
     %     offset    - [integer] start time in seconds. default: 0
     %     outputdir - default, same as EEG path
+    %.    useParquet - [logical] use Parquet format on save
     % Common Visual HTP Inputs:
     %     'bandDefs'   - cell-array describing frequency band definitions
     %     {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 'alpha2', 10.5, 12.5;
@@ -44,6 +45,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     defaultDuration = 60;
     defaultOffset = 0;
     defaultWindow = 2;
+    defaultUseParquet = false;
 
     % Inputs: Common across Visual HTP functions
     defaultOutputDir = [];
@@ -60,6 +62,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     addParameter(ip, 'window', defaultWindow);
     addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
     addParameter(ip, 'bandDefs', defaultBandDefs, @iscell);
+    addParameter(ip, 'useParquet', defaultUseParquet, @islogical);
 
     parse(ip, EEG, varargin{:});
 
@@ -67,9 +70,13 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     bandDefs = ip.Results.bandDefs;
 
 
-    % File Management
+    % File Management (create subfolder with function name)
     [~, basename, ~] = fileparts(EEG.filename);
-    pow_file   = fullfile(outputdir, [basename '_eeg_htpCalcRestPower.csv']);
+    analysis_outputdir =  fullfile(outputdir, mfilename);
+    if ~exist("analysis_outputdir", "dir")
+        mkdir(analysis_outputdir);
+    end
+    pow_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower.csv']);
     
 
     % START: Signal Processing
@@ -178,16 +185,18 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     % file management
     if ~isempty(ip.Results.outputdir)
+        if ~ip.Results.useParquet
         writetable(results.summary_table, pow_file);
+        else, parquetwrite(strrep(pow_file,'.csv','.parquet'),results.summary_table);
+        end
         note(sprintf('%s saved in %s.\n', EEG.setname, ip.Results.outputdir))
 
     else
-        note('Results not saved. No output dir specified.\n')
+        note('Specify output directory to save results.\n')
     end
 
     function note = htp_utilities()
             note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
-            rimport     = create_rfile();
     end
     
 end
