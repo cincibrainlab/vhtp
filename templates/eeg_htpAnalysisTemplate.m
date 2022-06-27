@@ -18,42 +18,19 @@
 %  5. add_path_with_subfolders - usage: add_path_with_subfolders( path )
 %  6. is_interactive - MATLAB mode - sections or running whole script true/false
 
-%% 1. COMPLETE DATASET INFORMATION ----
-%  Run section, enter details, and paste below
-if is_interactive()    
-    codegen_details();
-else
-    % Complete template or use Detail Helper and paste from clipboard
-	project_name	='Test Data';
-	author_name		='Ernie';
-	description		='Comments here';
-end
-note(sprintf('Proj. Name: %s\n\t\t\t Author: %s\n\t\t\t Description: %s', project_name, author_name, description));
+%% 1. ADD DATASET DETAILS ------------------------------------------------|
+%  Run Section, then enter details in GUI, and paste code below.
+if is_interactive(), codegen_details(); end
+project_name	='TBD';
+author_name		='TBD';
+description		='TBD';
+note(sprintf('Proj. Name: %s\n\t\t\t Author: %s\n\t\t\t Description: %s', ...
+     project_name, author_name, description));
 
-%% 2. UPDATE DATASET PATHS AND TOOLBOXES
-% Run section multiple times to copy and paste dir below
-if is_interactive(), codegen_pickdir; end
-
-% Project Directories
-set_dir      = fullfile('C:\srv\RAWDATA\MEA');  % *.SET input to process; subfolders OK
-temp_dir     = fullfile('C:\srv\Analysis\MEA\tempfiles\'); % empty temporary folder for large output
-results_dir  = fullfile('C:\srv\Analysis\MEA\analysis\'); % folder for final outputs
-
-%%  Load filelist (generate error if no files found)
-input_filelist = util_htpDirListing(set_dir, 'ext', '.set', 'subdirOn', true );
-
-if isempty(input_filelist), error('No files found')
-else
-    note(sprintf('Searching %s', set_dir));
-    note(sprintf('%d Files loaded.', height(input_filelist))); 
-    note(sprintf('Temp Dir: %s', temp_dir,results_dir));
-    note(sprintf('Results Dir: %s', temp_dir,results_dir));
-end
-
-%% Toolbox Directories
-eeglab_dir     = 'C:\srv\TOOLKITS\eeglab'; % EEGLAB installation
-brainstorm_dir = 'C:\srv\TOOLKITS\brainstorm3'; % Brainstorm3 installation
-vhtp_dir       = 'C:\srv\vhtp'; % vHTP installation
+%% 2. ADD TOOLBOX PATHS --------------------------------------------------|
+eeglab_dir     = 'C:\srv\TOOLKITS\eeglab'; % https://tinyurl.com/59h6ksjs
+brainstorm_dir = 'C:\srv\TOOLKITS\brainstorm3'; % https://tinyurl.com/2f3ek5yd
+vhtp_dir       = 'C:\srv\vhtp'; % https://tinyurl.com/3fcbexp8
 
 % Load toolkits - reset matlab paths
 restoredefaultpath;  
@@ -65,10 +42,27 @@ try eeglab nogui; catch, error('Check EEGLAB install'); end
 try brainstorm nogui; catch, error('Check Brainstorm install'); end
 note('Loaded EEG Toolkits.');
 
-%% RUN ANALYSIS LOOPS
+%% 3. UPDATE DATASET PATHS AND TOOLBOXES ---------------------------------|
+% Run section multiple times to copy and paste path name below
+if is_interactive(), codegen_pickdir; end
+
+% Project Directories
+set_dir      = fullfile('C:\srv\RAWDATA\MEA');  % *.SET input to process; subfolders OK
+temp_dir     = fullfile('C:\srv\Analysis\MEA\tempfiles\'); % empty temporary folder for large output
+results_dir  = fullfile('C:\srv\Analysis\MEA\analysis\'); % folder for final outputs
+
+%% 3. VALIDATE AND SCAN DIRECTORY AND GENERATE FILELIST ------------------|
+input_filelist = util_htpDirListing(set_dir, 'ext', '.set', 'subdirOn', true );
+if isempty(input_filelist), error('No files found'), else
+    note(sprintf('Scanning %s\n\t%d Files loaded.\n\tTemp Dir: %s\n\tResults Dir: %s', ...
+        set_dir, height(input_filelist),temp_dir,results_dir)); 
+end
+
+%% RUN ANALYSIS LOOPS -----------------------------------------------------|
 number_of_input_files = height( input_filelist );
 waitf = progress_bar('create');
 
+% Main analysis loop
 for i = 1 : number_of_input_files
 
     % active SET file
@@ -80,7 +74,7 @@ for i = 1 : number_of_input_files
         'filepath', current_subfolder);
 
     % begin function chain, i.e. EEG in and EEG out
-    EEG = eeg_htpCalcRestPower( EEG, 'gpuOn', true, 'outputdir', results_dir );
+    [EEG, results] = eeg_htpCalcRestPower( EEG,'useParquet', true, 'gpuOn', true, 'outputdir', results_dir );
 
     % update progress bar
     progress_bar('update',waitf, i, number_of_input_files)
@@ -89,12 +83,14 @@ end
 
 close(waitf); % waitbar
 
-%%
+%% CREATE R FILES FOR STATISTICS -----------------------------------------|
 create_r_project( fullfile( results_dir, [genvarname(project_name) '.Rproj'] ))
 
+util_htpCreateRFile('makeProject', results_dir)
+util_htpCreateRFile('makeImport', results_dir, 'functionname', 'eeg_htpCalcRestPower')
 
 %% HELPER FUNCTIONS =======================================================
-
+%  Support code only
 function [ note, pickdir, projcode, add_path_without_subfolders, ...
     add_path_with_subfolders, is_interactive] = load_helper_functions()
 
@@ -131,21 +127,6 @@ function waitbar_fig = progress_bar( action, f, current, total )
     end
 end
 
-function create_r_project( proj_file )
-    % Create R Project in Results Directory
-    fid = fopen( proj_file, 'wt' );
-    fprintf(fid, "Version: 1.0\n\n" + ...
-        "RestoreWorkspace: Default\n" + ...
-        "SaveWorkspace: Default\n" + ...
-        "AlwaysSaveHistory: Default\n\n" + ...
-        "EnableCodeIndexing: Yes\n" + ...
-        "UseSpacesForTab: Yes\n" + ...
-        "NumSpacesForTab: 2\n" + ...
-        "Encoding: UTF-8\n\n" + ...
-        "RnwWeave: Sweave\n" + ...
-        "LaTeX: pdfLaTeX\n");
-    fclose(fid);
-end
 
 
 
