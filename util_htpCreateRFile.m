@@ -20,7 +20,7 @@ functionstamp = mfilename; % function name for logging/output
 note('R utilities for Visual High Throughput Pipeline', '*blue');
 
 defaultProjectFilename = 'RProject_htpExample.Rproj';
-defaultIsParquet = false;
+defaultUseParquet = false;
 
 validateAction = @( ext ) ischar( ext ) & any(ismember(ext, {'makeProject','makeImport'}));
 validateFolder = @( folder ) exist(folder,"dir") ==7;
@@ -31,7 +31,7 @@ addRequired(ip, 'action', validateAction);
 addRequired(ip,'outputdir', validateFolder);
 addParameter(ip,'functionname', @ischar);
 addParameter(ip,'projectFilename', defaultProjectFilename, @ischar);
-addParameter(ip,'isParquet', defaultIsParquet, @islogical);
+addParameter(ip,'useParquet', defaultUseParquet, @islogical);
 
 parse(ip,action, outputdir, varargin{:});
 
