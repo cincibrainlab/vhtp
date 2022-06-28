@@ -96,7 +96,7 @@ close(waitf); % waitbar
 %% SUBSEQUENT ANALYSIS LOOPS
 %  Description Here
 
-% test various user functions
+% Test for Various User Function Options
 assert(calc_sum(5,6) == 11, 'User function invalid.')
 calc_sum_handle = get_calc_sum_handle();
 assert(calc_sum_handle(5,6) == 11, 'User function invalid.')
@@ -115,13 +115,13 @@ util_htpCreateRFile('makeImport', results_dir, 'functionname', 'eeg_htpCalcRestP
 
 %% USER DEFINED FUNCTIONS ------------------------------------------------|
 %  to replicability can list external or user functions here
-%  Example 1: simple comment
+%  Example 1: simple comment refering to external function
 %  External_Function_Name:  Description
 %  Example 2: define inline function (use run section or script)
 function example_result = calc_sum( num1, num2)
 example_result = num1 + num2;
 end
-% Example 3: get handle to any function
+% Example 3: get handle to any external function
 function f_handle = get_calc_sum_handle( )
 f_handle = @calc_sum;
 end
