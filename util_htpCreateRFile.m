@@ -1,4 +1,4 @@
-function results = util_htpCreateRFile( action, outputdir, varargin )
+function results = util_htpCreateRFile( action, path_to_results, varargin )
 % Creates R statistics project and script files from vHTP output
 %% Syntax
 %   results = util_htpCreateRFile( action, outputdir, functionname )
@@ -33,7 +33,7 @@ addParameter(ip,'functionname', @ischar);
 addParameter(ip,'projectFilename', defaultProjectFilename, @ischar);
 addParameter(ip,'useParquet', defaultUseParquet, @islogical);
 
-parse(ip,action, outputdir, varargin{:});
+parse(ip,action, path_to_results, varargin{:});
 
 functionname = ip.Results.functionname;
 projectFilename = ip.Results.projectFilename;
@@ -43,7 +43,7 @@ if ~nargin == 0
     switch action
         case 'makeProject'
             [~, fileonly, ~] = fileparts(projectFilename);
-            fname = fullfile(outputdir, [fileonly '.RProj']);
+            fname = fullfile(path_to_results, [fileonly '.RProj']);
             % Create R Project in Results Directory
             try
                 fid = fopen( fname, 'wt' );
@@ -59,17 +59,18 @@ if ~nargin == 0
                     "LaTeX: pdfLaTeX\n");
                 fclose(fid);
                 note(sprintf('Project created at %s', fname));
+                note(hyperlink(['cd(''' path_to_results ''')'], 'Click here to switch to result directory.'))
             catch
                 note(sprintf('Error creating Project: %s', fname));
             end
         case 'makeImport'
             % Create R Project in Results Directory
-            if ~isempty(functionname) && ~isempty(outputdir)
-                analysis_dir = fullfile(outputdir, functionname);
+            if ~isempty(functionname) && ~isempty(path_to_results)
+                analysis_dir = fullfile(path_to_results, functionname);
                 % check output directory
                 if exist(analysis_dir, 'dir')
                     note(sprintf('Output in %s', analysis_dir));
-                    rfile = fullfile(outputdir, [functionname '.R']);
+                    rfile = fullfile(path_to_results, [functionname '.R']);
                 else
                     note(sprintf('%s not found.', analysis_dir));
                 end
@@ -120,6 +121,10 @@ end
         else
             note        = @(msg, style) fprintf('%s: %s\n', mfilename, msg );
         end
+    end
+
+    function link = hyperlink( command, label )
+        link = sprintf('<a href="matlab:%s">%s</a>', command, label);
     end
 
 end

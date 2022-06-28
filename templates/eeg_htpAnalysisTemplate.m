@@ -43,7 +43,7 @@ brainstorm_dir = 'C:\srv\TOOLKITS\brainstorm3'; % https://tinyurl.com/2f3ek5yd
 vhtp_dir       = 'C:\srv\vhtp'; % https://tinyurl.com/3fcbexp8
 se_dir          = '';
 
-% Load toolkits - reset matlab paths
+%% Load toolkits - reset matlab paths
 restoredefaultpath;  
 add_path_without_subfolders( eeglab_dir );
 add_path_without_subfolders( brainstorm_dir );
@@ -132,7 +132,7 @@ function [ note, pickdir, projcode, add_path_without_subfolders, ...
     add_path_with_subfolders, is_interactive] = load_helper_functions()
 
     note        = @(msg) fprintf('%s: %s\n', 'htpAnalysis', msg );
-    pickdir     = @() clipboard('copy', uigetdir);
+    pickdir     = @() clipboard('copy', uigetdir([],'Choose a directory to copy to clipboard or hit cancel.'));
     projcode    = @create_project_details;
     add_path_without_subfolders = @( filepath ) addpath(fullfile( filepath ));
     add_path_with_subfolders    = @( filepath ) addpath(fullfile( filepath ));
