@@ -27,9 +27,9 @@ catch
 end
 %  Paste results from codegen_details() 
 % start:
-	project_name	='Spectral Events (auditory chirp)';
-	author_name		='Jack L';
-	description		='Working on new SE analysis';
+	project_name	='TBD';
+	author_name		='TBD';
+	description		='TBD';
 % end
 note(sprintf('Proj. Name: %s\n\t\t\t Author: %s\n\t\t\t Description: %s', ...
      project_name, author_name, description));
@@ -38,9 +38,11 @@ note(sprintf('Proj. Name: %s\n\t\t\t Author: %s\n\t\t\t Description: %s', ...
 % Run section multiple times to copy and paste path name below
 if is_interactive(), codegen_pickdir(); end
 
-eeglab_dir     = 'C:\srv\TOOLKITS\eeglab'; % https://tinyurl.com/59h6ksjs
-brainstorm_dir = 'C:\srv\TOOLKITS\brainstorm3'; % https://tinyurl.com/2f3ek5yd
-vhtp_dir       = 'C:\srv\vhtp'; % https://tinyurl.com/3fcbexp8
+eeglab_dir     = 'TBD'; % https://tinyurl.com/59h6ksjs
+brainstorm_dir = 'TBD'; % https://tinyurl.com/2f3ek5yd
+vhtp_dir       = 'TBD'; % https://tinyurl.com/3fcbexp8
+
+% user defined paths
 se_dir          = '';
 
 %% Load toolkits - reset matlab paths
