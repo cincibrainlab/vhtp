@@ -33,18 +33,23 @@ note(sprintf('Loading %s', EEG.filename));
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = pwd;
 defaultGpuOn = 1;
-defaultForceCsv = false;
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
-addParameter(ip, 'forcecsv', defaultForceCsv, @islogical);
+
+% === RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
+
+defaultUseParquet = false; defaultOutputDir = tempdir;
+addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
+addParameter(ip, 'useParquet', defaultUseParquet, @islogical);
+
+% === RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
+
 parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 
 note(sprintf('Output Dir: %s', ip.Results.outputdir));
-note(sprintf('CSV Output: %s', mat2str(ip.Results.forcecsv)));
 
 % Create channel combos
 combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique)
@@ -52,14 +57,11 @@ ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
 note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
 
 
-% File Management
-[~, basename, ~] = fileparts(EEG.filename);
-bcm_file   = fullfile(ip.Results.outputdir, [basename '_bcm.parquet']);
-graph_file = fullfile(ip.Results.outputdir, [basename '_graph.parquet']);
-
 if ip.Results.gpuon
-    note('GPU Arrays ON');
+    note('GPU Assist is ON.');
     EEG.data = gpuArray(EEG.data);
+else
+    note('GPU Assist is OFF.');
 end
 
 combo_left = ncombos(:,1);
@@ -101,8 +103,7 @@ freqs2use = frex;
 
 tic;
 note('Starting BCM calculations ...');
-
-ppm = ParforProgressbar(combo_size);
+try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
 
 parfor ci = 1 : combo_size
 
@@ -126,7 +127,7 @@ parfor ci = 1 : combo_size
     pli     = zeros(length(freqs2use),EEG.pnts);
     wpli    = zeros(length(freqs2use),EEG.pnts);
     dwpli   = zeros(length(freqs2use),EEG.pnts);
-     
+
     for fi=1:length(freqs2use)
         % create wavelet and take FFT
         s = num_cycles(fi)/(2*pi*freqs2use(fi));
@@ -164,14 +165,15 @@ parfor ci = 1 : combo_size
         dwpli(fi,:)  = (imagsum.^2 - debiasfactor)./(imagsumW.^2 - debiasfactor);
 
     end
-       
+
     res_ispc(ci,:) = mean(ispc,2);
     res_wpli(ci,:) = mean(wpli,2);
     res_dwpli(ci, :) = mean(dwpli,2);
     res_chan(ci,1) = channel1;
     res_chan2(ci,1) = channel2;
-    
+if HasParProgress
     ppm.increment();
+end
 end
 toc;
 
@@ -220,15 +222,29 @@ wpli_graph_table.Properties.VariableNames =strrep(wpli_graph_table.Properties.Va
 ispc_graph_table.Properties.VariableNames =strrep(ispc_graph_table.Properties.VariableNames, 'value', 'ispc');
 graph_table = innerjoin(wpli_graph_table, ispc_graph_table);
 
-% File management
-note(sprintf('Writing files to disk.'));
-if ip.Results.forcecsv
-    writetable(bconn_table2, strrep(bcm_file,'parquet','csv'));
-    writetable(graph_table, strrep(graph_file,'parquet','csv'));
-else
-    parquetwrite(bcm_file, bconn_table2);
-    parquetwrite(graph_file, graph_table);
+% === RESULT FILES ADDIN: 2/3 TARGET WRITE ================================
+% Result File Management (create subfolder with function name)
+% template: resultfile = EEG_to_resultfile(EEG, results_dir, file_extenstion);
+try
+    file_extension = target_resultfile( ip.Results.isParquet );
+
+    % target files
+    resultfile_bcm  = EEG_to_resultfile(EEG, ip.Results.outputdir, ['_bcm.' file_extension]);
+    resultfile_graph = EEG_to_resultfile(EEG, ip.Results.outputdir, ['_graph' file_extension]);
+
+    % write target files
+    writeresults( bconn_table2, resultfile_bcm, ip.Results.isParquet );
+    note(sprintf('Saved %s.\n', resultfile_bcm));
+
+    writeresults( graph_table, resultfile_graph, ip.Results.isParquet );
+    note(sprintf('Saved %s.\n', resultfile_graph));
+
+catch
+    error('Error creating output files.');
 end
+% === RESULT FILES ADDIN: 2/3 TARGET WRITE ================================
+
+
 
 freq_labels = arrayfun(@(x) sprintf('F%1.1f',x), freqs2use, 'uni',0);
 summary_table = [table(string(repmat(EEG.setname, combo_size,1)), ...
@@ -255,8 +271,37 @@ results = EEG.vhtp.eeg_htpCalcPhaseLag;
         G = graph( chan1_list, chan2_list, weights, chan_labels );
         bcm = full(adjacency(G, 'weighted'));
     end
+
+% === RESULT FILES ADDIN: 3/3 FUNCTIONS ===================================
+
+    function resultfile = EEG_to_resultfile(EEG, results_dir, file_extenstion)
+
+        % check and create output directory
+        if ~exist(folder_name, 'dir')
+            mkdir(folder_name);
+        end
+
+        % get basename of file
+        [~, basename, ~] = fileparts(file_name);
+
+        % create result file by adding new extension to basename
+        resultfile = fullfile(results_dir, [basename, '_', mfilename, '_', file_extenstion]);
+
+    end
+
+    function file_ext = target_resultfile( isParquet )
+        if isParquet, file_ext = 'parquet';
+        else, file_ext = 'csv'; end
+    end
+
+    function writeresults( result_table, result_file, isParquet )
+        if isParquet
+            parquetwrite(result_file, result_table);
+        else
+            writetable(result_table, result_file);
+        end
+    end
+
+% === RESULT FILES ADDIN: 3/3 FUNCTIONS ===================================
+
 end
-
-
-
-

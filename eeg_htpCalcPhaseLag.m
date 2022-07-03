@@ -22,25 +22,27 @@ function [EEG, results] = eeg_htpCalcPhaseLag(EEG, varargin)
 %
 %  Contact: kyle.cullion@cchmc.org
 
-timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
-functionstamp = mfilename; % function name for logging/output
+[ note, timestamp, functionstamp ] = htp_utilities();
+
 
 % Inputs: Function Specific
-
-% Inputs: Common across Visual HTP functions
-defaultOutputDir = tempdir;
-defaultGpuOn = 1;
-
-% MATLAB built-in input validation
-ip = inputParser();
+ip = inputParser(); % MATLAB built-in input validation
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
+
+defaultGpuOn = true;
 addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
 
+% Save Result File: 1. Input Paramaters
+defaultUseParquet = false; defaultOutputDir = tempdir;
+addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
+addParameter(ip, 'useParquet', defaultUseParquet, @islogical);
+
 parse(ip, EEG, varargin{:});% specify some time-frequency parameters
+
+
+
 tic;
 combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique)
-
 
 if ip.Results.gpuon
     warning('GPU Arrays Enabled.')
@@ -171,6 +173,26 @@ EEG.vhtp.eeg_htpCalcPhaseLag.summary_table =  summary_table;
 EEG.vhtp.eeg_htpCalcPhaseLag.qi_table = qi_table;
 
 results = EEG.vhtp.eeg_htpCalcPhaseLag;
+
+% File Management (create subfolder with function name)
+outputdir = ip.Results.outputdir;
+[~, basename, ~] = fileparts(EEG.filename);
+analysis_outputdir =  fullfile(outputdir, mfilename);
+if ~exist("analysis_outputdir", "dir"), mkdir(analysis_outputdir); end
+result_file   = fullfile(analysis_outputdir, [basename '_' mfilename '.csv']);
+if ~isempty(ip.Results.outputdir)
+    if ~ip.Results.useParquet, writetable(results.summary_table, result_file);
+    else, parquetwrite(strrep(result_file,'.csv','.parquet'),results.summary_table); end
+    note(sprintf('%s saved in %s.\n', EEG.setname, ip.Results.outputdir))
+else
+    note('Warning: Specify output directory to save results.\n')
+end
+
+    function [note, timestamp, functionstamp ] = htp_utilities()
+        note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
+        timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+        functionstamp = mfilename; % function name for logging/output
+    end
 
 end
 
