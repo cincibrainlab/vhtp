@@ -137,7 +137,7 @@ function [ note, pickdir, projcode, add_path_without_subfolders, ...
     pickdir     = @() clipboard('copy', uigetdir([],'Choose a directory to copy to clipboard or hit cancel.'));
     projcode    = @create_project_details;
     add_path_without_subfolders = @( filepath ) addpath(fullfile( filepath ));
-    add_path_with_subfolders    = @( filepath ) addpath(fullfile( filepath ));
+    add_path_with_subfolders    = @( filepath ) addpath(genpath(fullfile( filepath )));
     is_interactive = @check_interactive;
 
 end
