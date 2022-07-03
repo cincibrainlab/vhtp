@@ -64,23 +64,29 @@ if ~nargin == 0
                 note(sprintf('Error creating Project: %s', fname));
             end
         case 'makeImport'
+            % make valid name for files
+            valid_name = matlab.lang.makeValidName(functionname);
             % Create R Project in Results Directory
             if ~isempty(functionname) && ~isempty(path_to_results)
                 analysis_dir = fullfile(path_to_results, functionname);
                 % check output directory
                 if exist(analysis_dir, 'dir')
                     note(sprintf('Output in %s', analysis_dir));
-                    rfile = fullfile(path_to_results, [functionname '.R']);
+                    rfile = fullfile(path_to_results, [ valid_name '.R']);
                 else
                     note(sprintf('%s not found.', analysis_dir));
                 end
 
                 if ip.Results.useParquet
                     import_code = '*.parquet';
+                    file_ext = 'parquet';
                     import_fcn = 'arrow::read_parquet';
+                    export_fcn = 'arrow::write_parquet';
                 else
                     import_code = '*.csv';
                     import_fcn = 'readr::read_csv';
+                    export_fcn = 'readr::write_csv';
+                    file_ext = 'csv';
                 end
 
                 unix_style_path = strrep( analysis_dir, '\', '/' );
@@ -96,8 +102,10 @@ if ~nargin == 0
                         'data_dir = "%s"\n' ...   % unix_style_path
                         'data_type =  "%s"\n' ...  % import_code
                         '\ndf.%s <- dir(path=data_dir, pattern = data_type, full.names=TRUE) %s\n' ... % functionname, pipe
-                        'map(%s) %s reduce(rbind)\n\n'], functionname, ... % import_fcn, pipe
-                        timestamp, functionname, unix_style_path,  import_code, functionname, '%%>%%', import_fcn, '%%>%%');
+                        'map(%s) %s reduce(rbind)\n\n' ...
+                        '# Save merged file\n' ...
+                        '%s(df.%s, file.path(data_dir,  paste0(function_name, "_merged.%s"), fsep = .Platform$file.sep))'], valid_name, ... % import_fcn, pipe
+                        timestamp, valid_name, unix_style_path,  import_code, functionname, '%%>%%', import_fcn, '%%>%%', export_fcn, functionname, file_ext);
 
                 fid = fopen( rfile, 'wt' );
                 fprintf(fid, codeblock);
