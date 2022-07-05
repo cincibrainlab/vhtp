@@ -12,6 +12,8 @@ function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
 %     EEG       - EEGLAB Structure
 % Function Specific Inputs:
 %     'outputdir' - description
+%     'threshold'   - thresholding type 'mediansd' implemented by default
+%     for graph measures
 %
 % Outputs:
 %     EEG       - EEGLAB Structure with modified .vhtp field
@@ -20,32 +22,41 @@ function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%  Contact: ernest.pedapati@cchmc.org
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
-% Inputs: Function Specific
-note = @(msg) fprintf('%s: %s\n', mfilename, msg );
+[note] = htp_utilities();
 note(sprintf('Initializing function %s', timestamp));
 note(sprintf('Loading %s', EEG.filename));
 
 % Inputs: Common across Visual HTP functions
-defaultOutputDir = pwd;
 defaultGpuOn = 1;
+defaultThreshold = missing;
+%defaultThreshold = 'mediansd';
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
+addParameter(ip, 'threshold', defaultThreshold, @ischar);
 
-% === RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
+% Confirm Dependencies for Graph Measures
+% BRAPH
+assert( exist('GraphWU', 'file') == 2, 'ERROR: Add Braph 1.0 Toolbox (https://github.com/softmatterlab/BRAPH) to MATLAB Path.');
+% BCT
+assert( exist('eigenvector_centrality_und', 'file') == 2, 'ERROR: Add Brain Connectivity Toolbox (https://github.com/brainlife/BCT) to MATLAB Path.');
+
+
+% === EXPORT RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
 
 defaultUseParquet = false; defaultOutputDir = tempdir;
 addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip, 'useParquet', defaultUseParquet, @islogical);
 
-% === RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
+% === EXPORT RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
+
 
 parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 
@@ -79,6 +90,10 @@ bandDefs = {
     'gamma2', 65, 90;
     };
 
+note(' = Band Definitions =');
+bandDisplay = @(a,b,c) note(sprintf('%s: %1.1f-%1.1f', a,b,c));
+cellfun(bandDisplay, bandDefs(:,1), bandDefs(:,2), bandDefs(:,3));
+
 % defined frequency vector
 nsteps = 30;
 startf = 2;
@@ -89,6 +104,8 @@ nofreqs = length(frex);
 note(sprintf('Frequencies(logspace): %d to %d Hz (%d steps)', startf, endf, nsteps));
 
 res_dwpli = zeros(combo_size, nofreqs);
+res_scoh = zeros(combo_size, nofreqs);
+
 res_chan = zeros(combo_size,1);
 res_chan2 = zeros(combo_size,1);
 
@@ -127,6 +144,7 @@ parfor ci = 1 : combo_size
     pli     = zeros(length(freqs2use),EEG.pnts);
     wpli    = zeros(length(freqs2use),EEG.pnts);
     dwpli   = zeros(length(freqs2use),EEG.pnts);
+    scoh    = zeros(length(freqs2use),EEG.pnts);
 
     for fi=1:length(freqs2use)
         % create wavelet and take FFT
@@ -144,6 +162,7 @@ parfor ci = 1 : combo_size
         sig2 = reshape(convolution_result_fft,EEG.pnts,EEG.trials);
 
         % cross-spectral density
+        % A high csd value indicates the two time domain signals tend to have high power spectral density, 
         cdd = sig1 .* conj(sig2);
 
         % ISPC
@@ -164,25 +183,39 @@ parfor ci = 1 : combo_size
         debiasfactor = sum(cdi.^2,2);
         dwpli(fi,:)  = (imagsum.^2 - debiasfactor)./(imagsumW.^2 - debiasfactor);
 
+
+    % compute power and cross-spectral power
+    spec1 = mean(sig1.*conj(sig1),2);
+    spec2 = mean(sig2.*conj(sig2),2);
+    specX = abs(mean(sig1.*conj(sig2),2)).^2;
+    
+    % alternative notation for the same procedure, using the Euler-like expression: Me^ik
+    %spec1 = mean(abs(sig1).^2,2);
+    %spec2 = mean(abs(sig2).^2,2);
+    %specX = abs(mean( abs(sig1).*abs(sig2) .* exp(1i*(angle(sig1)-angle(sig2))) ,2)).^2;
+    
+    % compute spectral coherence, using only requested time points
+    scoh(fi,:) = specX ./ (spec1 .* spec2);
+   
     end
 
     res_ispc(ci,:) = mean(ispc,2);
     res_wpli(ci,:) = mean(wpli,2);
     res_dwpli(ci, :) = mean(dwpli,2);
+    res_scoh(ci, :) = mean(scoh,2);
     res_chan(ci,1) = channel1;
     res_chan2(ci,1) = channel2;
-if HasParProgress
-    ppm.increment();
-end
+
+if HasParProgress, ppm.increment(); end
 end
 toc;
+ppm.close;
 
 % create graphs for each frequency and measure
-note(sprintf('Tabulating BCM calculations into %s...', bcm_file));
 for fi = 1 : numel(frex)
     [fispc(:,:,fi)] = create_bcm( res_chan, res_chan2, res_ispc(:,fi), labels);
     [fwpli(:,:,fi)] = create_bcm( res_chan, res_chan2, res_wpli(:,fi), labels);
-    %[fdwpli(:,:,fi) = create_bcm( res_chan, res_chan2, res_dwpli(:,fi), labels);
+    [fscoh(:,:,fi)] = create_bcm( res_chan, res_chan2, res_scoh(:,fi), labels);
 end
 
 bconn_table = {};
@@ -192,9 +225,13 @@ count = 1;
 for fi = 1 : size(fispc,3)
     current_ispc = fispc(:,:,fi);
     current_wpli = fwpli(:,:,fi);
+    current_scoh = fscoh(:,:,fi);
+
     for ci = 1 : size(current_wpli,1)
         ispc_row = current_ispc(ci,:);
         wpli_row = current_wpli(ci,:);
+        scoh_row = current_scoh(ci,:);
+
         for ci2 = 1 : size(current_wpli,2)
             bconn_table{count,1} = EEG.filename;
             bconn_table{count,2} = labels(ci);
@@ -202,56 +239,70 @@ for fi = 1 : size(fispc,3)
             bconn_table{count,4} = frex(fi);
             bconn_table{count,5} = current_wpli(ci2);
             bconn_table{count,6} = current_ispc(ci2);
+            bconn_table{count,7} = current_scoh(ci2);
             count = count + 1;
         end
     end
 end
 
 bconn_table2 = cell2table(bconn_table, ...
-    'VariableNames', {'eegid','chan1','chan2','freq','wpli','ispc'});
+    'VariableNames', {'eegid','chan1','chan2','freq','wpli','ispc', 'scoh'});
 
-note('Calculating graph measures ...');
-[~, wpli_graph] = eeg_htpGraphBraphWU(EEG, fwpli, labels, frex);
-[~, ispc_graph] = eeg_htpGraphBraphWU(EEG, fispc, labels, frex);
+% Thresholding
+if ~ismissing(ip.Results.threshold)
+    % based on cohen ANTS Chapter 31
+    switch ip.Results.threshold % per frequency
+        case 'mediansd'  % each frequency thresholded separately
+            [t_fwpli, tvec1] = threshold_bcm_mediansd( fwpli );
+            [t_fispc, tvec2] = threshold_bcm_mediansd( fispc );
+            [t_fscoh, tvec3] = threshold_bcm_mediansd( fscoh );
+            note('Calculating graph measures ...');
+            [~, wpli_graph] = eeg_htpGraphBraphWU(EEG, t_fwpli, labels, frex);
+            [~, ispc_graph] = eeg_htpGraphBraphWU(EEG, t_fispc, labels, frex);
+            [~, scoh_graph] = eeg_htpGraphBraphWU(EEG, t_fscoh, labels, frex);
+    end
+else
+    threshold_vector = repmat(0,length(frex),1);
+    note('Calculating graph measures ...');
+    [~, wpli_graph] = eeg_htpGraphBraphWU(EEG, fwpli, labels, frex);
+    [~, ispc_graph] = eeg_htpGraphBraphWU(EEG, fispc, labels, frex);
+    [~, scoh_graph] = eeg_htpGraphBraphWU(EEG, fscoh, labels, frex);
+end
 
 wpli_graph_table = wpli_graph.summary_table;
 ispc_graph_table = ispc_graph.summary_table;
+scoh_graph_table = scoh_graph.summary_table;
 
-note(sprintf('Tabulating graph measures into %s...', graph_file));
 wpli_graph_table.Properties.VariableNames =strrep(wpli_graph_table.Properties.VariableNames, 'value', 'wpli');
 ispc_graph_table.Properties.VariableNames =strrep(ispc_graph_table.Properties.VariableNames, 'value', 'ispc');
-graph_table = innerjoin(wpli_graph_table, ispc_graph_table);
+scoh_graph_table.Properties.VariableNames =strrep(scoh_graph_table.Properties.VariableNames, 'value', 'soch');
 
-% === RESULT FILES ADDIN: 2/3 TARGET WRITE ================================
+graph_table_tmp = innerjoin(wpli_graph_table, ispc_graph_table);
+graph_table = innerjoin(graph_table_tmp, scoh_graph_table);
+
+% === EXPORT RESULT FILES ADDIN: 2/3 TARGET WRITE ================================
 % Result File Management (create subfolder with function name)
 % template: resultfile = EEG_to_resultfile(EEG, results_dir, file_extenstion);
 try
-    file_extension = target_resultfile( ip.Results.isParquet );
+    file_extension = target_resultfile( ip.Results.useParquet );
 
     % target files
-    resultfile_bcm  = EEG_to_resultfile(EEG, ip.Results.outputdir, ['_bcm.' file_extension]);
-    resultfile_graph = EEG_to_resultfile(EEG, ip.Results.outputdir, ['_graph' file_extension]);
+    resultfile_bcm  = EEG_to_resultfile(EEG, ip.Results.outputdir, ['bcm.' file_extension]);
+    resultfile_graph = EEG_to_resultfile(EEG, ip.Results.outputdir, ['graph.' file_extension]);
 
     % write target files
-    writeresults( bconn_table2, resultfile_bcm, ip.Results.isParquet );
-    note(sprintf('Saved %s.\n', resultfile_bcm));
+    writeresults( bconn_table2, resultfile_bcm, ip.Results.useParquet );
+    note(sprintf('Tabulating brain connectivity matrix (BCM) calculations ...'));
+    note(sprintf('Saved as %s.\n', resultfile_bcm));
 
-    writeresults( graph_table, resultfile_graph, ip.Results.isParquet );
-    note(sprintf('Saved %s.\n', resultfile_graph));
+    writeresults( graph_table, resultfile_graph, ip.Results.useParquet );
+    note(sprintf('Tabulating graph measures ...'));
+    note(sprintf('Saved as %s.\n', resultfile_graph));
 
 catch
     error('Error creating output files.');
 end
-% === RESULT FILES ADDIN: 2/3 TARGET WRITE ================================
-
-
-
-freq_labels = arrayfun(@(x) sprintf('F%1.1f',x), freqs2use, 'uni',0);
-summary_table = [table(string(repmat(EEG.setname, combo_size,1)), ...
-    res_chan, res_chan2, 'VariableNames',{'eegid','chan1','chan2'}) ...
-    array2table(res_dwpli,'VariableNames',freq_labels)];
-
-% END: Signal Processing
+% === EXPORT RESULT FILES ADDIN: 2/3 TARGET WRITE ================================
 
 % QI Table
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
@@ -260,9 +311,13 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
 % Outputs:
 note(sprintf('Completing function and assigning outputs.'));
 
-EEG.vhtp.eeg_htpCalcPhaseLag.summary_table =  summary_table;
-EEG.vhtp.eeg_htpCalcPhaseLag.qi_table = qi_table;
-results = EEG.vhtp.eeg_htpCalcPhaseLag;
+EEG.vhtp.eeg_htpGraphPhaseBcm.summary_table =  bconn_table2;
+EEG.vhtp.eeg_htpGraphPhaseBcm.graph_table =  graph_table;
+
+EEG.vhtp.eeg_htpGraphPhaseBcm.qi_table = qi_table;
+results = EEG.vhtp.eeg_htpGraphPhaseBcm;
+
+reset(gpuDevice);
 
     function [bcm, G]  = create_bcm( chan1_list, chan2_list, weights, chan_labels )
         % create brain connectivity matrix using matlab graph objects
@@ -272,9 +327,26 @@ results = EEG.vhtp.eeg_htpCalcPhaseLag;
         bcm = full(adjacency(G, 'weighted'));
     end
 
-% === RESULT FILES ADDIN: 3/3 FUNCTIONS ===================================
+    function [tbcm, tvec] = threshold_bcm_mediansd( bcm )
+        for fi = 1 : size( bcm, 3 ) % Brain Connectivity Matrix, freq. dimension
+            bcm_by_freq = bcm(:,:,fi);
+            bcm_threshold =  std(reshape(bcm_by_freq,1,[])) + median(reshape(bcm_by_freq,1,[]));
+            bcm_by_freq(bcm_by_freq < bcm_threshold) = 0;
+            thres_bcm(:,:,fi) = bcm_by_freq;
+            fprintf('BCM Median+SD %2.2f Hz Threshold: %2.2f\n', frex(fi), bcm_threshold);
+            threshold_vector(fi) = bcm_threshold;
+        end
 
-    function resultfile = EEG_to_resultfile(EEG, results_dir, file_extenstion)
+        tbcm = thres_bcm;
+        tvec = threshold_vector;
+    end
+
+% === EXPORT RESULT FILES ADDIN: 3/3 FUNCTIONS ===================================
+
+    function resultfile = EEG_to_resultfile(EEG, results_dir, file_extention)
+
+        file_name = EEG.filename;
+        folder_name = fullfile(results_dir, mfilename);
 
         % check and create output directory
         if ~exist(folder_name, 'dir')
@@ -285,17 +357,17 @@ results = EEG.vhtp.eeg_htpCalcPhaseLag;
         [~, basename, ~] = fileparts(file_name);
 
         % create result file by adding new extension to basename
-        resultfile = fullfile(results_dir, [basename, '_', mfilename, '_', file_extenstion]);
+        resultfile = fullfile(folder_name, [basename, '_', mfilename, '_', file_extention]);
 
     end
 
-    function file_ext = target_resultfile( isParquet )
-        if isParquet, file_ext = 'parquet';
+    function file_ext = target_resultfile( useParquet )
+        if useParquet, file_ext = 'parquet';
         else, file_ext = 'csv'; end
     end
 
-    function writeresults( result_table, result_file, isParquet )
-        if isParquet
+    function writeresults( result_table, result_file, useParquet )
+        if useParquet
             parquetwrite(result_file, result_table);
         else
             writetable(result_table, result_file);
@@ -304,4 +376,9 @@ results = EEG.vhtp.eeg_htpCalcPhaseLag;
 
 % === RESULT FILES ADDIN: 3/3 FUNCTIONS ===================================
 
+% === UTILITIES ADDIN: 2/2 ================================================
+    function note = htp_utilities()
+            note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
+    end
+% === UTILITIES ADDIN: 2/2 ================================================
 end

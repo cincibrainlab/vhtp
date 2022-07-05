@@ -102,6 +102,7 @@ if exist('eigenvector_centrality_und.m', 'file') == 2
     eigencentrality_node               = prealloc_node();
 else
     use_bct = false;
+    fprintf('MISSING: eigenvector_centrality_und.m\n');
 end
 
 assert( exist('GraphWU', 'file') == 2, 'Missing Braph Toolbox in MATLAB Path.');

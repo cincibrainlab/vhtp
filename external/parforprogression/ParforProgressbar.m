@@ -122,6 +122,7 @@ classdef ParforProgressbar < handle
                % Connect the worker to the server, so that we can send the
                % progress to the server.
                o.connection = udp(o.ServerName, o.ServerPort); 
+               warning('off','instrument:udp:ClassToBeRemoved');
                fopen(o.connection);
                o.isWorker = true; 
                o.it = 0; % This is the number of iterations this worker is called.
@@ -186,6 +187,8 @@ classdef ParforProgressbar < handle
                % package is received with this class object handle to keep
                % track of the progress.
                o.connection = udp(o.ServerName, 'DatagramReceivedFcn', {@receiver, o}, 'DatagramTerminateMode', 'on', 'EnablePortSharing', 'on');
+               warning('off','instrument:udp:ClassToBeRemoved');
+
                fopen(o.connection);
                
                % This new connection uses a free port, which we have to
