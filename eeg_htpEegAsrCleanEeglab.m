@@ -21,9 +21,9 @@ function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
 %                   3: flatline channel rejection, IIR highpass filter, correlation
 %                      with reconstructed channel rejection, line-noise
 %                      channel rejection, ASR burst reparation, window rejection
-%                   4: ??
+%                   4: ASR burst reparation, window rejection
 %
-%                   5: ASR burst reparation, window rejection
+%                   5: Custom
 %                 default: 2
 %                 
 %
@@ -70,6 +70,7 @@ defaultAsrChannel = 0.85;
 defaultAsrNoisy = 4;
 defaultAsrBurst = 20;
 defaultAsrWindow = 0.25;
+defaultAsrMaxMem = 64;
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -81,6 +82,7 @@ addParameter(ip, 'asrchannel', defaultAsrChannel, @isnumeric);
 addParameter(ip, 'asrnoisy', defaultAsrNoisy, @isnumeric);
 addParameter(ip, 'asrburst',defaultAsrBurst,@isnumeric);
 addParameter(ip, 'asrwindow', defaultAsrWindow, @isnumeric);
+addParameter(ip, 'asrmaxmem', defaultAsrMaxMem, @isnumeric);
 
 parse(ip,EEG,varargin{:});
 
@@ -91,7 +93,7 @@ try
             asrburst = -1;
             asrwindow = -1;
             
-            EEG = clean_rawdata(EEG, ip.Results.asrflatline, ip.Results.asrhighpass, ip.Results.asrchannel, ip.Results.asrnoisy, asrburst, asrwindow);
+            EEG = clean_artifacts(EEG, 'FlatlineCriterion',ip.Results.asrflatline, 'Highpass',ip.Results.asrhighpass, 'ChannelCriterion',ip.Results.asrchannel, 'NoiseCriterion',ip.Results.asrnoisy, 'BurstCriterion',asrburst, 'WindowCriterion',asrwindow,'MaxMem',ip.Results.asrmaxmem);
             
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrflatline = ip.Results.asrflatline;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrhighpass = ip.Results.asrhighpass;
@@ -99,6 +101,7 @@ try
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrnoisy = ip.Results.asrnoisy;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrburst = asrburst;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrwindow = asrwindow;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmaxmem = ip.Results.asrmaxmem;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmode = ip.Results.asrmode;
         case 2
             asrflatline = -1;
@@ -106,7 +109,7 @@ try
             asrchannel = -1;
             asrnoisy = -1;
             
-            EEG = clean_rawdata(EEG, asrflatline, asrhighpass, asrchannel, asrnoisy, ip.Results.asrburst, ip.Results.asrwindow);
+            EEG = clean_artifacts(EEG, 'FlatlineCriterion',asrflatline, 'Highpass',asrhighpass, 'ChannelCriterion',asrchannel, 'NoiseCriterion',asrnoisy, 'BurstCriterion',ip.Results.asrburst, 'WindowCriterion',ip.Results.asrwindow,'MaxMem',ip.Results.asrmaxmem);
             
             
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrflatline = asrflatline;
@@ -115,19 +118,20 @@ try
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrnoisy = asrnoisy;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrburst = ip.Results.asrburst;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrwindow = ip.Results.asrwindow;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmaxmem = ip.Results.asrmaxmem;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmode = ip.Results.asrmode;
         case 3
             asrburst = -1;
             asrwindow = -1;
             
-            EEG = clean_rawdata(EEG, ip.Results.asrflatline, ip.Results.asrhighpass, ip.Results.asrchannel, ip.Results.asrnoisy, asrburst, asrwindow);
+            EEG = clean_artifacts(EEG, 'FlatlineCriterion',ip.Results.asrflatline, 'Highpass',ip.Results.asrhighpass, 'ChannelCriterion',ip.Results.asrchannel, 'NoiseCriterion',ip.Results.asrnoisy, 'BurstCriterion',asrburst, 'WindowCriterion',asrwindow,'MaxMem',ip.Results.asrmaxmem);
             
             asrflatline = -1;
             asrhighpass = -1;
             asrchannel = -1;
             asrnoisy = -1;
             
-            EEG = clean_rawdata(EEG, asrflatline, asrhighpass, asrchannel, asrnoisy, ip.Results.asrburst, ip.Results.asrwindow);
+            EEG = clean_artifacts(EEG, 'FlatlineCriterion',asrflatline, 'Highpass',asrhighpass, 'ChannelCriterion',asrchannel, 'NoiseCriterion',asrnoisy, 'BurstCriterion',ip.Results.asrburst, 'WindowCriterion',ip.Results.asrwindow, 'MaxMem',ip.Results.asrmaxmem);
             
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrflatline = ip.Results.asrflatline;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrhighpass = ip.Results.asrhighpass;
@@ -135,17 +139,16 @@ try
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrnoisy = ip.Results.asrnoisy;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrburst = ip.Results.asrburst;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrwindow = ip.Results.asrwindow;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmaxmem = ip.Results.asrmaxmem;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmode = ip.Results.asrmode;
             
         case 4 
-            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmode = ip.Results.asrmode;
-        case 5
             asrflatline = -1;
             asrhighpass = -1;
             asrchannel = -1;
             asrnoisy = -1;
             
-            EEG = clean_rawdata(EEG, asrflatline, asrhighpass, asrchannel, asrnoisy, ip.Results.asrburst, ip.Results.asrwindow);
+            EEG = clean_artifacts(EEG, 'FlatlineCriterion',asrflatline, 'Highpass',asrhighpass, 'ChannelCriterion', asrchannel, 'NoiseCriterion',asrnoisy, 'BurstCriterion',ip.Results.asrburst, 'WindowCriterion',ip.Results.asrwindow,'MaxMem',ip.Results.asrmaxmem);
             
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrflatline = asrflatline;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrhighpass = asrhighpass;
@@ -153,6 +156,19 @@ try
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrnoisy = asrnoisy;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrburst = ip.Results.asrburst;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrwindow = ip.Results.asrwindow;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmaxmem = ip.Results.asrmaxmem;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmode = ip.Results.asrmode;
+        case 5
+            
+            EEG = clean_artifacts(EEG, 'FlatlineCriterion',ip.Results.asrflatline,'Highpass', ip.Results.asrhighpass, 'ChannelCriterion',ip.Results.asrchannel, 'NoiseCriterion',ip.Results.asrnoisy, 'BurstCriterion',ip.Results.asrburst, 'WindowCriterion',ip.Results.asrwindow,'MaxMem',ip.Results.asrmaxmem);
+
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrflatline = ip.Results.asrflatline;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrhighpass = ip.Results.asrhighpass;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrchannel = ip.Results.asrchannel;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrnoisy = ip.Results.asrnoisy;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrburst = ip.Results.asrburst;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrwindow = ip.Results.asrwindow;
+            EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmaxmem = ip.Results.asrmaxmem;
             EEG.vhtp.eeg_htpEegAsrCleanEeglab.asrmode = ip.Results.asrmode;
     end
     
