@@ -1,4 +1,4 @@
-function [PARAMS] = parameters_Resting()
+function [PARAMS] = parameters_RESTORE_noICA()
 clear PARAMS;
 
 %%FILTER HIGHPASS
