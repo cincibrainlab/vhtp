@@ -53,9 +53,13 @@ if ip.Results.subdirOn, filepath = fullfile(filepath, '**/'); end
 dirdump = dir(filepath);
 results = dirdump(~cellfun('isempty', {dirdump.date}));
 
+try
 filelist = cell2table([{results([results.isdir] == false).folder}' {results([results.isdir] == false).name}'], ...
     'VariableNames', {'filepath','filename'});
-
+catch
+    results = []; % fixed for truly empty directory
+    return;
+end
 if ~isempty(ip.Results.ext)
     filelist = filelist(contains(filelist.filename,ip.Results.ext),:);
 end
