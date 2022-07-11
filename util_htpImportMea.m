@@ -111,6 +111,8 @@ for i = 1 : height(filelist)
                 folder = filelist.filepath{i};
                 
                 edfFile = fullfile(folder, datafile);
+
+                EEG = eeg_htpMeaImportAndRemapEdf( edfFile );
                 
                 try EEG = pop_biosig( edfFile );
                 catch, error('Check if EEGLAB 2021 is installed'); end
@@ -122,7 +124,7 @@ for i = 1 : height(filelist)
                     EEG = pop_select( EEG, 'nochannel', [2,32]);
                 end
 
-                
+
                 
                 try
                 load('mea3d.mat', 'chanlocs');
