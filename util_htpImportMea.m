@@ -121,6 +121,8 @@ for i = 1 : height(filelist)
                 elseif EEG.nbchan == 32
                     EEG = pop_select( EEG, 'nochannel', [2,32]);
                 end
+
+                
                 
                 try
                 load('mea3d.mat', 'chanlocs');

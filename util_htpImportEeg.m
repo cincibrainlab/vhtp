@@ -158,6 +158,40 @@ if ip.Results.listing == false
                 EEG.urchanlocs = locs;
                 EEG.chaninfo   = chaninfo;
             case 'MEA30'
+                % chan 1 EDF is chan 23 MEA
+                % chan 2 is reference
+                % chan 3 EDF is chan 22
+                % chan 4 EDF is chan 30
+                % chan 5 EDF is chan 21
+                % chan 6 EDF is 29
+                % chan 7 EDF is 20
+                % chan 8 EDF is 28
+                % chan 9 EDF is 19
+                % chan 10 EDF is 27
+                % chan 11 EDF is 18
+                % chan 12 EDF is 26
+                % chan 13 EDF is 17
+                % chan 14 EDF is 25
+                % chan 15 EDF is 16
+                % chan 16 EDF is 24
+                % chan 17 EDF is 15
+                % chan 18 EDF is 7
+                % chan 19 EDF is 14
+                % chan 20 EDF is 6
+                % chan 21 EDF is 13
+                % chan 22 EDF is 5
+                % chan 23 EDF is 12
+                % chan 24 EDF is 4
+                % chan 25 EDF is 11
+                % chan 26 EDF is 3
+                % chan 27 EDF is 10
+                % chan 28 EDF is 2
+                % chan 29 EDF is 9
+                % chan 30 EDF is 1
+                % chan 31 EDF is 8
+                % chan 32 EDF is reference
+                % chan 33 EDF is piezo 
+
                 try
                     datafile =  filelist.filename{i};
                     folder = filelist.filepath{i};
