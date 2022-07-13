@@ -29,6 +29,7 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 defaultMaxComps = 24;
 defaultDPreset = 'dynamic';
 defaultRemoveIcs = [];
+defaultSaveOutput = false;
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -36,6 +37,7 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
 addParameter(ip,'dpreset',defaultDPreset, @ischar);
 addParameter(ip,'removeics',defaultRemoveIcs, @isvector);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 
 parse(ip,EEG,varargin{:});
 

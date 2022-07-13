@@ -40,6 +40,7 @@ functionstamp = mfilename; % function name for logging/output
 defaultEpochLimits = [-.500 2.750];
 defaultRmBaseline = 0;
 defaultBaselineLimits = [-.500 0];
+defaultSaveOutput = false;
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -48,6 +49,8 @@ addRequired(ip, 'epochevent',@ischar);
 addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
 addParameter(ip, 'rmbaseline', defaultRmBaseline, @isnumeric);
 addParameter(ip, 'baselinelimits', defaultBaselineLimits, @isnumeric);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+
 parse(ip, EEG, epochevent, varargin{:});
 
 try

@@ -21,11 +21,13 @@ function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,varargin)
 
 % MATLAB built-in input validation
 defaultSrate=500;
+defaultSaveOutput = false;
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'srate',defaultSrate,@isnumeric);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 
 parse(ip,EEG,varargin{:});
 

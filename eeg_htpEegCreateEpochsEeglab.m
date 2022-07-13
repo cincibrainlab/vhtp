@@ -29,6 +29,7 @@ function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 
 defaultEpochLength = 2;
 defaultEpochLimits = [0 defaultEpochLength];
+defaultSaveOutput = false;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -36,6 +37,7 @@ ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'epochlength',defaultEpochLength,@isnumeric);
 addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
+addParameter(ip, 'saveoutput',defaultSaveOutput,@islogical);
 
 parse(ip,EEG,varargin{:});
 
