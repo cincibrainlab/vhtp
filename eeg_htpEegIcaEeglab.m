@@ -33,6 +33,7 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 if isfield(EEG.vhtp,'eeg_htpEegInterpolateChansEeglab') && isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'dataRank'); defaultRank = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank; else; defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2))))); end;
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');
+defaultSaveOutput = false;
 % MATLAB built-in input validation
 ip = inputParser();
 ip.StructExpand = 0;
@@ -40,6 +41,7 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method',defaultMethod,@ischar);
 addParameter(ip,'rank',defaultRank,@isnumeric);
 addParameter(ip,'icadir',defaultIcaDir,@ischar);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
 
 parse(ip,EEG,varargin{:});
 

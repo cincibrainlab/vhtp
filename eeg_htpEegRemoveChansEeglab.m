@@ -49,6 +49,7 @@ defaultMinimumDuration = 100;
 defaultThreshold = 5;
 defaultRemoveChannel = false;
 defaultAutoMark = false;
+defaultSaveOutput = false;
 
 validateType = @( type ) ischar( type ) && ismember(type, {'Resting', 'Event'});
 
@@ -61,6 +62,7 @@ addParameter(ip, 'minimumduration',defaultMinimumDuration,@isnumeric);
 addParameter(ip,'threshold',defaultThreshold,@isnumeric);
 addParameter(ip,'removechannel', defaultRemoveChannel, @islogical);
 addParameter(ip, 'automark', defaultAutoMark, @islogical);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
 
 parse(ip,EEG,varargin{:});
 

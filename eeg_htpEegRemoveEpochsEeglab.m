@@ -19,9 +19,12 @@ function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
 %  Contact: kyle.cullion@cchmc.org
 
 % MATLAB built-in input validation
+defaultSaveOutput = false;
+
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
 
 parse(ip,EEG,varargin{:});
 

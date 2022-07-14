@@ -63,6 +63,7 @@ function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
+defaultSaveOutput = false;
 defaultAsrMode = 2;
 defaultAsrFlatline = 5;
 defaultAsrHighpass = [0.25 0.75];
@@ -83,6 +84,7 @@ addParameter(ip, 'asrnoisy', defaultAsrNoisy, @isnumeric);
 addParameter(ip, 'asrburst',defaultAsrBurst,@isnumeric);
 addParameter(ip, 'asrwindow', defaultAsrWindow, @isnumeric);
 addParameter(ip, 'asrmaxmem', defaultAsrMaxMem, @isnumeric);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
 
 parse(ip,EEG,varargin{:});
 

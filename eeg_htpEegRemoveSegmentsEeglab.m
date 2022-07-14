@@ -18,10 +18,12 @@ function [EEG, results] = eeg_htpEegRemoveSegmentsEeglab(EEG,varargin)
 %  please see http://github.com/cincibrainlab
 %
 %  Contact: kyle.cullion@cchmc.org
+defaultSaveOutput = false;
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
 
 parse(ip,EEG,varargin{:});
 

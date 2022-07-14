@@ -26,12 +26,15 @@ function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 %  Contact: kyle.cullion@cchmc.org
 defaultMethod='spherical';
 defaultChannels = [];
+defaultSaveOutput = false;
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'method', defaultMethod,@ischar)
-addParameter(ip, 'channels', defaultChannels, @isnumeric)
+addParameter(ip, 'method', defaultMethod,@ischar);
+addParameter(ip, 'channels', defaultChannels, @isnumeric);
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+
 parse(ip,EEG,varargin{:});
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
