@@ -63,7 +63,7 @@ parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 note(sprintf('Output Dir: %s', ip.Results.outputdir));
 
 % Create channel combos
-combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique)
+combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
 ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
 note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
 
@@ -218,35 +218,46 @@ for fi = 1 : numel(frex)
     [fscoh(:,:,fi)] = create_bcm( res_chan, res_chan2, res_scoh(:,fi), labels);
 end
 
-bconn_table = {};
-count = 1;
-% sample long table
-% eegid chan1 chan2 freq wpli ispc
-for fi = 1 : size(fispc,3)
-    current_ispc = fispc(:,:,fi);
-    current_wpli = fwpli(:,:,fi);
-    current_scoh = fscoh(:,:,fi);
+tic; % .06 seconds
+fispc_table = util_htpBcm2Long( fispc, labels, frex ); fispc_table = renamevars(fispc_table, "bcm_long", "ispc");
+fwpli_table = util_htpBcm2Long( fwpli, labels, frex ); fwpli_table = renamevars(fwpli_table, "bcm_long", "fwpli");
+fscoh_table = util_htpBcm2Long( fscoh, labels, frex ); fscoh_table = renamevars(fscoh_table, "bcm_long", "fscoh");
+bconn_table2 = horzcat( table(repmat(EEG.setname, [height(fispc_table) 1]), 'VariableNames',{'eegid'}), ...
+    innerjoin(fispc_table, innerjoin(fwpli_table,fscoh_table)));
+toc;
 
-    for ci = 1 : size(current_wpli,1)
-        ispc_row = current_ispc(ci,:);
-        wpli_row = current_wpli(ci,:);
-        scoh_row = current_scoh(ci,:);
-
-        for ci2 = 1 : size(current_wpli,2)
-            bconn_table{count,1} = EEG.filename;
-            bconn_table{count,2} = labels(ci);
-            bconn_table{count,3} = labels(ci2);
-            bconn_table{count,4} = frex(fi);
-            bconn_table{count,5} = current_wpli(ci2);
-            bconn_table{count,6} = current_ispc(ci2);
-            bconn_table{count,7} = current_scoh(ci2);
-            count = count + 1;
-        end
-    end
-end
-
-bconn_table2 = cell2table(bconn_table, ...
-    'VariableNames', {'eegid','chan1','chan2','freq','wpli','ispc', 'scoh'});
+% tic; % .54 seconds
+% bconn_table = {};
+% count = 1;
+% % sample long table
+% % eegid chan1 chan2 freq wpli ispc
+% for fi = 1 : size(fispc,3)
+%     current_ispc = fispc(:,:,fi);
+%     current_wpli = fwpli(:,:,fi);
+%     current_scoh = fscoh(:,:,fi);
+% 
+%     for ci = 1 : size(current_wpli,1)
+%         ispc_row = current_ispc(ci,:);
+%         wpli_row = current_wpli(ci,:);
+%         scoh_row = current_scoh(ci,:);
+% 
+%         for ci2 = 1 : size(current_wpli,2)
+%             bconn_table{count,1} = EEG.filename;
+%             bconn_table{count,2} = labels(ci);
+%             bconn_table{count,3} = labels(ci2);
+%             bconn_table{count,4} = frex(fi);
+%             bconn_table{count,5} = current_wpli(ci2);
+%             bconn_table{count,6} = current_ispc(ci2);
+%             bconn_table{count,7} = current_scoh(ci2);
+%             count = count + 1;
+%         end
+%     end
+% end
+% 
+% bconn_table2 = cell2table(bconn_table, ...
+%     'VariableNames', {'eegid','chan1','chan2','freq','wpli','ispc', 'scoh'});
+% toc;
+% 
 
 % Thresholding
 if ~ismissing(ip.Results.threshold)
