@@ -158,39 +158,9 @@ if ip.Results.listing == false
                 EEG.urchanlocs = locs;
                 EEG.chaninfo   = chaninfo;
             case 'MEA30'
-                % chan 1 EDF is chan 23 MEA
                 % chan 2 is reference
-                % chan 3 EDF is chan 22
-                % chan 4 EDF is chan 30
-                % chan 5 EDF is chan 21
-                % chan 6 EDF is 29
-                % chan 7 EDF is 20
-                % chan 8 EDF is 28
-                % chan 9 EDF is 19
-                % chan 10 EDF is 27
-                % chan 11 EDF is 18
-                % chan 12 EDF is 26
-                % chan 13 EDF is 17
-                % chan 14 EDF is 25
-                % chan 15 EDF is 16
-                % chan 16 EDF is 24
-                % chan 17 EDF is 15
-                % chan 18 EDF is 7
-                % chan 19 EDF is 14
-                % chan 20 EDF is 6
-                % chan 21 EDF is 13
-                % chan 22 EDF is 5
-                % chan 23 EDF is 12
-                % chan 24 EDF is 4
-                % chan 25 EDF is 11
-                % chan 26 EDF is 3
-                % chan 27 EDF is 10
-                % chan 28 EDF is 2
-                % chan 29 EDF is 9
-                % chan 30 EDF is 1
-                % chan 31 EDF is 8
                 % chan 32 EDF is reference
-                % chan 33 EDF is piezo 
+                % chan 33 EDF is piezo
 
                 try
                     datafile =  filelist.filename{i};
@@ -198,56 +168,20 @@ if ip.Results.listing == false
 
                     edfFile = fullfile(folder, datafile);
 
-                    try EEG = pop_biosig( edfFile );
-                    catch, error('Check if EEGLAB 2021 is installed'); end
+                    % using remap function for Neuronexus
+                    EEG = eeg_htpMeaImportAndRemapEdf( edfFile );
 
-
-                    if EEG.nbchan == 33
-                        EEG = pop_select( EEG, 'nochannel', [2,32,33]);
-                    elseif EEG.nbchan == 32
-                        EEG = pop_select( EEG, 'nochannel', [2,32]);
-                    end
-
-                    try
-                        load('mea3d.mat', 'chanlocs');
-                    catch
-                        error('mea3d.mat file missing');
-                    end
-
-                    chanlocs(31) = [];
-                    EEG.chanlocs = chanlocs;
-                    EEG = eeg_checkset( EEG );
-
-                    % clear chanlocs;
-
-                    %EEG = pop_select( EEG,'channel',{'17' '16' '15' '14' '19' '18' '13' '12' '21' '20' '11' ...
-                    %    '10' '24' '23' '22' '9' '8' '7' '27' '26' '25' '6' '5' '4' '30' '29' '28' '3' '2' '1'});
-
-                    % based on the revised NN remap provided by Carrie Jonak
-                    % (Channel remap.jpg)
-
-                    %EEG = pop_select( EEG,'channel',{'1','3','4','5','6','7','8','9','10', ...
-                    %                     '11','12','13','14','15','16','17','18','19','20','21','22','23','24', ...
-                    %                     '25','26','27','28','29','30','31'});
-                    %
-                    %
-                    %                 '17' '16' '15' '14' '19' '18' '13' '12' '21' '20' '11' ...
-                    %                     '10' '24' '23' '22' '9' '8' '7' '27' '26' '25' '6' '5' '4' '30' '29' '28' '3' '2' '1'});
-
-
-                    swCHANNEL = 0;
-                    swRESAMPLE  = 0;
                     EEG.filename = datafile;
-                    EEG.chaninfo.filename = 'meachanlocs.mat';
-                    EEG = eeg_checkset(EEG);
+                    % EEG.chaninfo.filename = 'meachanlocs.mat';
 
                 catch e
-                    throw(e);
+                    error('MEA EDF Import Failed.')
                 end
-                chaninfo.filename = netInfo.net_file;
-                EEG.chaninfo   = chaninfo;
 
+               % chaninfo.filename = netInfo.net_file;
+               % EEG.chaninfo   = chaninfo;
             otherwise
+                
         end
 
         % Populate EEG SET File
