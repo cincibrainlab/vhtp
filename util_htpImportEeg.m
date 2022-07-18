@@ -100,7 +100,7 @@ switch exist(filepath)
         is_single_file = true;
 end
 
-if ~isempty(filelist.filename)
+if ~isempty(filelist)
     filelist.success = false(height(filelist),1);
     filelist.importdate = repmat(string(timestamp), height(filelist),1);
     filelist.electype = repmat(ip.Results.nettype, height(filelist),1);
