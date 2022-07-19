@@ -86,9 +86,6 @@ end
             checks.viewprops = checkRequirements( 'viewprops' );
             checks.firfilt = checkRequirements( 'firfilt' );
         end
-
-
-
         msgHandler(checks);
         fprintf('\n! htpDoctor found %d issues.\n\n', sum(~struct2array(checks)));
     end
@@ -99,7 +96,7 @@ end
             case 'eeglab'
                 results = checkCommand( 'eeglab nogui' );
             case 'brainstorm'
-                results = checkCommand( 'brainstorm nogui' );
+                results = checkScriptName( 'brainstorm' );
             case 'spectralevents'
                 results = checkScriptName( 'spectralevents' );
             otherwise
