@@ -70,6 +70,12 @@ end
 % checkRequirement, send to messageHandler, send to guiHandler
     function checks = runChecks()
         note('Checking major tookits ...')
+
+        % add path to vHTP
+        [vhtpdir, ~, ~] = fileparts(which(mfilename));
+        note(sprintf('Adding vHTP to MATLAB Path (%s)...', vhtpdir))
+        addpath(genpath(vhtpdir));
+
         % check eeglab
         checks.eeglab = htpDoctor('check_eeglab');
         % check for brainstorm
