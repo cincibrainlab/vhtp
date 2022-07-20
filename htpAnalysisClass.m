@@ -42,7 +42,6 @@ classdef htpAnalysisClass < handle
             end
         end
 
-
     end
     methods
         function o = htpAnalysisClass() % Constructor
@@ -55,36 +54,70 @@ classdef htpAnalysisClass < handle
             o.util.note('Loading helper functions...');
         end
     end
+
     methods % common functions
+        function o = assignProcessingSteps( o, selectedSteps )
+            o.proj_status.selectedSteps = selectedSteps;
+        end
+        function o = assignProcessingType( o, processtype)
+            o.proj_status.processingType = processtype;
+            o.util.note(sprintf('Process Type set to %s.', processtype));
+        end
         function o = run_analysis_loop( o )
-            filelist = o.input_filelist;
-            results_dir = o.proj_info.results_dir;
-            progress_bar = @o.progress_bar;
-            %% RUN ANALYSIS LOOPS -----------------------------------------------------|
-            number_of_input_files = height( filelist );
 
-            % Main analysis loop
-            waitf = progress_bar('create');
-            for i = 1 : number_of_input_files
+            % get step number
+            findStepPosition = @( step ) find(strcmp( o.proj_status.current_parameter_steps, step ));
 
-                % active SET file
-                current_set = filelist.filename{i};
-                current_subfolder = filelist.filepath{i};
-
-                % load EEG (EEGLAB)
-                EEG = pop_loadset('filename', current_set, ...
-                    'filepath', current_subfolder);
-
-                % = begin function chain, i.e. EEG in and EEG out ====================
-                [EEG, results{i}] = eeg_htpCalcRestPower( EEG,...
-                    'useParquet', true, ...
-                    'gpuOn', true, 'outputdir', results_dir );
-
-                % update progress bar
-                progress_bar('update',waitf, i, number_of_input_files)
-
+            switch o.proj_status.processingType
+                case 'All'
+                    stepnumbers = 1 : numel( o.proj_status.current_parameter_steps );
+                case 'IndividualStep'
+                    stepnumbers = sort(cell2mat(cellfun(@(x) findStepPosition(x), o.proj_status.selectedSteps, 'uni', 0)));
+                case 'Continuation'
+                    step_list_by_position = sort(cell2mat(cellfun(@(x) findStepPosition(x), {o.proj_status.selectedSteps}, 'uni', 0)));
+                    stepnumbers = step_list_by_position(1) : numel( o.proj_status.current_parameter_steps );
             end
-            close(waitf); % waitbar
+
+            progress_bar = @o.progress_bar;
+            
+            useSubDir = ~o.proj_status.ignore_subdirectories;
+
+            util_htpParadigmRun(...
+                o.proj_info.data_dir, ...
+                o.proj_status.current_parameter_PARAMS, ...
+                o.proj_status.processingType, ...
+                'dryrun', false, ...
+                'subdirOn', useSubDir, ...
+                'outputdir', o.proj_info.results_dir, ...
+                'stepnumbers', stepnumbers, ...
+                'analysisMode', true);
+            
+            
+%             %% RUN ANALYSIS LOOPS -----------------------------------------------------|
+%             number_of_input_files = height( filelist );
+% 
+%             % Main analysis loop
+%             waitf = progress_bar('create');
+%             for i = 1 : number_of_input_files
+% 
+%                 % active SET file
+%                 current_set = filelist.filename{i};
+%                 current_subfolder = filelist.filepath{i};
+% 
+%                 % load EEG (EEGLAB)
+%                 EEG = pop_loadset('filename', current_set, ...
+%                     'filepath', current_subfolder);
+% 
+%                 % = begin function chain, i.e. EEG in and EEG out ====================
+%                 [EEG, results{i}] = eeg_htpCalcRestPower( EEG,...
+%                     'useParquet', true, ...
+%                     'gpuOn', true, 'outputdir', results_dir );
+% 
+%                 % update progress bar
+%                 progress_bar('update',waitf, i, number_of_input_files)
+% 
+%             end
+%             close(waitf); % waitbar
         end
 
         function load_helper_functions( o )
@@ -119,7 +152,10 @@ classdef htpAnalysisClass < handle
             % toolbox paths
             o.proj_info.eeglab_dir = [];
             o.proj_info.brainstorm_dir = [];
-            o.proj_info.vhtp_dir = [];
+
+            [vhtpdir, ~, ~] = fileparts(which(mfilename));
+            o.util.note(sprintf('vHtp Directory at %s...', vhtpdir))
+            o.proj_info.vhtp_dir = vhtpdir;
 
             % datapaths
             o.proj_info.data_dir = [];
@@ -233,6 +269,59 @@ classdef htpAnalysisClass < handle
                 case 'openExplorer'
                     o.openExplorer;
             end
+
+        end
+        function list = listAnalysisParameterFiles(o)
+            filelist = util_htpDirListing(fullfile( o.proj_info.vhtp_dir, 'analysis_templates/'), 'ext', '.m', 'keyword', 'parameters');
+            list = string(regexp(filelist{:,2},'(?<=parameters_)\w*','match'));
+        end
+        function extractCurrentParameterFile( o, selection )
+               o.proj_status.current_parameter_code = selection;
+               o.proj_status.current_parameter_file = strcat("parameters_",selection);
+               o.proj_status.current_parameter_func =  str2func(strcat("parameters_",selection));              
+
+               o.parameterHandler('loadParameterFile');
+        end
+        function res = parameterHandler( o, action )
+            switch action
+                case 'loadParameterFile'
+                    o.proj_status.current_parameter_PARAMS = ...
+                        o.proj_status.current_parameter_func();
+                    o.proj_status.current_parameter_steps = fieldnames(o.proj_status.current_parameter_PARAMS);
+
+                case 'listParametersForTable'
+                    res = o.proj_status.current_parameter_steps;
+                case 'openParameterFileForEditing'
+                    try
+                        open(o.proj_status.current_parameter_file);
+                        o.util.note(sprintf('Opened %s for editing.', ...
+                            o.ha.proj_status.current_parameter_file));
+                    catch
+                        o.util.note('Warning: No parameters file selected.')
+                    end
+            end
+
+%             % get current parameter code
+%             code = o.proj_status.current_parameter_code;
+% 
+%                     if ~isempty( code )
+%                         % load parameters function and get preprocessing steps
+%                         try
+%                             app.PARAMS=current_parameter_func();
+%                             app.actionHandler('loadCurrentParametersSteps');
+%                             app.actionHandler('listIndividualSteps');
+%                             app.actionHandler('updateStepDetails');
+%                             app.allowIndividualSteps;
+%                         catch
+%                             error('Error loading %s (parameters) file.', app.currentParametersFile);
+%                         end
+%                         allowProcessStyle(app);
+%                         app.PROCESS='All';
+%                         denyContinuationSteps(app);
+%                         %denyIndividualSteps(app);
+%                     else
+%                         denyAll(app);
+%                     end
 
         end
     end
