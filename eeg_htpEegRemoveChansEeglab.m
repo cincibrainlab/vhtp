@@ -45,7 +45,7 @@ function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 %  Contact: kyle.cullion@cchmc.org
 
 defaultType = 'Resting';
-defaultMinimumDuration = 100;
+defaultMinimumDuration = 60;
 defaultThreshold = 5;
 defaultRemoveChannel = false;
 defaultAutoMark = false;
@@ -76,7 +76,8 @@ try
         EEG.vhtp.eeg_htpEegRemoveChansEeglab=rmfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason');
     end
     original = EEG;
-    if EEG.xmax < ip.Results.minimumduration
+    if EEG.xmax < ip.Results.minimumduration % 60 seconds
+        proc_badchans = [];
         EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed = 0;
         EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Data too short';
 
@@ -170,7 +171,22 @@ try
         else
             EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
         end
+
+        % display check for user
+        channel_labels = {EEG.chanlocs.labels};
+        nochannel_idx = channel_labels(proc_badchans);
+        EEG_Temp = pop_select( EEG, 'nochannel',  nochannel_idx);
+
+        eegplot(EEG_Temp.data,'srate',EEG.srate,'winlength',10, ...
+            'plottitle', [sprintf('Review Channel Removal for for Subject %s',regexprep(EEG.subject,'^*\.\w+$',''))], ...
+            'events',EEG.event,'color',carr,'wincolor',[1 0.5 0.5], ...
+            'eloc_file',EEG.chanlocs,  'butlabel', 'Close Window', 'submean', 'on', ...
+            'command', 't = 1', 'position', [400 400 1024 768] ...
+            );
+        waitfor(gcf);
+
         answer = questdlg(sprintf('Would you like to Re-do the Marking Bad Channel Process for Subject %s?',regexprep(EEG.subject,'^*\.\w+$','')),'Channel Removal Repeat','Repeat','Continue','Continue');
+        
         if isempty(answer) || strcmp(answer, 'Repeat')
             repeating = 1;
         else
