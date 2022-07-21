@@ -59,7 +59,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     defaultConfirmPlot = false;
     defaultSaveSet = true;
     defaultComputeHeadModel = false;
-    defaultDeleteTempfiles = true;
+    defaultDeleteTempfiles = false;
     defaultUsePreexisting = false;
     defaultResetProtocol = false;
     defaultHeadModelFile = 'Empty';
@@ -83,11 +83,15 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % Dependency Check: Requires Brainstorm and EEGLAB Functions
     % BRAINSTORM
     if ~ip.Results.headless
+       try
         fprintf('Brainstorm found.\n');
         if brainstorm('status'), warning('GUI Mode: Brainstorm Already Running.');
         else 
-            error('Please start Brainstorm or Turn on Server Mode (''headless'', true)');
+            brainstorm;
         end
+       catch
+            error('Please start Brainstorm or Turn on Server Mode (''headless'', true)');
+       end
     end
     % EEGLAB
     if exist('eeglab', 'file') == 0,  error('Please add EEGLAB to path.'); else, fprintf('EEGLAB found.\n'); end
