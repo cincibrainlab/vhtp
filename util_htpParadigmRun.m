@@ -1,4 +1,8 @@
 function [results] = util_htpParadigmRun(filepath, presets, process, varargin)
+% EP Edits
+% useFileList - t/f filepath is a preexisting file list rather than a
+% directory
+
 % paradigm_Resting() - main import function
 %
 % Usage:
@@ -30,6 +34,10 @@ function [results] = util_htpParadigmRun(filepath, presets, process, varargin)
 %
 %  Contact: kyle.cullion@cchmc.org
 
+if nargin < 1
+   fprintf('\nutil_htpParadigmRun\nPlease see comments for instructions on use.\n')
+   return;
+end
 
 
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
@@ -47,6 +55,8 @@ defaultIndividualStep = '';
 defaultRerunStep = '';
 defaultRerunSourceStep='';
 defaultStepNumbers=[];
+defaultUseFileList = false;
+defaultAnalysisMode = false;
 
 
 validateProcess = @( process ) ismember(process,{'All','Continuation', 'IndividualStep'});
@@ -68,10 +78,14 @@ addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 addParameter(ip,'individualstep',defaultIndividualStep,@ischar);
 addParameter(ip,'continuationstep',defaultRerunStep,@ischar);
 addParameter(ip, 'stepnumbers',defaultStepNumbers,@isnumeric);
+addParameter(ip, 'useFileList', defaultUseFileList,@islogical);
+addParameter(ip, 'analysisMode', defaultAnalysisMode,@islogical);
+
 
 parse(ip,filepath,presets,process,varargin{:});
 
 stepnames = structfun(@(x) getfield(x,'function'),presets,'UniformOutput',false);
+step_labels = fields(stepnames);
 
 switch exist(filepath)
     case 7
@@ -95,6 +109,7 @@ switch exist(filepath)
         is_single_file = true;
 end
 
+if ip.Results.analysisMode == false % two pathways to account for analysis functions
 try
     for i=1:height(filelist)
         switch process
@@ -103,13 +118,23 @@ try
                 if ~isfield(EEG.vhtp,'stepPreprocessing')
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
-                processAll(EEG, stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+                processAll(EEG, stepnames,presets,ip.Results.dryrun,ip.Results.outputdir, ip.Results.stepnumbers);
             case 'IndividualStep'
                 EEG = pop_loadset('filename',fullfile(filelist.filepath(i),filelist.filename(i)));
                 if ~isfield(EEG.vhtp,'stepPreprocessing')
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
-                processIndividualStep(EEG,ip.Results.individualstep,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+                % modified by EP
+                if numel(ip.Results.stepnumbers) == 1
+%                     processIndividualStep(EEG,ip.Results.individualstep,stepnames,presets,...
+%                         ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+                    processIndividualStep(EEG, step_labels{ip.Results.stepnumbers},stepnames,presets,...
+                        ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+                else
+                    if numel(ip.Results.stepnumbers) > 1
+                        processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+                    end
+                end
             case 'Continuation'
                 EEG = pop_loadset('filename',fullfile(filelist.filepath(i),regexprep(filelist.filename(i),ip.Results.ext,'.set')));
                 if ~isfield(EEG.vhtp,'stepPreprocessing')
@@ -117,13 +142,64 @@ try
                 end
                 processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
             otherwise
-        end
+        end 
         EEG = eeg_emptyset;
     end
 catch e 
     throw(e)
 end
 
+else
+    % Analysis loop
+    for i=1:height(filelist)
+        EEG = pop_loadset('filename',fullfile(filelist.filepath(i),filelist.filename(i)));
+
+        all_steps = fieldnames(stepnames);
+        sel_steps = stepnumbers;
+        for si =1:length(stepnumbers)
+
+            sel_step_index = stepnumbers(si);
+            processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+
+            EEG = runAnalysisStep(EEG, ...
+                options.(all_steps{sel_step_index}), ...
+                steps{sel_step_index}, ...
+                stepnames.(steps{sel_step_index}),...
+                dryrun, ...
+                newoutputdir, ...
+                stepnumbers(sel_step_index));
+
+
+        end
+
+    end
+
+end
+
+end
+
+function process_analysis_steps(EEG,stepnames,options,dryrun,outputdir, stepnumbers)
+    steps =fieldnames(stepnames);
+    for i =1:length(stepnumbers)
+        current_step = stepnumbers(i);
+        newoutputdir = fullfile(outputdir,char(stepnames.(steps{current_step})));
+        EEG = runStep(EEG, options.(steps{current_step}), steps{current_step}, stepnames.(steps{current_step}), dryrun, newoutputdir, stepnumbers(current_step));
+    end
+end
+
+function [EEG]=runAnalysisStep(EEG, params, step, functionName, dryRun,outputdir, stepNumber)
+    inputs = [fieldnames(params).'; struct2cell(params).'];
+    inputs = inputs(:).';
+    prior_file = EEG.filename;
+    
+    EEG = functionName(EEG,inputs{3:end});
+    EEG.vhtp.stepPreprocessing.(step) = true;
+    EEG.vhtp.prior_file = prior_file;
+    if ~dryRun && (isfield(params,'saveoutput') && params.saveoutput == 1)
+        EEG.filename = [regexprep(EEG.subject,'.set','') '_' step '.set'];
+        EEG.vhtp.stepPlacement = stepNumber;
+        pop_saveset(EEG,'filename',fullfile(outputdir,EEG.filename));
+    end
 end
 
 function [EEG]=runStep(EEG, params, step, functionName, dryRun,outputdir, stepNumber)
@@ -145,7 +221,8 @@ function processAll(EEG,stepnames,options,dryrun,outputdir,stepnumbers)
     steps =fieldnames(stepnames);
     for i =1:length(steps)
         newoutputdir = fullfile(outputdir,char(stepnames.(steps{i})));
-        EEG = runStep(EEG, options.(steps{i}), steps{i}, stepnames.(steps{i}), dryrun,newoutputdir,stepnumbers(i));
+        EEG = runStep(EEG, options.(steps{i}), steps{i}, ...
+            stepnames.(steps{i}), dryrun,newoutputdir, stepnumbers(i));
     end
 end
 
@@ -158,9 +235,10 @@ end
 
 function processRerunStep(EEG,stepnames,options,dryrun,outputdir, stepnumbers)
     steps =fieldnames(stepnames);
-    for i =1:length(steps)
-        newoutputdir = fullfile(outputdir,char(stepnames.(steps{i})));
-        EEG = runStep(EEG, options.(steps{i}), steps{i}, stepnames.(steps{i}), dryrun,newoutputdir, stepnumbers(i));
+    for i =1:length(stepnumbers)
+        current_step = stepnumbers(i);
+        newoutputdir = fullfile(outputdir,char(stepnames.(steps{current_step})));
+        EEG = runStep(EEG, options.(steps{current_step}), steps{current_step}, stepnames.(steps{current_step}), dryrun, newoutputdir, stepnumbers(current_step));
     end
 end
 
