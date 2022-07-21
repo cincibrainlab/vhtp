@@ -57,12 +57,16 @@ try
     EEGtemp = EEG;  
 
     if length(badchannels) >= 1
-
         
-        EEG = pop_interp(EEGtemp,badchannels,ip.Results.method);
+        % EEG = pop_interp(EEGtemp,badchannels,ip.Results.method);
+        EEG = pop_interp(EEGtemp, EEGtemp.urchanlocs,ip.Results.method);
+        
         EEG.vhtp.eeg_htpEegInterpolateChansEeglab.method = ip.Results.method;
+        try
         EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank = size(double(EEG.data'),2) - length(badchannels);
-
+        catch
+             EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank = numel(EEG.urchanlocs) - numel(badchannels);
+        end
         EEG.vhtp.eeg_htpEegInterpolateChansEeglab.nbchan_post = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank;
         EEG.vhtp.eeg_htpEegInterpolateChansEeglab.proc_ipchans = badchannels;
     else
