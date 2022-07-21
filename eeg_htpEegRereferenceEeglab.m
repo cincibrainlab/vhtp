@@ -32,7 +32,14 @@ functionstamp = mfilename; % function name for logging/output
 try
     %EEG.data = bsxfun( @minus, EEG.data, sum( EEG.data, 1 ) / ( EEG.nbchan + 1 ) );
     EEG.nbchan = EEG.nbchan+1;
-    EEG.data(end+1,:) = zeros(1, EEG.pnts);
+    if ndims(EEG.data) == 3
+        trial_dim = size(EEG.data);
+        EEG.data(end+1, :, :) = zeros([trial_dim(2:end)]);
+    else 
+        if ndims(EEG.data) == 2
+                EEG.data(end+1,:) = zeros(1, EEG.pnts);
+        end
+    end
     EEG.chanlocs(1,EEG.nbchan).labels = 'initialReference';
     EEG = pop_reref(EEG, []);
     EEG = pop_select( EEG,'nochannel',{'initialReference'});
