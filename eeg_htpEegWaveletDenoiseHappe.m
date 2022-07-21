@@ -67,6 +67,8 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     defaultLowPass = .5;
     defaultHighPass = 30;
     defaultFiltOn = true;
+    defaultSaveOutput = false;
+
 
     % MATLAB built-in input validation
     ip = inputParser();
@@ -81,6 +83,8 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     addParameter(ip, 'highpass', defaultHighPass, @isnumeric)
     addParameter(ip, 'lowpass', defaultLowPass, @isnumeric)
     addParameter(ip, 'filtOn', defaultFiltOn, @islogical);
+    addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
+
 
     % perform double precision test
     if ~isa(EEG.data,'double')
