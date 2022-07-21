@@ -1,4 +1,4 @@
-function [EEG, results] = eeg_htpEegCreateErpEpochsEeglab(EEG, epochevent, varargin)
+function [EEG, results] = eeg_htpEegCreateErpEpochsEeglab(EEG, varargin)
 % eeg_htpEegCreateErpEpochsEeglab - Perform epoch creation for ERP datasets
 %
 % Usage:
@@ -37,6 +37,7 @@ function [EEG, results] = eeg_htpEegCreateErpEpochsEeglab(EEG, epochevent, varar
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
+defaultEpochEvent = missing;
 defaultEpochLimits = [-.500 2.750];
 defaultRmBaseline = 0;
 defaultBaselineLimits = [-.500 0];
@@ -45,13 +46,20 @@ defaultSaveOutput = false;
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addRequired(ip, 'epochevent',@ischar);
+addParameter(ip, 'epochevent', defaultEpochEvent, @ischar);
 addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
 addParameter(ip, 'rmbaseline', defaultRmBaseline, @isnumeric);
 addParameter(ip, 'baselinelimits', defaultBaselineLimits, @isnumeric);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 
-parse(ip, EEG, epochevent, varargin{:});
+parse(ip, EEG, varargin{:});
+
+if ismissing(ip.Results.epochevent)
+    disp("Missing Event Code to Epoch.")
+    return;
+else
+    epochevent = ip.Results.epochevent;
+end
 
 try
    [~,filename,~] = fileparts(EEG.filename);
