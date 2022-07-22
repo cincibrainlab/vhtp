@@ -113,7 +113,9 @@ try
             results(i,2).Validation_Result = "Failed"; 
             results(i,3).Fail_Reason = strjoin(EEG.vhtp.qi.failreason,', ');
         end 
-        
+        if isfield(presets,'saveoutput') && presets.saveoutput
+            pop_saveset(EEG,'filename',fullfile(EEG.filepath,EEG.filename));
+        end
 
     end
 
@@ -160,6 +162,12 @@ function EEG=channelMontageCheck(EEG,params)
         locs = removevars(locs,~ismember(locs.Properties.VariableNames,eegfields));
         locs = table2struct(locs);
         chanstemp = rmfield(EEG.chanlocs,eegfields(~ismember(eegfields,fieldnames(locs))));
+        eegfields = fieldnames(chanstemp);
+        labelsindex = find(ismember('labels',eegfields));
+        for i=labelsindex+1:length(eegfields)
+            field = eegfields{i};
+           locs.(field) = round([locs.(field)],4);
+        end
         if isequal(locs,chanstemp)
             EEG.vhtp.qi.channelmontage.passed = 1;
         else
@@ -218,9 +226,19 @@ function EEG=dinIntervalCheck(EEG,params)
     dinintervaltimestamp = datestr(now,'yymmddHHMMSS');  % timestamp
     events = unique({EEG.event(:).type});
     events = events(ismember(events,params.events));
+    failed = 0;
+    checked=0;
     for i=1:length(events)
         indices(i,:) = find(strcmp(events(i),{EEG.event(:).type}));
-        intervals(i) = mean([EEG.event(indices(i,:)).latency]-[EEG.event(indices(i,:)-1).latency],'omitnan');
+        if length(EEG.event)~=1
+            if length(indices(i,:)) == 1 && indices(i,:)==length(EEG.event)
+                intervals(i) = EEG.event(indices(i,:)).latency;
+            else
+                intervals(i) = mean([EEG.event(indices(i,:)).latency]-[EEG.event(indices(i,:)+1).latency],'omitnan');
+            end
+        else
+            intervals(i) = EEG.event(indices(i,:)).latency;
+        end
         if abs(intervals(i)-params.intervals{i})>params.threshold
             failed=1;
         end
