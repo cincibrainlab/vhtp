@@ -3,17 +3,19 @@ function [results] = util_htpParadigmRun(filepath, presets, process, varargin)
 % useFileList - t/f filepath is a preexisting file list rather than a
 % directory
 
-% paradigm_Resting() - main import function
+% util_htpParadigmRun() - main Processing function to execute
+%                         user-defined/selected steps
 %
 % Usage:
-%    >> [ results ] = paradigm_Resting( EEG, varargin )
+%    >> [ results ] = util_htpParadigmRun( EEG, varargin )
 %
 % Example:
-%    >> [results] = util_htpImportEeg('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
+%    >> [results] = util_htpParadigmRun('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
 %
 % Require Inputs:
-%     filepath       - directory to get file list
-%     'nettype'      - channel input type
+%     filepath     - directory to get file list
+%     presets      - channel input type
+%     process      - Processing mode selected by user
 %
 % Function Specific Inputs:
 %     'ext'          - specify file extenstion
@@ -22,12 +24,11 @@ function [results] = util_htpParadigmRun(filepath, presets, process, varargin)
 %     'dryrun'       - no actual changes to disk, default: true
 %     'chanxml'      - specify channel catalog xml
 %     'outputdir'    - output path (default: tempdir)
+%     'useFileList' - pre-existing filelist rather than a directory
+%     'analysisMode' - false/true to determine if analysis pathway is used 
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
-%
-% Outputs:
-%     results   - variable outputs
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -93,13 +94,6 @@ switch exist(filepath)
         if ip.Results.subdirOn
             filelist = filelist(~contains(filelist.filepath, fullfile(filepath,'preprocess')),:);
         end
-%         if strcmp(process,'All')
-%             filelist = filelist(~contains(filelist.filename, fieldnames(stepnames)),:) ;
-%         elseif strcmp(process,'Continuation')
-%             filelist = filelist(~contains(filelist.filename, fieldnames(stepnames)),:);
-%         else
-%             filelist = filelist;
-%         end
         is_single_file = false;
     case 2
         [tmppath, tmpfile, tmpext] = fileparts(filepath);
