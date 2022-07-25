@@ -17,6 +17,12 @@ PARAMS.filter_lowpass.method = 'lowpass';
 PARAMS.filter_lowpass.lowpassfilt=100;
 %PARAMS.filter_lowpass.saveoutput = true;
 
+% %% WAVELET DENOISING
+ PARAMS.waveletdenoise.function = @eeg_htpEegWaveletDenoiseHappe;
+ PARAMS.waveletdenoise.isErp = true;
+ PARAMS.waveletdenoise.filtOn = true;
+ PARAMS.waveletdenoise.saveoutput = true;
+
 %%CHANNEL REMOVAL 
 PARAMS.channel_removal.function=@eeg_htpEegRemoveChansEeglab;
 PARAMS.channel_removal.threshold = 3;
@@ -24,12 +30,9 @@ PARAMS.channel_removal.removechannel = true;
 PARAMS.channel_removal.saveoutput = true;
 PARAMS.channel_removal.minimumduration = 0;
 PARAMS.channel_removal.type = 'Event';
+PARAMS.channel_removal.automark = true;
 
-% %% WAVELET DENOISING
-% PARAMS.waveletdenoise.function = @eeg_htpEegWaveletDenoiseHappe;
-% PARAMS.waveletdenoise.isErp = true;
-% PARAMS.waveletdenoise.filtOn = true;
-% PARAMS.waveletdenoise.saveoutput = true;
+
 % 
 % %% EPOCH AND BASELINE CORRECT
 % PARAMS.create_epochs.function = @eeg_htpEegCreateErpEpochsEeglab;

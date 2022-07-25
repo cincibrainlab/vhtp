@@ -157,7 +157,7 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
             isEpoched = false;
             samples_per_trial = size(EEG.data,2);
         end
-        preEEG = reshape(EEG.data, size(EEG.data,1), []) ;
+    preEEG = reshape(EEG.data, size(EEG.data,1), []) ;
         postEEG = preEEG - artifacts ;
 
         % create artifact only EEG SET
