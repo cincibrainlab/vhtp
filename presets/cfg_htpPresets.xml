@@ -1,0 +1,278 @@
+<PresetOptions>
+    
+
+<Study>
+	<Title>Redo P2</Title>
+	<Code>RedoP2</Code>
+	<Net>EGI128</Net>
+		<Settings>
+			<NetDowngrade>none</NetDowngrade>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>none</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>250</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>0</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<ChanCleanThreshold>5</ChanCleanThreshold>
+			<CleanMode>FullAuto</CleanMode>
+			<EpochType>Rest</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-500 4000</EventLimits>
+			<LevelBLimits>-500 725</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>CUDAICA</IcaType>
+			<DipfitCalc>Off</DipfitCalc>
+		</Settings>
+</Study>
+<Study>
+	<Title>MEPNow</Title>
+	<Code>M_121919</Code>
+	<Net>EGI128</Net>
+		<Settings>
+			<NetDowngrade>none</NetDowngrade>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>none</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>250</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>0</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<ChanCleanThreshold>3</ChanCleanThreshold>
+			<CleanMode>Manual</CleanMode>
+			<EpochType>Event</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-5000 2700</EventLimits>
+			<LevelBLimits>-5300 2000</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>CUDAICA</IcaType>
+			<DipfitCalc>Off</DipfitCalc>
+		</Settings>
+</Study>
+
+<Study>
+	<Title>Event</Title>
+	<Code>E_121819</Code>
+	<Net>EGI128</Net>
+		<Settings>
+			<NetDowngrade>none</NetDowngrade>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>80</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>250</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>0</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<ChanCleanThreshold>3</ChanCleanThreshold>
+			<CleanMode>Manual</CleanMode>
+			<EpochType>Event</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-500 4000</EventLimits>
+			<LevelBLimits>-500 800</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>24</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>CUDAICA</IcaType>
+			<DipfitCalc>Off</DipfitCalc>
+		</Settings>
+</Study>
+
+    <Study>
+        <Title>Reversal Learning</Title>
+        <Code>RL</Code>
+        <Net>EGI128</Net>
+        <Settings>
+       	    <FilterLow>2</FilterLow>
+            <FilterHigh>80</FilterHigh>
+            <MergeFiles>Yes</MergeFiles>
+            <EpochType>Event</EpochType>
+            <EventLimits>-500 4000</EventLimits>
+            <LevelBLimits>-500 800</LevelBLimits>
+	    <PCA>24</PCA>
+        </Settings>
+    </Study>
+    <Study>
+        <Title>Minocycline</Title>
+        <Code>Mino</Code>
+        <Net>EGI32</Net>
+        <Settings>
+            <MergeFiles>Yes</MergeFiles>
+            <EpochType>Rest</EpochType>
+            <EpochLength>2</EpochLength>
+            <EpochLimits>- to + length</EpochLimits>      
+        </Settings>
+    </Study>
+<Study>
+	<Title>RL 2</Title>
+	<Code>R2_042319</Code>
+	<Net>EGI128</Net>
+		<Settings>
+			<FilterLow>0.3</FilterLow>
+			<FilterHigh>30</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Resample>250</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>1</ParforS1>
+			<MergeFiles>Yes</MergeFiles>
+			<Interpolation>Spherical</Interpolation>
+			<CleanMode>Manual</CleanMode>
+			<EpochType>Event</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-400 400</EventLimits>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<DipfitCalc>On</DipfitCalc>
+		</Settings>
+</Study>
+<Study>
+	<Title>Source</Title>
+	<Code>S_082519</Code>
+	<Net>EGI32</Net>
+		<Settings>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>none</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>500</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>0</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<CleanMode>ASR</CleanMode>
+			<EpochType>Rest</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-500 4000</EventLimits>
+			<LevelBLimits>-500 725</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>CUDAICA</IcaType>
+			<DipfitCalc>On</DipfitCalc>
+		</Settings>
+</Study>
+<Study>
+	<Title>SAT Connectivity</Title>
+	<Code>SC_100219</Code>
+	<Net>EGI32</Net>
+		<Settings>
+			<NetDowngrade>none</NetDowngrade>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>80</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>250</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>1</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<CleanMode>FullAuto</CleanMode>
+			<EpochType>Rest</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-500 4000</EventLimits>
+			<LevelBLimits>-500 725</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>CUDAICA</IcaType>
+			<DipfitCalc>Off</DipfitCalc>
+		</Settings>
+</Study>
+<Study>
+	<Title>Ketamine Rest</Title>
+	<Code>KR_100919</Code>
+	<Net>EGI32</Net>
+		<Settings>
+			<NetDowngrade>none</NetDowngrade>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>none</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>250</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>1</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<CleanMode>FullAuto</CleanMode>
+			<EpochType>Rest</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-500 4000</EventLimits>
+			<LevelBLimits>-500 725</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>BINICA</IcaType>
+			<DipfitCalc>Off</DipfitCalc>
+		</Settings>
+</Study>
+<Study>
+	<Title>MEA</Title>
+	<Code>M_121619</Code>
+	<Net>MEA30</Net>
+		<Settings>
+			<NetDowngrade>none</NetDowngrade>
+			<FilterLow>2</FilterLow>
+			<FilterHigh>none</FilterHigh>
+			<Notch1>57 63</Notch1>
+			<Cleanline>Disabled</Cleanline>
+			<Resample>500</Resample>
+			<Rereference>Average</Rereference>
+			<ParforS1>1</ParforS1>
+			<MergeFiles>No</MergeFiles>
+			<MergeType>TrimMergeOnly</MergeType>
+			<Interpolation>Spherical</Interpolation>
+			<ChanCleanThreshold>3</ChanCleanThreshold>
+			<CleanMode>Manual</CleanMode>
+			<EpochType>Rest</EpochType>
+			<EpochLength>2</EpochLength>
+			<EpochLimits>- to + length</EpochLimits>
+			<EventLimits>-500 4000</EventLimits>
+			<LevelBLimits>-500 725</LevelBLimits>
+			<EventRemoveBaseline>No</EventRemoveBaseline>
+			<EventBaseline>-200 -1</EventBaseline>
+			<AlwaysRecalc>Yes</AlwaysRecalc>
+			<PCA>Data Rank</PCA>
+			<CompSelect>Manual</CompSelect>
+			<IcaType>CUDAICA</IcaType>
+			<DipfitCalc>Off</DipfitCalc>
+		</Settings>
+</Study>
+
+
+</PresetOptions>
