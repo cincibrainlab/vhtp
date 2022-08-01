@@ -1,22 +1,28 @@
 function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
-% eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
+%% eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegRemoveEpochsEeglab( EEG, varargin) )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegRemoveEpochsEeglab( EEG, varargin) )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
-%        
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%% Required Inputs:
+%     EEG [struct]          - EEGLAB Structure
+%    
+%% Function Specific Inputs
+%    'saveoutput' - Boolean representing if output should be saved
+%                   default: false
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%% Outputs:
+%     EEG [struct]        - Updated EEGLAB structure
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%     results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Disclaimer:
+%  This file is part of the Cincinnati Visual High Throughput Pipeline
+%
+%  Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%  kyle.cullion@cchmc.org
 
 % MATLAB built-in input validation
 defaultSaveOutput = false;

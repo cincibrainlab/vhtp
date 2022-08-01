@@ -1,29 +1,32 @@
 function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
-% eeg_htpEegInterpolateChansEeglab - Mark channels for rejection and
-%                               interpolation
+% eeg_htpEegInterpolateChansEeglab - Interpolate channels utilizing specified method 
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegInterpolateChansEeglab( EEG,varargin )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegInterpolateChansEeglab( EEG,varargin )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Required Inputs:
+%     EEG [struct]          - EEGLAB Structure
 %
-% Function Specific Inputs:
-%   'method'  - Text representing method utilized for interpolation 
-%               of channels
-%               e.g. {'invdist'/'v4', 'spherical', 'spacetime'}
-%               default: 'spherical'
+%% Function Specific Inputs:
+%   'method'  - Text representing method utilized for interpolation of channels
+%               default: 'spherical' e.g. {'invdist'/'v4', 'spherical', 'spacetime'}
 %
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%% Outputs:
+%     EEG [struct]        - Updated EEGLAB structure
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%     results [struct]  - Updated function-specific structure containing qi table and input parameters used
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Disclaimer:
+%  This file is part of the Cincinnati Visual High Throughput Pipeline
+%  
+%  Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%  kyle.cullion@cchmc.org
+
 defaultMethod='spherical';
 defaultChannels = [];
 defaultSaveOutput = false;

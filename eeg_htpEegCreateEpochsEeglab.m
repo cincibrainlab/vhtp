@@ -1,31 +1,34 @@
 function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 % eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegCreateEpochsEeglab( EEG, varargin )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegCreateEpochsEeglab( EEG, varargin )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Require Inputs:
+%     EEG [struct]          - EEGLAB Structure
 %
-% Function Specific Inputs:
+%% Function Specific Inputs:
 %   'epochlength'  - Integer representing the recurrence interval in seconds of epochs
 %               default: 2
 %
-%   'epochlimits' - array of two integers representing latencies interval in seconds 
-%                   relative to the time-locking events 
+%   'epochlimits' - array of two integers representing latencies interval in seconds relative to the time-locking events 
 %               default: [0 epochlength]
 %
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
 %           
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%% Outputs:
+%     EEG [struct]         - Updated EEGLAB structure
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%     results [struct]  - Updated function-specific structure containing qi table and input parameters used
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%% Disclaimer:
+%  This file is part of the Cincinnati Visual High Throughput Pipeline
+%  
+%  Please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Contact:
+%   kyle.cullion@cchmc.org
 
 defaultEpochLength = 2;
 defaultEpochLimits = [0 defaultEpochLength];

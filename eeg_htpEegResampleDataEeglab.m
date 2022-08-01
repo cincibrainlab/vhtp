@@ -1,23 +1,30 @@
 function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,varargin)
-% eeg_htpResampleDataEeglab() - Resample data to new specified sampling rate.
+% eeg_htpResampleDataEeglab() - Resamples data to newly specified sampling rate
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_ResampleDataEeglab( EEG, srate )
+%% Syntax:
+%   [ EEG, results ] = eeg_ResampleDataEeglab( EEG, srate )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
-%     srate         - Number specifying new sampling rate
+%% Required Inputs:
+%   EEG [struct]           - EEGLAB Structure
+% 
+%% Function Specific Inputs
+%   'srate'         - Number specifying new sampling rate
+%                     default: 500
 %
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
+%% Output:
+%   EEG [struct] - output structure with updated dataset
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%   results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%% Disclaimer:
+%   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   
+%   Please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Contact:
+%   kyle.cullion@cchmc.org
 
 % MATLAB built-in input validation
 defaultSrate=500;

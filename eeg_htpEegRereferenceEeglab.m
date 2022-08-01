@@ -1,22 +1,25 @@
 function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 % eeg_htpEegRereferenceEeglab() - Rereference data to Average Reference.
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegRereferenceEeglab( EEG, varargin )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegRereferenceEeglab( EEG, varargin )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Required Inputs:
+%   EEG [struct]           - EEGLAB Structure
 %
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%% Function Specific Inputs:
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
+%% Output:
+%   EEG [struct] - output structure with updated dataset
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%   results [struct]   - Updated function-specific structure containing qi table and input parameters used
+%% Disclaimer:
+%   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   Please see http://github.com/cincibrainlab
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
-%
-%  Contact: kyle.cullion@cchmc.org
+%% Contact:
+%   kyle.cullion@cchmc.org
 defaultSaveOutput = false;
 
 ip = inputParser();
