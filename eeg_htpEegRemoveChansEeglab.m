@@ -178,6 +178,14 @@ try
             'eloc_file',EEG.chanlocs,  'butlabel', 'Close Window', 'submean', 'on', ...
             'command', 't = 1', 'position', [400 400 1024 768] ...
             );
+
+        h = findobj('tag', 'eegplottitle');
+        h.FontWeight = 'Bold'; h.FontSize = 16; h.Position = [0.5000 0.93 0];
+
+        handle = gcf;
+        handle.Units = 'normalized';
+        handle.Position = gui.position;
+
         waitfor(gcf);
 
         answer = questdlg(sprintf('Would you like to Re-do the Marking Bad Channel Process for Subject %s?',regexprep(EEG.subject,'^*\.\w+$','')),'Channel Removal Repeat','Repeat','Continue','Continue');
