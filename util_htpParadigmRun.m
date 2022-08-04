@@ -230,9 +230,9 @@ end
 function processRerunStep(EEG,stepnames,options,dryrun,outputdir, stepnumbers)
     steps =fieldnames(stepnames);
     for i =1:length(stepnumbers)
-        current_step = stepnumbers(i);
-        newoutputdir = fullfile(outputdir,char(stepnames.(steps{current_step})));
-        EEG = runStep(EEG, options.(steps{current_step}), steps{current_step}, stepnames.(steps{current_step}), dryrun, newoutputdir, stepnumbers(current_step));
+        %current_step = stepnumbers(i);
+        newoutputdir = fullfile(outputdir,char(stepnames.(steps{i})));
+        EEG = runStep(EEG, options.(steps{i}), steps{i}, stepnames.(steps{i}), dryrun, newoutputdir, stepnumbers(i));
     end
 end
 
