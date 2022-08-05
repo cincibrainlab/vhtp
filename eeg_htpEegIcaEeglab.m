@@ -1,35 +1,39 @@
 function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 % eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegIcaEeglab( EEG, varargin )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegIcaEeglab( EEG, varargin )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Required Inputs:
+%     EEG [struct]           - EEGLAB Structure
 %
-% Function Specific Inputs:
+%% Function Specific Inputs:
 %   'method'  - Text representing method utilized for ICA
-%               e.g. {'binica', cudaica', 'runica'}
-%               default: 'binica'
+%               default: 'binica' e.g. {'binica', cudaica', 'runica'}
 %
 %   'rank' - Number representing the data rank of input data
 %            default: getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))))
 %
-%   'icadir' - Directory to store weight-related output files generated
-%              during ICA
+%   'icadir' - Directory to store weight-related output files generated during ICA
 %              default: fullfile(pwd,'icaweights')
+%
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
 %               
 %
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%% Outputs:
+%     EEG [struct]         - Updated EEGLAB structure
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%     results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%% Disclaimer:
+%  This file is part of the Cincinnati Visual High Throughput Pipeline
+%  
+%  Please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Contact:
+%   kyle.cullion@cchmc.org
+
 if isfield(EEG.vhtp,'eeg_htpEegInterpolateChansEeglab') && isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'dataRank'); defaultRank = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank; else; defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2))))); end;
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');

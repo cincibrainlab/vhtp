@@ -1,48 +1,43 @@
 function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
-% eeg_htpEegRemoveChansEeglab - Mark channels for rejection and
-%                               interpolation
+% eeg_htpEegRemoveChansEeglab - Mark channels for rejection and interpolation
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegRemoveChansEeglab( EEG, varargin )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegRemoveChansEeglab( EEG, varargin )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Required Inputs:
+%     EEG [struct]           - EEGLAB Structure
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
-%
-% Function Specific Inputs:
+%% Function Specific Inputs:
 %   'type'  - Text for type of data to work with for use in trimming edge effects
-%             e.g. {'Resting, Event'}
-%             default: 'Resting'
+%             default: 'Resting' e.g. {'Resting, Event'}
 %
-%   'minimumduration' - Number to indicate a minimum duration of data
-%                       required for removal of channels and interpolation
+%   'minimumduration' - Number to indicate a minimum duration of data required for removal of channels and interpolation
 %                       default: 100
 %
-%   'threshold' - Number to utilize for threshold in automated detection/marking
-%                 of bad channels via various measures (probability, kurtosis,and spectrum)
+%   'threshold' - Number to utilize for threshold in automated detection/marking of bad channels via various measures (probability, kurtosis,and spectrum)
 %                 default: 5
 %
-%    'removechannel' - true/false if channels should be removed after
-%                       marking prior to next step.
+%   'removechannel' - true/false if channels should be removed after marking prior to next step.
+%                      default: false
 %    
-%    'automark'      - turns on and off automatic detection (default:
-%    false)
+%   'automark'      - turns on and off automatic detection 
+%                      default: false
 %
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
 %
-% Version history:
-% 6/16/2022       EP added option 'removechannel', true/false to delete
-%           channels without interpolation before the next step.
-%                 default: false
-% 6/17/2022       EP added automark option (default: false)
+%% Outputs:
+%    EEG [struct]         - Updated EEGLAB structure
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%    results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Disclaimer:
+%  This file is part of the Cincinnati Visual High Throughput Pipeline
+%  
+%  Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%   kyle.cullion@cchmc.org
 
 defaultType = 'Resting';
 defaultMinimumDuration = 60;
@@ -183,6 +178,14 @@ try
             'eloc_file',EEG.chanlocs,  'butlabel', 'Close Window', 'submean', 'on', ...
             'command', 't = 1', 'position', [400 400 1024 768] ...
             );
+
+        h = findobj('tag', 'eegplottitle');
+        h.FontWeight = 'Bold'; h.FontSize = 16; h.Position = [0.5000 0.93 0];
+
+        handle = gcf;
+        handle.Units = 'normalized';
+        handle.Position = gui.position;
+
         waitfor(gcf);
 
         answer = questdlg(sprintf('Would you like to Re-do the Marking Bad Channel Process for Subject %s?',regexprep(EEG.subject,'^*\.\w+$','')),'Channel Removal Repeat','Repeat','Continue','Continue');

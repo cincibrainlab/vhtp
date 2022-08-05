@@ -1,16 +1,15 @@
 function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
-% eeg_htpEegFilterEeglab - Perform various filtering methods
-%                           (hipass, lowpass, notch, and cleanline) on data
+% eeg_htpEegFilterEeglab - Perform various filtering methods (hipass, lowpass, notch, and cleanline) on data
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegFilterEeglab( EEG, varargin)
+%% Syntax:
+%   [ EEG, results ] = eeg_htpEegFilterEeglab( EEG, varargin)
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Required Inputs:
+%     EEG [struct]         - EEGLAB Structure
 %
-% Function Specific Inputs:
-%
+%% Function Specific Inputs:
 %   'method'  - Text representing method utilized for Filtering
+%               default: 'Highpass'
 %
 %   'lowpassfilt' - Number representing the higher edge frequency to use in 
 %                   lowpass bandpass filter 
@@ -67,8 +66,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                             default: 1
 %
 %   'cleanlinesigtype' - Text of signal type to clean 
-%                         e.g. {'Channels','Components'}
-%                        default: 'Channels'
+%                        default: 'Channels' e.g. {'Channels','Components'}
 %               
 %   'cleanlinetau' - Number for smoothing factor of overlapping windows
 %                    default: 100
@@ -83,16 +81,21 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                        window
 %                        default: 4
 %
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%   'saveoutput' - Boolean representing if output should be saved
+%                  default: false
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%% Outputs:
+%     EEG [struct]         - Updated EEGLAB structure
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%     results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Disclaimer:
+%  This file is part of the Cincinnati Visual High Throughput Pipeline
+%  
+%  Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%  kyle.cullion@cchmc.org
 
 defaultMethod = 'highpass';
 defaultLoCutoff = 0.5;
