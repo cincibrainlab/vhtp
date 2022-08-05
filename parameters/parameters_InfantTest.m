@@ -4,6 +4,8 @@ clear PARAMS;
 PARAMS.filter_highpass.function = @eeg_htpEegFilterEeglab;
 PARAMS.filter_highpass.method='highpass';
 PARAMS.filter_highpass.hipassfilt = 0.3;
+PARAMS.filter_highpass.filtOrder = 13750;
+
 
 %%FILTER NOTCH
 PARAMS.filter_notch.function = @eeg_htpEegFilterEeglab;
