@@ -32,6 +32,8 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                 phase response
 %                 default: 0
 %
+%   'filtOrder' - numeric override of default EEG filters
+%
 %   'minphase' - Boolean for minimum-phase converted causal filter
 %                default: false
 %
@@ -104,6 +106,7 @@ defaultNotch = [55 65];
 if any(strcmp(varargin,{'method'})) && strcmp(varargin(find(strcmp(varargin,'method'))+1),'notch'); defaultRevFilt=1; else; defaultRevFilt=0; end;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
+defaultFiltOrder = missing;
 defaultDynamicFiltOrder = 0;
 defaultCleanlineBandwidth = 2;
 defaultCleanlineChanList = [1:EEG.nbchan];
@@ -160,7 +163,11 @@ try
     switch ip.Results.method
         case 'highpass'
             if ~(ip.Results.dynamicfiltorder)
-                highpassfiltorder = 6600;
+                if ismissing(ip.Results.filtOrder)
+                    highpassfiltorder = 6600;
+                else
+                    highpassfiltorder = ip.Results.filtOrder;
+                end
                 EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);
                 EEG.vhtp.eeg_htpEegFilterEeglab.highpassfiltorder    = highpassfiltorder;
             else
@@ -175,7 +182,11 @@ try
             
         case 'lowpass'
             if ~(ip.Results.dynamicfiltorder)
-                lowpassfiltorder = 3300;
+                if ismissing(ip.Results.filtOrder)
+                    lowpassfiltorder = 3300;
+                else
+                    lowpassfiltorder = ip.Results.filtOrder;
+                end
                 EEG = pop_eegfiltnew(EEG,  ...
                     'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',lowpassfiltorder);
                 EEG.vhtp.eeg_htpEegFilterEeglab.lowpassfiltorder    = lowpassfiltorder;
