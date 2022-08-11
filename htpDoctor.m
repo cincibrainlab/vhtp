@@ -1,6 +1,6 @@
-function results = htpDoctor( action )
+function [results, paths]  = htpDoctor( action )
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
-[note, fixnote, failednote, successnote] = htp_utilities();
+[note, fixnote, failednote, successnote, successpath] = htp_utilities();
 
 if nargin < 1, action = missing;
     fprintf('\nWelcome to VHTP! - http://github.com/cincibrainlab/vhtp\n', timestamp);
@@ -10,10 +10,9 @@ if nargin < 1, action = missing;
     note('Running tests ...');
 end
 
-
 if ~ismissing(action)
     isValidAction =  ismember(action, {'fix_eeglab', 'check_eeglab', 'check_brainstorm',... 
-        'check_biosig', 'fix_biosig', 'fix_viewprops', 'fix_cleanrawdata', 'fix_brainstorm', ...
+        'check_biosig', 'check_braph', 'fix_braph', 'fix_biosig', 'fix_viewprops', 'fix_cleanrawdata', 'fix_brainstorm', ...
         'fix_firfilt', 'check_spectralevents', 'fix_spectralevents'});
 else
     action = 'default';
@@ -34,13 +33,16 @@ if isValidAction
             results = checkRequirements( 'eeglab' );
         case 'check_brainstorm'
             results = checkRequirements( 'brainstorm' );
-
         case 'fix_eeglab'
             results = fixHandler('eeglab');
         case 'check_biosig'
             results = checkRequirements( 'biosig' );
+        case 'check_braph'
+            results = checkRequirements( 'braph' );
         case 'fix_biosig'
             results = fixHandler('biosig');
+        case 'fix_braph'
+            results = fixHandler('braph');
         case 'fix_viewprops'
             results = fixHandler('viewprops');
         case 'fix_cleanrawdata'
@@ -82,6 +84,9 @@ end
         checks.brainstorm = htpDoctor('check_brainstorm');
         % check spectral events toolkit
         checks.spectralevents = htpDoctor('check_spectralevents');
+        % check braph toolkit
+        checks.braph = htpDoctor('check_braph');
+
 
         % eeglab dependencies
         note('Checking eeglab plugins ...')
@@ -93,7 +98,11 @@ end
             checks.firfilt = checkRequirements( 'firfilt' );
         end
         msgHandler(checks);
-        fprintf('\n! htpDoctor found %d issues.\n\n', sum(~struct2array(checks)));
+        total_issues = sum(~struct2array(checks));
+        fprintf('\n! htpDoctor found %d issues.\n\n', total_issues);
+        if total_issues == 0
+            paths = generatePathNames(checks);
+        end
     end
 
 % === CHECK DEPENDENCIES FUNCTIONS
@@ -105,6 +114,8 @@ end
                 results = checkScriptName( 'brainstorm' );
             case 'spectralevents'
                 results = checkScriptName( 'spectralevents' );
+            case 'braph'
+                results =  checkScriptName( 'braph' );
             otherwise
                 results = checkEeglabPlugin(action);
         end
@@ -142,6 +153,8 @@ end
                 results = addMatlabPath( action );
             case 'spectralevents'
                 results = addMatlabPath( action );
+            case 'braph'
+                results = addMatlabPath( action );
             otherwise
                 results = downloadEegLabPlugin( action );
         end
@@ -154,7 +167,7 @@ end
         try_matlab_path = missing;
         while ToolIsAvailable == false
             try
-                if ~ismissing(try_matlab_path), addpath(try_matlab_path); end
+                if ~ismissing(try_matlab_path), addpath(fullfile(try_matlab_path)); end
                 assert(checkRequirements( action ) );
                 ToolIsAvailable = true;
                 successnote( action );
@@ -179,6 +192,7 @@ end
             end
 
         end
+        results = ToolIsAvailable;
 
 
     end
@@ -283,13 +297,48 @@ end
         end
     end
 
+    function paths = generatePathNames( checks )
+    check_fields = fieldnames(checks);
+        for i = 1 : numel(check_fields)
+            current_field = check_fields{i};
+            check_now = checks.(current_field);
+            lookup_field = missing;
+            if check_now
+                switch current_field
+                    case 'biosig'
+                    case 'spectralevents' 
+                        lookup_field = 'spectralevents';
+                    case 'braph'
+                        lookup_field = 'braph';
+
+                    case 'bct'
+                    case 'viewprops'
+                    otherwise
+                        lookup_field = current_field;
+     
+                end
+                if ~ismissing(lookup_field)
+                    paths.([lookup_field '_dir']) = ...
+                        fileparts(which(lookup_field));
+                    successpath(sprintf('%s_dir = %s', lookup_field, paths.([lookup_field '_dir'])));
+                end
+            else
+                failednote(current_field);
+                cmd = fixCommands(current_field);
+                fixnote(cmd);
+            end
+        end
+
+    end
 
 % === UTILITIES ADDIN: 2/2 ================================================
-    function [note, fixnote, failednote, successnote] = htp_utilities()
+    function [note, fixnote, failednote, successnote, successpath] = htp_utilities()
         note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
         fixnote        = @(msg) fprintf('%s: \tFix command: %s\n', mfilename, msg );
         failednote = @(msg) fprintf('%s: [N] FAILED: %s\n', mfilename, upper(msg) );
         successnote = @(msg) fprintf('%s:[Y] SUCCESS: %s\n', mfilename, upper(msg) );
+        successpath = @(msg) fprintf('%s:[Y] Path: %s;\n', mfilename, msg );
+
     end
 
 % === UTILITIES ADDIN: 2/2 ================================================
