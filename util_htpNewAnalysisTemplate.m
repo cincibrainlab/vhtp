@@ -4,6 +4,9 @@ function util_htpNewAnalysisTemplate(varargin)
 %   util_htpNewAnalysisTemplate( PROJECTNAME ) opens the editor and pastes the content of a
 %   user-defined template into the file template_PROJECTNAME.m.
 %
+%   Usage:
+%
+%
 %
 %   References
 %   Based on file 'newTest' from David Legland.
@@ -59,9 +62,7 @@ else
     end
 end
 
-    function out = parse(funName)
-
-
+    function out = parse( values )
         t = fileread('templates\eeg_htpAnalysisTemplate_dynamic.m');
         template = regexp(t, '\r\n|\r|\n', 'split');
 
@@ -86,10 +87,25 @@ end
             datestr(now, 29)
             };
 
-        for k = 1:numel(repstr)
+        for k = 1:numel(repwithstr)
             template = strrep(template, repstr{k}, repwithstr{k});
         end
         out = sprintf('%s\n', template{:});
+    end
+
+    function template_variables = assignVal( variable_name, variable_value )
+
+        switch variable_name
+            case 'filename'
+            case 'creation_date'
+            case 'project_name'
+            case 'author_name'
+            case 'description'
+            case 'eeglab_dir'
+            case 'brainstorm_dir'
+
+        end
+
     end
 end
 
