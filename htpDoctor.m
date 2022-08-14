@@ -154,10 +154,45 @@ end
             case 'spectralevents'
                 results = addMatlabPath( action );
             case 'braph'
-                results = addMatlabPath( action );
+                results = addMatlabPathWithSubfolders( action );
             otherwise
                 results = downloadEegLabPlugin( action );
         end
+
+    end
+
+    function results = addMatlabPathWithSubfolders( action )
+
+         ToolIsAvailable = checkRequirements( action );
+        try_matlab_path = missing;
+        while ToolIsAvailable == false
+            try
+                if ~ismissing(try_matlab_path), 
+                    addpath(genpath(fullfile(try_matlab_path))); 
+                    % addpath(genpath(fullfile(try_matlab_path))); 
+
+                end
+                assert(checkRequirements( action ) );
+                ToolIsAvailable = true;
+                successnote( action );
+                results = ToolIsAvailable;
+            catch
+                if ~ismissing(try_matlab_path), rmpath(try_matlab_path); end
+                try_matlab_path = uigetdir([], ...
+                    sprintf('Choose %s directory or hit Cancel.', action));
+                if try_matlab_path == false
+                    failednote([action ': No directory selected.']);
+                    switch action
+                        otherwise
+                    end
+                    results = ToolIsAvailable;
+                    break;
+                end
+            end
+
+        end
+        results = ToolIsAvailable;
+
 
     end
 
@@ -167,7 +202,11 @@ end
         try_matlab_path = missing;
         while ToolIsAvailable == false
             try
-                if ~ismissing(try_matlab_path), addpath(fullfile(try_matlab_path)); end
+                if ~ismissing(try_matlab_path), 
+                    addpath(fullfile(try_matlab_path)); 
+                    % addpath(genpath(fullfile(try_matlab_path))); 
+
+                end
                 assert(checkRequirements( action ) );
                 ToolIsAvailable = true;
                 successnote( action );
