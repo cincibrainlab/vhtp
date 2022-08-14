@@ -12,7 +12,7 @@ end
 
 if ~ismissing(action)
     isValidAction =  ismember(action, {'fix_eeglab', 'check_eeglab', 'check_brainstorm',... 
-        'check_biosig', 'check_braph', 'fix_braph', 'fix_biosig', 'fix_viewprops', 'fix_cleanrawdata', 'fix_brainstorm', ...
+        'check_biosig', 'check_braph', 'check_bct', 'fix_bct', 'fix_braph', 'fix_biosig', 'fix_viewprops', 'fix_cleanrawdata', 'fix_brainstorm', ...
         'fix_firfilt', 'check_spectralevents', 'fix_spectralevents'});
 else
     action = 'default';
@@ -39,8 +39,12 @@ if isValidAction
             results = checkRequirements( 'biosig' );
         case 'check_braph'
             results = checkRequirements( 'braph' );
+        case 'check_bct'
+            results = checkRequirements( 'bct' );
         case 'fix_biosig'
             results = fixHandler('biosig');
+        case 'fix_bct'
+            results = fixHandler('bct');
         case 'fix_braph'
             results = fixHandler('braph');
         case 'fix_viewprops'
@@ -86,6 +90,8 @@ end
         checks.spectralevents = htpDoctor('check_spectralevents');
         % check braph toolkit
         checks.braph = htpDoctor('check_braph');
+        % check braph toolkit
+        checks.bct = htpDoctor('check_bct');
 
 
         % eeglab dependencies
@@ -116,14 +122,17 @@ end
                 results = checkScriptName( 'spectralevents' );
             case 'braph'
                 results =  checkScriptName( 'braph' );
+            case 'bct'
+                results =  checkScriptName( 'eigenvector_centrality_und.m' );
             otherwise
                 results = checkEeglabPlugin(action);
         end
     end
-    function isScriptValid = checkScriptName( command )
+    function [isScriptValid, pathname] = checkScriptName( command )
             note(sprintf('Locating script %s ...', command));
             if exist(command,'file') == 2
                 isScriptValid = true;
+                 pathname = fileparts(which(command));
             else
                 isScriptValid = false;
             end
@@ -154,6 +163,8 @@ end
             case 'spectralevents'
                 results = addMatlabPath( action );
             case 'braph'
+                results = addMatlabPathWithSubfolders( action );
+            case 'bct'
                 results = addMatlabPathWithSubfolders( action );
             otherwise
                 results = downloadEegLabPlugin( action );
@@ -345,20 +356,20 @@ end
             if check_now
                 switch current_field
                     case 'biosig'
-                    case 'spectralevents' 
-                        lookup_field = 'spectralevents';
-                    case 'braph'
-                        lookup_field = 'braph';
-
+                        lookup_field = 'biosig';
+                        script_name = 'biosig_installer.m';
                     case 'bct'
+                        lookup_field = 'bct';
+                        script_name = 'eigenvector_centrality_und';
                     case 'viewprops'
                     otherwise
                         lookup_field = current_field;
-     
+                        script_name = current_field;
                 end
                 if ~ismissing(lookup_field)
-                    paths.([lookup_field '_dir']) = ...
-                        fileparts(which(lookup_field));
+                  paths.([lookup_field '_dir']) = fileparts(which(script_name));
+                         % checkScriptName( script_name );
+                         
                     successpath(sprintf('%s_dir = %s', lookup_field, paths.([lookup_field '_dir'])));
                 end
             else
