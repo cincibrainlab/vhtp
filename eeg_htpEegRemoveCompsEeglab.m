@@ -11,9 +11,17 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %    'maxcomps'  - Number of maximum components to utilize
 %                  in thresholding and plotting
 %                  default: 24
+%    
 %    'dpreset'   - display size preset ('1080p')
+%                  default: 'dynamic'
+%    
 %    'removeics' - bypass GUI and remove user specified components
 %                  defined as vector of integers.
+%                  default: []
+%
+%    'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
+%                   default: false
+%
 %
 % Outputs:
 %     EEG         - Updated EEGLAB structure

@@ -11,7 +11,7 @@ function [EEG, results] = eeg_htpEegResampleDataEeglab(EEG,varargin)
 %   'srate'         - Number specifying new sampling rate
 %                     default: 500
 %
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %% Output:
 %   EEG [struct] - output structure with updated dataset

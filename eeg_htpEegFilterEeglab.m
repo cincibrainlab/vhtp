@@ -9,7 +9,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %
 %% Function Specific Inputs:
 %   'method'  - Text representing method utilized for Filtering
-%               default: 'Highpass'
+%               default: 'highpass' e.g. {'highpass', 'lowpass', 'notch', 'cleanline'}
 %
 %   'lowpassfilt' - Number representing the higher edge frequency to use in 
 %                   lowpass bandpass filter 
@@ -25,34 +25,35 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %
 %
 %   'revfilt' - Numeric boolean to invert filter from bandpass to notch
-%               {0 -> bandpass, 1 -> notch}
-%               default: 0    
+%               default: 0 e.g. {0 -> bandpass, 1 -> notch}
 %
-%   'plotfreqz' - Numeric boolean to indicate whether to plot filter's frequency and
-%                 phase response
+%   'plotfreqz' - Numeric boolean to indicate whether to plot filter's frequency and phase response
 %                 default: 0
 %
-%   'filtOrder' - numeric override of default EEG filters
 %
 %   'minphase' - Boolean for minimum-phase converted causal filter
 %                default: false
 %
-%   'cleanlinebandwidth' - Number for width of spectral peak  for fixed
-%                          frequency
+%   'filtorder' - numeric override of default EEG filters
+%                 default: missing
+%
+%   'dynamicfiltorder' - numeric boolean indicating whether to use dynamic filtorder determined via EEGLAB filtering function
+%                        default: 0
+%   
+%
+%   'cleanlinebandwidth' - Number for width of spectral peak  for fixed frequency
 %                          default: 2
 %
 %   'cleanlinechanlist' - Array of numbers for indices of channels to clean
 %                         default: [1:EEG.nbchan]
 %
-%   'cleanlinecomputepower' - Numeric boolean for visualization of the original and
-%                             cleaned spectra
+%   'cleanlinecomputepower' - Numeric boolean for visualization of the original and cleaned spectra
 %                             default: 0
 %
 %   'cleanlinelinefreqs' - Array of numbers for line frequencies to remove
 %                          default: [60 120 180 240 300]
 %
-%   'cleanlinenormspectrum' - Numeric boolean to normalize log spectrum via
-%                             detrending
+%   'cleanlinenormspectrum' - Numeric boolean to normalize log spectrum via detrending
 %                             default: 0
 %
 %   'cleanlinep' - Number for p-value used for detection of sinusoid
@@ -83,7 +84,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                        window
 %                        default: 4
 %
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
 %% Outputs:
@@ -137,6 +138,7 @@ addParameter(ip, 'notchfilt',defaultNotch,@isnumeric);
 addParameter(ip, 'revfilt',defaultRevFilt,validateRevFilt);
 addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
 addParameter(ip, 'minphase',defaultMinPhase,@islogical);
+addParameter(ip, 'filtorder',defaultFiltOrder,@isnumeric);
 addParameter(ip, 'dynamicfiltorder', defaultDynamicFiltOrder,@islogical);
 addParameter(ip, 'cleanlinebandwidth',defaultCleanlineBandwidth,@isnumeric);
 addParameter(ip, 'cleanlinechanlist',defaultCleanlineChanList,@isnumeric);
@@ -163,10 +165,10 @@ try
     switch ip.Results.method
         case 'highpass'
             if ~(ip.Results.dynamicfiltorder)
-                if ismissing(ip.Results.filtOrder)
+                if ismissing(ip.Results.filtorder)
                     highpassfiltorder = 6600;
                 else
-                    highpassfiltorder = ip.Results.filtOrder;
+                    highpassfiltorder = ip.Results.filtorder;
                 end
                 EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);
                 EEG.vhtp.eeg_htpEegFilterEeglab.highpassfiltorder    = highpassfiltorder;
@@ -182,10 +184,10 @@ try
             
         case 'lowpass'
             if ~(ip.Results.dynamicfiltorder)
-                if ismissing(ip.Results.filtOrder)
+                if ismissing(ip.Results.filtorder)
                     lowpassfiltorder = 3300;
                 else
-                    lowpassfiltorder = ip.Results.filtOrder;
+                    lowpassfiltorder = ip.Results.filtorder;
                 end
                 EEG = pop_eegfiltnew(EEG,  ...
                     'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',lowpassfiltorder);
@@ -203,7 +205,11 @@ try
             
         case 'notch'
             if ~(ip.Results.dynamicfiltorder)
-                notchfiltorder = 3300;
+                if ismissing(ip.Results.filtorder)
+                    notchfiltorder = 3300;
+                else
+                    notchfiltorder = ip.Results.filtorder;
+                end
                 linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
                 harmonics = floor((EEG.srate/2) / linenoise);
                 if EEG.srate < 2000

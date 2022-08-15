@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
-%% eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
+%% eeg_htpEegRemoveEpochsEeglab - Perform manual epoch rejection
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegRemoveEpochsEeglab( EEG, varargin) )
@@ -8,7 +8,7 @@ function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
 %     EEG [struct]          - EEGLAB Structure
 %    
 %% Function Specific Inputs
-%    'saveoutput' - Boolean representing if output should be saved
+%    'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                   default: false
 %
 %% Outputs:
