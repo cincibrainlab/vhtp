@@ -145,6 +145,7 @@ end
 
 else
     % Analysis loop
+    stepnumbers = ip.Results.stepnumbers;
     for i=1:height(filelist)
         EEG = pop_loadset('filename',fullfile(filelist.filepath(i),filelist.filename(i)));
 
@@ -153,7 +154,7 @@ else
         for si =1:length(stepnumbers)
 
             sel_step_index = stepnumbers(si);
-            processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+            processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir, stepnumbers);
 
             EEG = runAnalysisStep(EEG, ...
                 options.(all_steps{sel_step_index}), ...
@@ -162,8 +163,6 @@ else
                 dryrun, ...
                 newoutputdir, ...
                 stepnumbers(sel_step_index));
-
-
         end
 
     end
