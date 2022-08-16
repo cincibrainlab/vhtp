@@ -60,7 +60,7 @@ classdef htpAnalysisClass < handle
                     if selected_key == 'function'
 
                         fx_name = func2str( vals{j} );
-                        cmd{count} = sprintf('\t/* Function: %s */\n\tEEG = %s(EEG, ', fx_name, fx_name);
+                        cmd{count} = sprintf('\t%s Function: %s\n\tEEG = %s(EEG, ', '%%', fx_name, fx_name);
                         count = count + 1;
                     else
                         selected_key = keys{j};
@@ -210,6 +210,7 @@ classdef htpAnalysisClass < handle
             res = o.proj_status.all_dependencies_present;
         end
         function res = getLastDirectory( o )
+            isempty(app.ha.proj_status.data_dir)
             if o.proj_status.last_directory == 0
                 o.proj_status.last_directory = pwd;
                 res = pwd;
@@ -318,7 +319,7 @@ classdef htpAnalysisClass < handle
             t = fileread('templates\eeg_htpAnalysisTemplate_dynamic.m');
             template = regexp(t, '\r\n|\r|\n', 'split');
 
-            commands = app.createFxString( o.proj_status.current_parameter_PARAMS );
+            commands = o.createFxString( o.proj_status.current_parameter_PARAMS );
 
             % create single struct
             v = o.proj_status;
@@ -329,6 +330,23 @@ classdef htpAnalysisClass < handle
             if isempty(v.project_name), v.project_name = 'TBD'; end
             if isempty(v.author_name), v.author_name = 'TBD'; end
             if isempty(v.description), v.description = 'TBD'; end
+
+            if o.proj_status.useMaxEpochs
+                startchar = '%%- Use Max Trials -'; 
+                linechar = '%%';
+                endchar = '%%}';
+            else
+                startchar = '';
+                linechar = '';
+                endchar = '';
+            end
+            select_trials = sprintf('%s\t\n%s\tif EEG.trials >= %d\n%s\t\tEEG = pop_select(EEG, ''trial'', 1:%d);\n%s\tend\n\t\n', ...
+                startchar,...
+                linechar, ...
+                o.proj_status.minTrials, ...
+                linechar, ...
+                o.proj_status.minTrials, ...
+                linechar);
 
             repstr = {...
                 '$filename'
@@ -345,7 +363,7 @@ classdef htpAnalysisClass < handle
                 '$set_dir'
                 '$temp_dir'
                 '$results_dir'
-                '$trial_number'
+                '$select_trials'
                 '$loopcode'};
 
             repwithstr = {...
@@ -363,7 +381,7 @@ classdef htpAnalysisClass < handle
                 v.data_dir
                 v.temp_dir
                 v.results_dir
-                v.trial_number
+                select_trials
                 commands
                 };
 
