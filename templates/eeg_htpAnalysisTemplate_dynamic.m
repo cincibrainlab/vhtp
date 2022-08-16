@@ -97,37 +97,11 @@ for i = 1 : number_of_input_files
 
     EEG.data = double(EEG.data);
 
-    if EEG.trials >= 40
-        EEG = pop_select(EEG, 'trial', 1:40);
+    if EEG.trials >= $trial_number
+        EEG = pop_select(EEG, 'trial', 1:$trial_number);
     end
     
-    % remove more artifacts without ICA
-     
-    % EEG = eeg_htpEegEpoch2Cont(EEG);
-
-    %EEG = clean_artifacts( EEG, 'BurstCriterion', 20, 'useGpu',1);
-
-    % Use wavelet cleaning
-    EEG = eeg_htpEegWaveletDenoiseHappe( EEG, 'isErp', false);
-
-    % Calculate power spreadsheets
-    sEEG = eeg_htpCalcSource( EEG, 'outputdir', results_dir);
-
-
-    % calculate graph and connectivity measures
-
-    %eegplot(EEG.data, 'data2', EEG2.data, 'srate', EEG.srate)
-
-    % = begin function chain, i.e. EEG in and EEG out ====================
-   % [~, results{i}] = eeg_htpCalcRestPower( sEEG,'useParquet', true, 'gpuOn', true, 'outputdir', results_dir );
-
-    rsns = readtable(fullfile(vhtp_dir,"chanfiles/DK_atlas-68_dict.csv"));
-    dmn_index = categorical(rsns.RSN) == 'DMN';
-    dmn_chanselect = rsns.labelclean((dmn_index));
-    dmnEEG = pop_select(sEEG, 'channel', dmn_chanselect);
-
-    [~, results_conn{i}] = eeg_htpGraphPhaseBcm( dmnEEG, 'useParquet', true, 'gpuOn', true, 'outputdir', results_dir );
-
+$loopcode
 
     % update progress bar
     progress_bar('update',waitf, i, number_of_input_files)
