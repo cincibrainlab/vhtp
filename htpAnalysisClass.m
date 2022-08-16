@@ -4,7 +4,6 @@ classdef htpAnalysisClass < handle
     properties
         util;           % helper function
         checks;         % check dependencies
-        proj_info;
         input_filelist; % master filelist for setfiles
         proj_status;    % status only
         datasets;
@@ -40,6 +39,65 @@ classdef htpAnalysisClass < handle
                 case 'update'
                     waitbar( current/total, f, sprintf('Progress: %1.0f of %1.0f', current, total ));
             end
+        end
+
+        function command_str = createFxString( param_struct )
+
+            fx_names = fieldnames(param_struct); % function names
+            fx_no    = numel(fx_names);
+
+            count = 1;
+
+            for i = 1 : fx_no
+                fx_parameters = param_struct.( fx_names{i} );
+                keys = fieldnames( fx_parameters );
+                vals = struct2cell( fx_parameters );
+
+                for j = 1 : numel(keys)
+
+                    selected_key   = categorical(keys(j));
+
+                    if selected_key == 'function'
+
+                        fx_name = func2str( vals{j} );
+                        cmd{count} = sprintf('\t/* Function: %s */\n\tEEG = %s(EEG, ', fx_name, fx_name);
+                        count = count + 1;
+                    else
+                        selected_key = keys{j};
+                        selected_value = vals{j};
+                        value_type = class(selected_value);
+                        %
+                        %
+                        %
+                        %             fx_string = sprintf('%s %s %s', fx_string, selected_key, selected_value);
+                        cmd{count} = sprintf( '''%s'', ', selected_key );
+                        count = count + 1;
+                        if j == numel(keys)
+                            endchar = ');\n\n';
+                        else
+                            endchar =', ';
+                        end
+
+                        switch value_type
+                            case 'double'
+                                cmd{count} = sprintf( '%d%s', selected_value, endchar );
+                            case 'logical'
+                                cmd{count} = sprintf( '%d%s', selected_value, endchar );
+                            case 'character'
+                                cmd{count} = sprintf( '%s%s', selected_value, endchar );
+                            case 'string'
+                                cmd{count} = sprintf( '%s%s', selected_value, endchar );
+                        end
+                        count = count + 1;
+                        % addstring = sprintf('%s%s',addstring,)
+                    end
+                end
+                % fprintf('\n');
+            end
+
+            command_str = sprintf([cmd{:}]);
+
+
         end
 
     end
@@ -79,45 +137,19 @@ classdef htpAnalysisClass < handle
             end
 
             progress_bar = @o.progress_bar;
-            
+
             useSubDir = ~o.proj_status.ignore_subdirectories;
 
             util_htpParadigmRun(...
-                o.proj_info.data_dir, ...
+                o.proj_status.data_dir, ...
                 o.proj_status.current_parameter_PARAMS, ...
                 o.proj_status.processingType, ...
                 'dryrun', false, ...
                 'subdirOn', useSubDir, ...
-                'outputdir', o.proj_info.results_dir, ...
+                'outputdir', o.proj_status.results_dir, ...
                 'stepnumbers', stepnumbers, ...
                 'analysisMode', true);
-            
-            
-%             %% RUN ANALYSIS LOOPS -----------------------------------------------------|
-%             number_of_input_files = height( filelist );
-% 
-%             % Main analysis loop
-%             waitf = progress_bar('create');
-%             for i = 1 : number_of_input_files
-% 
-%                 % active SET file
-%                 current_set = filelist.filename{i};
-%                 current_subfolder = filelist.filepath{i};
-% 
-%                 % load EEG (EEGLAB)
-%                 EEG = pop_loadset('filename', current_set, ...
-%                     'filepath', current_subfolder);
-% 
-%                 % = begin function chain, i.e. EEG in and EEG out ====================
-%                 [EEG, results{i}] = eeg_htpCalcRestPower( EEG,...
-%                     'useParquet', true, ...
-%                     'gpuOn', true, 'outputdir', results_dir );
-% 
-%                 % update progress bar
-%                 progress_bar('update',waitf, i, number_of_input_files)
-% 
-%             end
-%             close(waitf); % waitbar
+
         end
 
         function load_helper_functions( o )
@@ -135,35 +167,35 @@ classdef htpAnalysisClass < handle
         function isValid = check_dependencies( o )
             % htpDoctor based dependency checker
             % returns 0 if any dependency is broken
-            o.checks = htpDoctor;
+            [o.checks, o.proj_status.toolbox_paths] = htpDoctor;
             isValid = all(struct2array(o.checks));
             if isValid
                 o.mark_dependencies_present;
             else
                 o.mark_dependencies_missing;
             end
-            
+
         end
         function setup_project_info( o )
-            o.proj_info.project_name = [];
-            o.proj_info.author_name = [];
-            o.proj_info.description = [];
-    
+            o.proj_status = struct();
+            o.proj_status.project_name = [];
+            o.proj_status.author_name = [];
+            o.proj_status.description = [];
+
             % toolbox paths
-            o.proj_info.eeglab_dir = [];
-            o.proj_info.brainstorm_dir = [];
+            o.proj_status.eeglab_dir = [];
+            o.proj_status.brainstorm_dir = [];
 
             [vhtpdir, ~, ~] = fileparts(which(mfilename));
             o.util.note(sprintf('vHtp Directory at %s...', vhtpdir))
-            o.proj_info.vhtp_dir = vhtpdir;
+            o.proj_status.vhtp_dir = vhtpdir;
 
             % datapaths
-            o.proj_info.data_dir = [];
-            o.proj_info.temp_dir = [];
-            o.proj_info.results_dir = [];
+            o.proj_status.data_dir = [];
+            o.proj_status.temp_dir = [];
+            o.proj_status.results_dir = [];
         end
         function o = setup_project_status( o )
-            o.proj_status = struct();
             o.proj_status.all_dependencies_present = false;
             o.proj_status.ignore_subdirectories = false;
             o.proj_status.last_directory = pwd;
@@ -192,13 +224,13 @@ classdef htpAnalysisClass < handle
         end
         function o = set_directory_name( o, dir_code, dir_target )
             o.util.note('Setting %s directory to %s', dir_code, dir_target);
-            o.proj_info.(dir_code) = dir_target;
+            o.proj_status.(dir_code) = dir_target;
         end
         function o = scan_set_directory( o, useSubDirectories )
             if nargin < 2
                 useSubDirectories = true;
             end
-            if ~isempty(o.proj_info.set_dir)
+            if ~isempty(o.proj_status.set_dir)
                 o.input_filelist = util_htpDirListing(set_dir, 'ext', '.set', 'subdirOn', useSubDirectories );
                 if isempty(o.input_filelist), error('No files found'), else
                     note(sprintf('Scanning %s\n\t%d Files loaded.\n\tTemp Dir: %s\n\tResults Dir: %s', ...
@@ -234,8 +266,8 @@ classdef htpAnalysisClass < handle
             o.input_filelist = results;
         end
         function res = getCurrentFileByRowNumber( o, row )
-               res = o.input_filelist( row, : );
-               o.proj_status.active_file = res;
+            res = o.input_filelist( row, : );
+            o.proj_status.active_file = res;
         end
         function res = loadActiveEegSelection( o )
             filerow = o.proj_status.active_file;
@@ -256,7 +288,7 @@ classdef htpAnalysisClass < handle
             winopen(o.datasets.active_EEG.filepath);
         end
         function openResultsFolder( o )
-            winopen(o.proj_info.results_dir);
+            winopen(o.proj_status.results_dir);
         end
         function singleEegHandler( o, action )
             switch action
@@ -272,15 +304,80 @@ classdef htpAnalysisClass < handle
 
         end
         function list = listAnalysisParameterFiles(o)
-            filelist = util_htpDirListing(fullfile( o.proj_info.vhtp_dir, 'analysis_templates/'), 'ext', '.m', 'keyword', 'parameters');
+            filelist = util_htpDirListing(fullfile( o.proj_status.vhtp_dir, 'analysis_templates/'), 'ext', '.m', 'keyword', 'parameters');
             list = string(regexp(filelist{:,2},'(?<=parameters_)\w*','match'));
         end
         function extractCurrentParameterFile( o, selection )
-               o.proj_status.current_parameter_code = selection;
-               o.proj_status.current_parameter_file = strcat("parameters_",selection);
-               o.proj_status.current_parameter_func =  str2func(strcat("parameters_",selection));              
+            o.proj_status.current_parameter_code = selection;
+            o.proj_status.current_parameter_file = strcat("parameters_",selection);
+            o.proj_status.current_parameter_func =  str2func(strcat("parameters_",selection));
 
-               o.parameterHandler('loadParameterFile');
+            o.parameterHandler('loadParameterFile');
+        end
+        function res = createManualTemplate( o )
+            t = fileread('templates\eeg_htpAnalysisTemplate_dynamic.m');
+            template = regexp(t, '\r\n|\r|\n', 'split');
+
+            commands = app.createFxString( o.proj_status.current_parameter_PARAMS );
+
+            % create single struct
+            v = o.proj_status;
+            for fn = fieldnames(o.proj_status.toolbox_paths)'
+                v.(fn{1}) = o.proj_status.toolbox_paths.(fn{1});
+            end
+            % fill in black values
+            if isempty(v.project_name), v.project_name = 'TBD'; end
+            if isempty(v.author_name), v.author_name = 'TBD'; end
+            if isempty(v.description), v.description = 'TBD'; end
+
+            repstr = {...
+                '$filename'
+                '$creation_date'
+                '$project_name'
+                '$author_name'
+                '$description'
+                '$eeglab_dir'
+                '$brainstorm_dir'
+                '$vhtp_dir'
+                '$se_dir'
+                '$braph_dir'
+                '$bct_dir'
+                '$set_dir'
+                '$temp_dir'
+                '$results_dir'
+                '$trial_number'
+                '$loopcode'};
+
+            repwithstr = {...
+                upper( v.project_name )
+                datestr(now, 29)
+                v.project_name
+                v.author_name
+                v.description
+                v.eeglab_dir
+                v.brainstorm_dir
+                v.vhtp_dir
+                v.spectralevents_dir
+                v.braph_dir
+                v.bct_dir
+                v.data_dir
+                v.temp_dir
+                v.results_dir
+                v.trial_number
+                commands
+                };
+
+            for k = 1:numel(repwithstr)
+                template = strrep(template, repstr{k}, repwithstr{k});
+            end
+            out = sprintf('%s\n', template{:});
+
+            % Write data to text file
+            savefile = fullfile(v.results_dir,  strcat("htpAnalysis_", v.current_parameter_code,"_" ,datestr(now, 30), ".m"));
+            writematrix(out, savefile, 'FileType', 'text');
+
+
+
         end
         function res = parameterHandler( o, action )
             switch action
@@ -301,28 +398,10 @@ classdef htpAnalysisClass < handle
                     end
             end
 
-%             % get current parameter code
-%             code = o.proj_status.current_parameter_code;
-% 
-%                     if ~isempty( code )
-%                         % load parameters function and get preprocessing steps
-%                         try
-%                             app.PARAMS=current_parameter_func();
-%                             app.actionHandler('loadCurrentParametersSteps');
-%                             app.actionHandler('listIndividualSteps');
-%                             app.actionHandler('updateStepDetails');
-%                             app.allowIndividualSteps;
-%                         catch
-%                             error('Error loading %s (parameters) file.', app.currentParametersFile);
-%                         end
-%                         allowProcessStyle(app);
-%                         app.PROCESS='All';
-%                         denyContinuationSteps(app);
-%                         %denyIndividualSteps(app);
-%                     else
-%                         denyAll(app);
-%                     end
-
         end
+
+
+
+
     end
 end
