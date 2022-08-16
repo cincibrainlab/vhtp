@@ -17,11 +17,10 @@ classdef htpReporterClass < handle
         function display_instructions
             fprintf('Directions:\n\n');
             fprintf('\thtpReporter = htpReporterClass();\tcreate new htpReporter Object.\n');
-            fprintf('\thtpReporter(''start'');\tstart new logging session.\n');
+            fprintf('\thtpReporter.entryPoint(''start'');\tstart new logging session.\n');
             fprintf('\thtpReporter(''stop'');\tstop logging session.\n');
             fprintf('\thtpReporter(''reset'');\treset logging session.\n');
             fprintf('\thtpReporter(''add'', ''function'', [vHTP function name], ''EEG'', [EEG SET(s)]);\tadd log for function and results.\n');
-
             fprintf('\n');
             fprintf('Parameters:\n');
             fprintf('\t''name''\tset custom session name (default: autonumber)\n');
@@ -32,7 +31,7 @@ classdef htpReporterClass < handle
     end
 
     methods
-        function o = htpReporterClass( action, varargin ) % Constructor
+        function o = htpReporterClass( ) % Constructor
             % hard code version
             o.session_info.version = 0.5;
             o.load_helper_functions;
@@ -41,6 +40,10 @@ classdef htpReporterClass < handle
             %            o.check_dependencies;
 
             o.display_header;
+            o.display_instructions;
+
+        end
+        function o = entryPoint( o, action, varargin )
             if nargin < 1, action = missing;
                 o.display_instructions;
             end
@@ -145,7 +148,7 @@ classdef htpReporterClass < handle
                     % try to open file
                     try
                        fid = fopen( o.session_info.session_file, 'wt' );
-                       o.util.note(sprintf('Session file %s open.', ...
+                       o.util.note(sprintf('Session file %s.', ...
                            o.session_info.session_file));
                        o.session_info.fileID = fid;
                         if  fid ~= -1
@@ -156,7 +159,8 @@ classdef htpReporterClass < handle
                             % insert general vhtp citation
                             fprintf(fid, 'Citation:\n%s', o.snipitHandler('vhtp_citation'));
                             fclose(fid);
-                            
+                             o.session_info.fileID = [];
+
                             % create hyperlink link to file
                             disp(['<a href="file://'  o.session_info.session_file '">Link to File</a>'])
                         else
