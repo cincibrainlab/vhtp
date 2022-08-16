@@ -38,6 +38,8 @@ PARAMS.segment_removal.function = @eeg_htpEegRemoveSegmentsEeglab;
 PARAMS.epoch_creation.function = @eeg_htpEegCreateEpochsEeglab;
 PARAMS.epoch_creation.epochlength = 2;
 PARAMS.epoch_creation.epochlimits=[-1 1];
+PARAMS.epoch_creation.saveoutput = true;
+
 
 %%EPOCH REMOVAL
 PARAMS.epoch_removal.function = @eeg_htpEegRemoveEpochsEeglab;
