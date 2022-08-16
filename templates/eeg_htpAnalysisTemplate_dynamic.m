@@ -96,13 +96,8 @@ for i = 1 : number_of_input_files
         'filepath', current_subfolder);
 
     EEG.data = double(EEG.data);
-
-    if EEG.trials >= $trial_number
-        EEG = pop_select(EEG, 'trial', 1:$trial_number);
-    end
-    
+$select_trials
 $loopcode
-
     % update progress bar
     progress_bar('update',waitf, i, number_of_input_files)
 
