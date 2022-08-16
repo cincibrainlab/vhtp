@@ -4,7 +4,7 @@ function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegCreateEpochsEeglab( EEG, varargin )
 %
-%% Require Inputs:
+%% Required Inputs:
 %     EEG [struct]          - EEGLAB Structure
 %
 %% Function Specific Inputs:
@@ -14,7 +14,7 @@ function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 %   'epochlimits' - array of two integers representing latencies interval in seconds relative to the time-locking events 
 %               default: [0 epochlength]
 %
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step while using VHTP preprocessing tool
 %                  default: false
 %           
 %% Outputs:

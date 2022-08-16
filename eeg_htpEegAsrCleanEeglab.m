@@ -48,6 +48,9 @@ function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
 %   'asrwindow' - Number indicating the max fraction of dirty channels accepted in output for each window. 
 %                 default: 0.25
 %
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
+%                  default: false
+%
 %           
 % Outputs:
 %     EEG         - Updated EEGLAB structure

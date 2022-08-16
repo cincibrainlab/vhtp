@@ -12,12 +12,14 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 %               default: 'binica' e.g. {'binica', cudaica', 'runica'}
 %
 %   'rank' - Number representing the data rank of input data
-%            default: getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2)))))
+%            default: getrank(double(EEG.data))
+%
+%            getrank is local function to obtain effective rank of data.
 %
 %   'icadir' - Directory to store weight-related output files generated during ICA
 %              default: fullfile(pwd,'icaweights')
 %
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %               
 %
@@ -30,11 +32,11 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 %  This file is part of the Cincinnati Visual High Throughput Pipeline
 %  
 %  Please see http://github.com/cincibrainlab
-%
+% 
 %% Contact:
 %   kyle.cullion@cchmc.org
 
-if isfield(EEG.vhtp,'eeg_htpEegInterpolateChansEeglab') && isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'dataRank'); defaultRank = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank; else; defaultRank = getrank(double(EEG.data(:,min(3000,1:size(EEG.data,2))))); end;
+if isfield(EEG.vhtp,'eeg_htpEegInterpolateChansEeglab') && isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'dataRank'); defaultRank = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank; else; defaultRank = getrank(double(EEG.data)); end;
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');
 defaultSaveOutput = false;

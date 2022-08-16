@@ -8,7 +8,7 @@ function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 %   EEG [struct]           - EEGLAB Structure
 %
 %% Function Specific Inputs:
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %% Output:
 %   EEG [struct] - output structure with updated dataset
@@ -16,6 +16,7 @@ function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 %   results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %% Disclaimer:
 %   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   
 %   Please see http://github.com/cincibrainlab
 %
 %% Contact:

@@ -11,7 +11,7 @@ function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
 %   'method'  - Text representing method utilized for interpolation of channels
 %               default: 'spherical' e.g. {'invdist'/'v4', 'spherical', 'spacetime'}
 %
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
 %% Outputs:

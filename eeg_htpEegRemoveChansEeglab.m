@@ -10,9 +10,11 @@ function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 %% Function Specific Inputs:
 %   'type'  - Text for type of data to work with for use in trimming edge effects
 %             default: 'Resting' e.g. {'Resting, Event'}
+%             
+%             Resting removes first and last 10 seconds from file, Event does not perform removal
 %
 %   'minimumduration' - Number to indicate a minimum duration of data required for removal of channels and interpolation
-%                       default: 100
+%                       default: 100 secs
 %
 %   'threshold' - Number to utilize for threshold in automated detection/marking of bad channels via various measures (probability, kurtosis,and spectrum)
 %                 default: 5
@@ -23,7 +25,7 @@ function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 %   'automark'      - turns on and off automatic detection 
 %                      default: false
 %
-%   'saveoutput' - Boolean representing if output should be saved
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
 %% Outputs:

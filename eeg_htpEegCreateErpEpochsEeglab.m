@@ -1,39 +1,39 @@
 function [EEG, results] = eeg_htpEegCreateErpEpochsEeglab(EEG, varargin)
 % eeg_htpEegCreateErpEpochsEeglab - Perform epoch creation for ERP datasets
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegCreateErpEpochsEeglab( EEG, epochevent, varargin )
+%% Syntax:
+%    [ EEG, results ] = eeg_htpEegCreateErpEpochsEeglab( EEG, epochevent, varargin )
 %
-% Require Inputs:
-%     EEG           - EEGLAB Structure
+%% Required Inputs:
+%     EEG [struct]           - EEGLAB Structure
 %
-%     epochevent    - string indicating event to time-lock
-%                     epochs to when converting continuous dataset to epoched dataset.
+%     epochevent    - string indicating event to time-lock epochs to when converting continuous dataset to epoched dataset.
 %
-% Function Specific Inputs:
-%
-%   'epochlimits' - array of two integers representing interval in s 
-%                   relative to the time-locking event 
+%% Function Specific Inputs:
+%   'epochlimits' - array of two integers representing interval in secs relative to the time-locking event 
 %                   default: [-.500 2.750]
 %
 %   'rmbaseline' - Boolean indicating if baseline should be removed
 %                  default: 0
 %
-%   'baselinelimits' - Array of numbers indicating limits in s to use for
-%                      baseline removal process.
+%   'baselinelimits' - Array of numbers indicating limits in secs to use for baseline removal process.
 %                      default: [-500 0]
 %
-%           
-% Outputs:
-%     EEG         - Updated EEGLAB structure
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
+%                  default: false
+%      
+%% Output:
+%     EEG [struct]        - Updated EEGLAB structure
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%     results [struct]   - Updated function-specific structure containing qi table and input parameters used
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%% Disclaimer:
+%   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   
+%   Please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Contact:
+%   kyle.cullion@cchmc.org
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
