@@ -8,7 +8,6 @@ classdef htpAnalysisClass < handle
         proj_status;    % status only
         datasets;
     end
-
     methods (Static)
         %% HELPER FUNCTIONS =======================================================
         %  Support code only
@@ -112,7 +111,6 @@ classdef htpAnalysisClass < handle
             o.util.note('Loading helper functions...');
         end
     end
-
     methods % common functions
         function o = assignProcessingSteps( o, selectedSteps )
             o.proj_status.selectedSteps = selectedSteps;
@@ -151,7 +149,6 @@ classdef htpAnalysisClass < handle
                 'analysisMode', true);
 
         end
-
         function load_helper_functions( o )
             % quick anonymous functions
             o.util = struct;
@@ -240,7 +237,6 @@ classdef htpAnalysisClass < handle
                 end
             end
         end
-        % handling subfolders for file list
         function set_ignore_subdirectory_state( o, state )
             o.proj_status.ignore_subdirectories = state;
             o.util.note(sprintf('ignore subfolder state %s', mat2str(state)));
@@ -312,7 +308,6 @@ classdef htpAnalysisClass < handle
             o.proj_status.current_parameter_code = selection;
             o.proj_status.current_parameter_file = strcat("parameters_",selection);
             o.proj_status.current_parameter_func =  str2func(strcat("parameters_",selection));
-
             o.parameterHandler('loadParameterFile');
         end
         function res = createManualTemplate( o )
@@ -332,9 +327,9 @@ classdef htpAnalysisClass < handle
             if isempty(v.description), v.description = 'TBD'; end
 
             if o.proj_status.useMaxEpochs
-                startchar = '%%- Use Max Trials -'; 
-                linechar = '%%';
-                endchar = '%%}';
+                startchar = '%- Use Max Trials -'; 
+                linechar = '%';
+                endchar = '%}';
             else
                 startchar = '';
                 linechar = '';
@@ -392,10 +387,9 @@ classdef htpAnalysisClass < handle
 
             % Write data to text file
             savefile = fullfile(v.results_dir,  strcat("htpAnalysis_", v.current_parameter_code,"_" ,datestr(now, 30), ".m"));
-            writematrix(out, savefile, 'FileType', 'text');
-
-
-
+            writematrix(out, savefile, 'FileType', 'text', 'QuoteStrings','none');
+            fprintf('Analysis template saved to %s', savefile);
+            open(savefile);
         end
         function res = parameterHandler( o, action )
             switch action
@@ -417,9 +411,18 @@ classdef htpAnalysisClass < handle
             end
 
         end
+        function prepareEegForSave( o, EEG, step_name, outputdir )
+            EEG.filename = [regexprep(EEG.subject,'.set','') '_' step_name '.set'];
+            EEG.filepath = outputdir;
 
+            o.datasets.last_EEG;
+ 
+        end
+        function saveEeg( o )
 
+            EEG = o.datasets.last_EEG;
+            pop_saveset(EEG,'filename', EEG.filename, 'filepath', EEG.filepath );
 
-
+        end
     end
 end
