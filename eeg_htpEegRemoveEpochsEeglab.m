@@ -25,11 +25,19 @@ function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
 %  kyle.cullion@cchmc.org
 
 % MATLAB built-in input validation
+defaultThresholdRejection = false;
+defaultThreshold = 50;
+defaultEvents = {};
+defaultLimits = [EEG.xmin EEG.xmax];
 defaultSaveOutput = false;
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
+addParameter(ip, 'limits',defaultLimits,@isnumeric);
+addParameter(ip,'thresholdrejection',defaultThresholdRejection,@islogical);
+addParameter(ip, 'threshold',defaultThreshold,@isnumeric);
+addParameter(ip,'events', defaultEvents,@iscell);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
 
 parse(ip,EEG,varargin{:});
@@ -40,6 +48,19 @@ functionstamp = mfilename; % function name for logging/output
 try 
     global rej;
 
+    if ip.Results.thresholdrejection
+        if isempty(ip.Results.events(:))
+            EEG = pop_epoch(EEG,{},ip.Results.limits,'valuelim',[-ip.Results.threshold ip.Results.threshold],'epochinfo','yes');
+        else
+            EEG = pop_epoch(EEG,ip.Results.events,ip.Results.limits, 'valuelim',[-ip.Results.threshold ip.Results.threshold],'epochinfo','yes');
+        end
+        EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.thresholdrejection = true;
+        if isfield(EEG.vhtp.eeg_htpEegRemoveEpochsEeglab,'threshold')
+            EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.threshold = unique([EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.threshold, ip.Results.threshold],'stable');
+        else
+            EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.threshold = ip.Results.threshold;
+        end
+    end
 
     gui.position = [0.07 0.35 0.4 0.55];
 
@@ -112,4 +133,3 @@ else
 end
 results = EEG.vhtp.eeg_htpEegRemoveEpochsEeglab;
 end
-

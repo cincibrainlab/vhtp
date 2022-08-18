@@ -15,7 +15,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                   lowpass bandpass filter 
 %                   default: 80
 %
-%   'hipassfilt' - Number representing the lower edge frequency to use in 
+%   'highpassfilt' - Number representing the lower edge frequency to use in 
 %                  highpass bandpass filter 
 %                  default: .5
 %
@@ -51,7 +51,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                             default: 0
 %
 %   'cleanlinelinefreqs' - Array of numbers for line frequencies to remove
-%                          default: [60 120 180 240 300]
+%                          default: [60 120 180]
 %
 %   'cleanlinenormspectrum' - Numeric boolean to normalize log spectrum via detrending
 %                             default: 0
@@ -112,7 +112,7 @@ defaultDynamicFiltOrder = 0;
 defaultCleanlineBandwidth = 2;
 defaultCleanlineChanList = [1:EEG.nbchan];
 defaultCleanlineComputePower = 0;
-defaultCleanlineLineFreqs = [60 120 180 240 300];
+defaultCleanlineLineFreqs = [60 120 180];
 defaultCleanlineNormSpectrum=0;
 defaultCleanlineP=0.01;
 defaultCleanlinePad = 2;
@@ -133,7 +133,7 @@ ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method', defaultMethod, validateMethod);
 addParameter(ip, 'lowpassfilt',defaultHiCutoff,@isnumeric);
-addParameter(ip, 'hipassfilt',defaultLoCutoff,@isnumeric);
+addParameter(ip, 'highpassfilt',defaultLoCutoff,@isnumeric);
 addParameter(ip, 'notchfilt',defaultNotch,@isnumeric);
 addParameter(ip, 'revfilt',defaultRevFilt,validateRevFilt);
 addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
@@ -170,14 +170,14 @@ try
                 else
                     highpassfiltorder = ip.Results.filtorder;
                 end
-                EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);
+                EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.highpassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);
                 EEG.vhtp.eeg_htpEegFilterEeglab.highpassfiltorder    = highpassfiltorder;
             else
                 EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', []);
                 EEG.vhtp.eeg_htpEegFilterEeglab.highpassfiltorder    = 'dynamic';
             end
             EEG.vhtp.eeg_htpEegFilterEeglab.highpass_completed = 1;
-            EEG.vhtp.eeg_htpEegFilterEeglab.highpassLocutoff = ip.Results.hipassfilt;
+            EEG.vhtp.eeg_htpEegFilterEeglab.highpassLocutoff = ip.Results.highpassfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassRevfilt     = ip.Results.revfilt;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassPlotfreqz   = ip.Results.plotfreqz;
             EEG.vhtp.eeg_htpEegFilterEeglab.highpassMinPhase    = ip.Results.minphase;

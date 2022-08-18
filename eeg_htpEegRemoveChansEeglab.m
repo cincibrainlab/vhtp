@@ -8,10 +8,10 @@ function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 %     EEG [struct]           - EEGLAB Structure
 %
 %% Function Specific Inputs:
-%   'type'  - Text for type of data to work with for use in trimming edge effects
-%             default: 'Resting' e.g. {'Resting, Event'}
+%   'trim'  - boolean to indicate whether to trim beginning and end of file for edge effects
+%             default: false
 %             
-%             Resting removes first and last 10 seconds from file, Event does not perform removal
+%             Removes first and last 10 secs of data
 %
 %   'minimumduration' - Number to indicate a minimum duration of data required for removal of channels and interpolation
 %                       default: 100 secs
@@ -41,20 +41,18 @@ function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 %% Contact:
 %   kyle.cullion@cchmc.org
 
-defaultType = 'Resting';
+defaultTrim = false;
 defaultMinimumDuration = 60;
 defaultThreshold = 5;
-defaultRemoveChannel = false;
+defaultRemoveChannel = true;
 defaultAutoMark = false;
 defaultSaveOutput = false;
-
-validateType = @( type ) ischar( type ) && ismember(type, {'Resting', 'Event'});
 
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip,'type',defaultType,validateType);
+addParameter(ip,'trim',defaultTrim,@islogical);
 addParameter(ip, 'minimumduration',defaultMinimumDuration,@isnumeric);
 addParameter(ip,'threshold',defaultThreshold,@isnumeric);
 addParameter(ip,'removechannel', defaultRemoveChannel, @islogical);
@@ -77,17 +75,14 @@ try
         proc_badchans = [];
         EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed = 0;
         EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Data too short';
-
-        if strcmp(ip.Results.type,'Resting')
-            f = errordlg(sprintf('\t\tYOUR DATA IS SHORTER THAN THE SET MINIMUM DURATION OF %d SECONDS\n\n\t\tYOUR FILE WILL NOT UNDERGO TRIMMING EDGES OR MARKING BAD CHANNELS',ip.Results.minimumduration),'Recording Error');
-        else
-            f = errordlg(sprintf('\t\tYOUR DATA IS SHORTER THAN THE SET MINIMUM DURATION OF %d SECONDS\n\n\t\tYOUR FILE WILL NOT UNDERGO MARKING BAD CHANNELS.',ip.Results.minimumduration),'Recording Error');
-        end
+        
+        f = errordlg(sprintf('\t\tYOUR DATA IS SHORTER THAN THE SET MINIMUM DURATION OF %d SECONDS\n\n\t\tYOUR FILE WILL NOT UNDERGO MARKING BAD CHANNELS.',ip.Results.minimumduration),'Recording Error');
+        
         uiwait(f);
         repeating=0;
 
     end
-    if strcmp(ip.Results.type,'Resting')
+    if ip.Results.trim
         if ~isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab')
             EEG = trim_edges(EEG,10);
             if isfield(EEG.vhtp,'eeg_htpEegRemoveChansEeglab') && isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason')

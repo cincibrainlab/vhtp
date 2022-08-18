@@ -49,7 +49,7 @@ try
             if ~isempty(EEG.vhtp.eeg_htpEegRemoveChansEeglab.('proc_badchans'))
                 badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;            
             else
-                badchannels = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
+                badchannels = [];
             end
         else
             badchannels=[];

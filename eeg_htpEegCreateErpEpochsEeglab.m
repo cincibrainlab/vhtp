@@ -11,13 +11,13 @@ function [EEG, results] = eeg_htpEegCreateErpEpochsEeglab(EEG, varargin)
 %
 %% Function Specific Inputs:
 %   'epochlimits' - array of two integers representing interval in secs relative to the time-locking event 
-%                   default: [-.500 2.750]
+%                   default: [-.5 2.750]
 %
 %   'rmbaseline' - Boolean indicating if baseline should be removed
-%                  default: 0
+%                  default: false
 %
 %   'baselinelimits' - Array of numbers indicating limits in secs to use for baseline removal process.
-%                      default: [-500 0]
+%                      default: [-.5 0]
 %
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
@@ -39,7 +39,7 @@ functionstamp = mfilename; % function name for logging/output
 
 defaultEpochEvent = missing;
 defaultEpochLimits = [-.500 2.750];
-defaultRmBaseline = 0;
+defaultRmBaseline = false;
 defaultBaselineLimits = [-.500 0];
 defaultSaveOutput = false;
 
@@ -48,7 +48,7 @@ ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'epochevent', defaultEpochEvent, @ischar);
 addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
-addParameter(ip, 'rmbaseline', defaultRmBaseline, @isnumeric);
+addParameter(ip, 'rmbaseline', defaultRmBaseline, @islogical);
 addParameter(ip, 'baselinelimits', defaultBaselineLimits, @isnumeric);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 
@@ -67,7 +67,7 @@ try
    EEG = pop_epoch(EEG, {epochevent}, ip.Results.epochlimits, 'epochinfo', 'yes', 'newname', fullfile(EEG.filepath,[filename '_' epochevent]));
    EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erporiginalfile = originalfile;
    if ip.Results.rmbaseline
-       EEG = pop_rmbase(EEG, ip.Results.baselinelimits);
+       EEG = pop_rmbase(EEG, ip.Results.baselinelimits*1000);
        EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erprmbaseline = 1;
        EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpbaselinelimits = ip.Results.baselinelimits;
    end

@@ -36,7 +36,7 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 %% Contact:
 %   kyle.cullion@cchmc.org
 
-if isfield(EEG.vhtp,'eeg_htpEegInterpolateChansEeglab') && isfield(EEG.vhtp.eeg_htpEegInterpolateChansEeglab,'dataRank'); defaultRank = EEG.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank; else; defaultRank = getrank(double(EEG.data)); end;
+if length(size(EEG.data))==3; defaultRank = getRank(double(reshape(EEG.data,EEG.nbchan,[])')); else; defaultRank = getRank(double(EEG.data')); end
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(pwd,'icaweights');
 defaultSaveOutput = false;
