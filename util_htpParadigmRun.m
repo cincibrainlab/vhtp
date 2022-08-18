@@ -137,6 +137,11 @@ try
                 processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
             otherwise
         end 
+        if exists(EEG.etc.lastOutputDir)
+            results.last_output_directory = EEG.etc.lastOutputDir;
+        else
+            results.last_output_directory = [];
+        end
         EEG = eeg_emptyset;
     end
 catch e 
@@ -156,13 +161,13 @@ else
             sel_step_index = stepnumbers(si);
             processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir, stepnumbers);
 
-            EEG = runAnalysisStep(EEG, ...
-                options.(all_steps{sel_step_index}), ...
-                steps{sel_step_index}, ...
-                stepnames.(steps{sel_step_index}),...
-                dryrun, ...
-                newoutputdir, ...
-                stepnumbers(sel_step_index));
+%             EEG = runAnalysisStep(EEG, ...
+%                 options.(all_steps{sel_step_index}), ...
+%                 steps{sel_step_index}, ...
+%                 stepnames.(steps{sel_step_index}),...
+%                 dryrun, ...
+%                 newoutputdir, ...
+%                 stepnumbers(sel_step_index));
         end
 
     end
@@ -206,7 +211,8 @@ function [EEG]=runStep(EEG, params, step, functionName, dryRun,outputdir, stepNu
     if ~dryRun && (isfield(params,'saveoutput') && params.saveoutput == 1)
         EEG.filename = [regexprep(EEG.subject,'.set','') '_' step '.set'];
         EEG.vhtp.stepPlacement = stepNumber;
-        pop_saveset(EEG,'filename',fullfile(outputdir,EEG.filename));
+        pop_saveset(EEG,'filename', EEG.filename, 'filepath', outputdir);
+        EEG.etc.lastOutputDir = outputdir;
     end
 end
 
