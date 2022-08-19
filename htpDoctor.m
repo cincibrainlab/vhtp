@@ -108,6 +108,8 @@ end
         fprintf('\n! htpDoctor found %d issues.\n\n', total_issues);
         if total_issues == 0
             paths = generatePathNames(checks);
+        else
+            paths = [];
         end
     end
 
