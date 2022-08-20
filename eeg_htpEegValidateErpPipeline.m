@@ -1,5 +1,5 @@
 function EEG = eeg_htpEegValidateErpPipeline( EEG, varargin )
-
+% Description: Validate Erp Paradigms
 % Source Input
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output

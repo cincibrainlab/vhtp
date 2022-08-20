@@ -1,10 +1,7 @@
 function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
-%eeg_htpEegAsrCleanEeglab
+% Description: Perform ASR cleaning via the clean_rawdata plugin provided through the EEGLAB interface
 %
-% eeg_htpEegAsrCleanEeglab - Perform ASR cleaning via the clean_rawdata plugin provided through the EEGLAB interface
-%
-%% Usage:
-%    [ EEG, results ] = eeg_htpEegAsrCleanEeglab( EEG, varargin )
+% Usage: [ EEG, results ] = eeg_htpEegAsrCleanEeglab( EEG, varargin )
 %
 %% Required Inputs:
 %     EEG [struct]           - EEGLAB Structure
@@ -66,7 +63,7 @@ function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
 %
 %% Disclaimer:
 %   Part of the Cincinnati Visual High Throughput EEG Pipeline
-%   
+%
 %   Please see http://github.com/cincibrainlab
 %
 %% Contact:

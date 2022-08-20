@@ -1,6 +1,6 @@
 function [summary_table] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
-% eeg_htpEegAssessPipelineHAPPE() - adaptation of HAPPE pipeline quality
-% assurance to incorporate additional visualization and export options.
+% Description: adaptation of HAPPE pipeline quality assurance to incorporate 
+% additional visualization and export options.
 %
 % Key Changes from original HAPPE2 script:
 %   1. Input has been modified from data matrixes to EEG SET files
@@ -31,7 +31,6 @@ defaultGroupLabels = {EEG1.setname,EEG2.setname};
 defaultTableOnly = false;
 defaultSaveOutput = true;
 defaultOutputFile = [];
-
 
 ip = inputParser();
 addRequired(ip, 'EEG1', @isstruct);

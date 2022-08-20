@@ -1,6 +1,5 @@
 function [fEEG, results] = eeg_htpEegFilterFastFc(EEG, filttype, filtfreq, varargin)
-% eeg_htpEegFilterFastFc - Perform various filtering methods
-%                          using fast_fc toolbox
+% Description: Perform various filtering methods using fast_fc toolbox
 %
 % Usage:
 %    >> [ EEG, results ] = eeg_htpEegFilterEeglab( EEG, method, varargin)

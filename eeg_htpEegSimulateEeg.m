@@ -1,5 +1,5 @@
 function [EEG] = eeg_htpEegSimulateEeg( varargin )
-% eeg_htpEegSimulateEeg - Simualte Noisy EEG Signal
+% Description: Simualte Noisy EEG Signal
 %      adapted from Michael X Cohen
 %      https://github.com/mikexcohen/NeuroscienceSourceSeparation/blob/main/ANT_temporalFiltering.m
 %      adapted from https://data.mrc.ox.ac.uk/data-set/simulated-eeg-data-generator

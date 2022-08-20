@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
-%% eeg_htpEegRemoveEpochsEeglab - Perform manual epoch rejection
+%% Description: Perform manual epoch rejection
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegRemoveEpochsEeglab( EEG, varargin) )

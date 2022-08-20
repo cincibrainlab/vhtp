@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
-% eeg_htpEegCreateEpochs - Perform epoch creation for Non-ERP datasets
+% Description: Perform epoch creation for Non-ERP datasets
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegCreateEpochsEeglab( EEG, varargin )

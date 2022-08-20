@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
-% eeg_htpEegIcaEeglab - Perform Independent Component Analysis on data
+% Description: Perform Independent Component Analysis on data
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegIcaEeglab( EEG, varargin )

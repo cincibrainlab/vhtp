@@ -1,5 +1,5 @@
-function EEG = epoch2cont(EEG)
-    % revised 9/30/2021
+function EEG = eeg_htpEegEpoch2cont(EEG)
+% Description: Converts epoched to continous data.
 
     if length(size(EEG.data)) > 2
         % starting dimensions

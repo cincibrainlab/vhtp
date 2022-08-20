@@ -1,5 +1,5 @@
 function [EEG,results] = eeg_htpEegInterpolateChansEeglab(EEG,varargin)
-% eeg_htpEegInterpolateChansEeglab - Interpolate channels utilizing specified method 
+% Description: Interpolate channels utilizing specified method 
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegInterpolateChansEeglab( EEG,varargin )
