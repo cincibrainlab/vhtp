@@ -1,7 +1,9 @@
 function EEG =  eeg_htpMeaImportAndRemapEdf( edfFile )
+% Description: Import MEA EDF file
+% Category: Preprocessing
+% Tags: Import
 
-            note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
-
+note = @(msg) fprintf('%s: %s\n', mfilename, msg );
 
 try EEG = pop_biosig( edfFile );
     note('Import EDF.')
@@ -58,7 +60,4 @@ note('Assign chanlocs to imported EDF and check set.')
         meachan = chanMap( edfchan );
 
     end
-
-
-
 end

@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcHabErp( EEG, varargin )
-% eeg_htpCalcHabErp() - Amplitude, latency, and percent change 
-% (habituation) in N1 and P2 event-related potential (ERP) components 
-% calculated from habituation task (Ethridge 2019).
+% Description: Auditory habituation ERP N1 and P2 metrics
+% Category: Analysis
+% Tag: ERP
+% Derivied from habituation task (Ethridge 2019).
 %
 % Usage:
 %    >> [ EEG ] = eeg_htpCalcHabErp( EEG, varargin )

@@ -1,6 +1,9 @@
 function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
-% eeg_htpGraphPhaseBcm: Phase brain connectivity matrix Implementation
-% of Michael X Cohen's PLI code from Chapter 26.
+% Description:  Phase-based connectivity analysis
+% Category: Analysis
+% Tags: Connectivity
+% 
+% Michael X Cohen's PLI code from Chapter 26.
 %
 % Cohen, Mike X. Analyzing neural time series data: theory and practice.
 % MIT Press 2014.

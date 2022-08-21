@@ -1,6 +1,9 @@
 function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
-    % eeg_htpComputeSource() - compute forward solution using Brainstorm. By
-    % default the function creates an minimum norm estimate source model from
+    % Description: Compute forward solution using Brainstorm.
+    % Category: Analysis
+    % Tag: Source
+    %
+    % By default the function creates an minimum norm estimate source model from
     % EGI-128 formatted data. The datasets are stored as SET files with
     % atlas regions as channels.
     %
@@ -47,7 +50,6 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % if ~isfile(precomputed_openmeeg)
     %     urlwrite(download_headmodel, precomputed_openmeeg);
     % end
-
 
     % Inputs: Function Specific
     defaultHeadless = false;

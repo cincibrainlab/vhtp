@@ -1,6 +1,7 @@
 function [summary_table] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
-% Description: adaptation of HAPPE pipeline quality assurance to incorporate 
-% additional visualization and export options.
+% Description: adaptation of HAPPE pipeline with visual quality assurance
+% Category: Analysis
+% Tags: Quality
 %
 % Key Changes from original HAPPE2 script:
 %   1. Input has been modified from data matrixes to EEG SET files

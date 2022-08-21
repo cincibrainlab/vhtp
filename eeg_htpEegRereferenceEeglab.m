@@ -1,5 +1,7 @@
 function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 % Description: Rereference data to Average Reference.
+% Category: Preprocessing
+% Tags: Channel
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegRereferenceEeglab( EEG, varargin )

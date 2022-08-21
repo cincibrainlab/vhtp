@@ -1,5 +1,7 @@
 function [EEG, results] = eeg_htpEegCreateEpochsEeglab(EEG,varargin)
 % Description: Perform epoch creation for Non-ERP datasets
+% Category: Preprocessing
+% Tags: Epoching
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegCreateEpochsEeglab( EEG, varargin )
@@ -39,7 +41,7 @@ ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'epochlength',defaultEpochLength,@isnumeric);
-addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
+addParameter(ip, 'epochlimits',defaultEpochLimits,@isnumeric);
 addParameter(ip, 'saveoutput',defaultSaveOutput,@islogical);
 
 parse(ip,EEG,varargin{:});

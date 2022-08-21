@@ -1,6 +1,8 @@
 function [EEG, results] = eeg_htpCalcLaplacian(EEG, varargin)
-    % eeg_htpCalcLaplacian() - compute Laplacian of EEG data via Cohen's
-    % implementation of Perrin et al. (1989). This function is a wrapper
+    % Description: compute spatial laplacian 
+    % Category: Preprocessing
+    % Tag: Filter
+    % Cohen's implementation of Perrin et al. (1989). This function is a wrapper
     % for laplacian_perrinX (unmodified) from
     % https://github.com/mikexcohen/AnalyzingNeuralTimeSeries/blob/main/laplacian_perrinX.m
     % Units are in microvolts per mm^2.

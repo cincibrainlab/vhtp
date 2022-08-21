@@ -1,7 +1,18 @@
 function results = eeg_htpCalcEulerPac(EEG)
-tic;
-%% now for traditional Euler PAC (this time using a debiasing term from van Driel et al., 2015)
-EEG.data = gpuArray(EEG.data);
+% Description: Euler PAC w/ debiasing term from van Driel et al., 2015
+% Category: Analysis
+% Tags: Connectivity
+
+ip = inputParser();
+addRequired(ip, 'EEG', @isstruct);
+parse(ip, EEG);
+
+try
+    EEG.data = gpuArray(EEG.data);
+catch
+    fprintf('GPU arrays not available.');
+end
+
 frex = linspace(10,90,70);
 thetafreq = 6;
 dpac = zeros(EEG.nbchan,length(frex));

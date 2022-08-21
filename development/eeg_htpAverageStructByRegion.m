@@ -1,6 +1,14 @@
 function EEG = eeg_htpAverageStructByRegion( EEG, scriptname )
-% utility function to reduce cortical sources to regions by averaging.
+% Description: ERP dimension reduction (nodes -> regions)
+% Category: Analysis
+% Tags: ERP Source
 % Currently built for DK atlas, however, can be adapted to any atlas.
+
+% MATLAB built-in input validation
+ip = inputParser();
+addRequired(ip, 'EEG', @isstruct);
+addParameter(ip,'scriptname', defaultOutputDir, @isfolder)
+parse(ip,EEG,varargin{:});
 
 atlas_file = 'chanfiles/DK_atlas-68_dict.csv';
 

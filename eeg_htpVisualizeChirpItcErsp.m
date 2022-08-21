@@ -1,5 +1,7 @@
 function [EEGcell, results] = eeg_htpVisualizeChirpItcErsp( EEGcell, varargin )
-% eeg_htpVisualizeChirpItcErsp() - Creates ERP plots from eeg_htpCalcChirpItcErsp.
+% Description: Creates ERP plots from eeg_htpCalcChirpItcErsp.
+% Category: Analysis
+% Tags: ERP
 %
 % Usage:
 %    >> [ EEGcell, results ] = eeg_htpVisualizeChirpItcErsp( EEGcell )

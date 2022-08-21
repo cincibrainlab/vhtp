@@ -1,5 +1,7 @@
 function [EEG, results] = eeg_htpEegRemoveSegmentsEeglab(EEG,varargin)
 % Description: Select and reject atifactual regions in data
+% Category: Preprocessing
+% Tags: Artifact
 %
 %% Syntax:
 %   [ EEG, results ] = eeg_htpEegRemoveSegmentsEeglab( EEG, varargin )

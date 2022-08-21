@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
-% eeg_htpCalcChirpItcErsp() - calculate ITC and single trial power (ERSP)
-%      from epoched ERP data. Original code designed for auditory chirp
-%      presentation.
+% Description: calculate ITC and single trial power (ERSP)
+% Category: Analysis
+% Tag: ERP
+%      Original code designed for auditory chirp presentation.
 %      Note: newtimef() is a legacy EEGLAB function that is highly
 %      dependent on EEGLAB timefreq.m which is frequently updated. Future
 %      version of this code will embed relevant itc/ersp functions.
@@ -45,8 +46,6 @@ defaultSourceOn = false;
 defaultEmptyEEG = true;
 defaultAmpThreshold = 120;
 defaultByChannel = false;
-
-% Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
 
 % MATLAB built-in input validation
@@ -64,8 +63,6 @@ addParameter(ip, 'emptyEEG', defaultEmptyEEG, @islogical)
 addParameter(ip, 'ampThreshold', defaultAmpThreshold, @isnumeric)
 addParameter(ip, 'byChannel', defaultByChannel, @islogical)
 addParameter(ip, 'baselinew', defaultBaselineW, @isvector);
-
-
 parse(ip, EEG, varargin{:});
 
 outputdir = ip.Results.outputdir;

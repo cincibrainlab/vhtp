@@ -1,5 +1,7 @@
 function [EEGcell, results] = eeg_htpVisualizeHabErp( EEGcell, varargin )
-% eeg_htpVisualizeHabErp() - Creates ERP plots from eeg_htpCalcHabErp.
+% Description: Creates ERP plots from eeg_htpCalcHabErp.
+% Category: Analysis
+% Tags: ERP
 %
 % Usage:
 %    >> [ EEGcell, results ] = eeg_htpVisualizeHabErp( EEGcell )

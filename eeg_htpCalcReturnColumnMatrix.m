@@ -1,7 +1,10 @@
 function [x] = eeg_htpCalcReturnColumnMatrix(EEG)
-% eeg_htpCalcReturnColumnMatrix() - Returns columnwise matrix of each
-%         channel. Example form: 1000 samples x 100 channels (size(x))
-%         Uses optional fast_fc filtering to return bandpass signal.
+% Description: Returns columnwise matrix of each channel.
+% Category: Analysis
+% Tag: Transform
+%
+%   Example form: 1000 samples x 100 channels (size(x))
+%   Uses optional fast_fc filtering to return bandpass signal.
 %
 % Usage:
 %    >> [ EEG, results ] = eeg_htpCalcReturnColumnMatrix( EEG, varargin )

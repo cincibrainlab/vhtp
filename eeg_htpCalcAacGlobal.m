@@ -1,6 +1,8 @@
 function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
-% eeg_htpCalcAacGlobal() - calculates amplitude-amplitude coupling
-% (AAC) as described in Wang et al. (2017). Global (mean) power
+% Description: calculates amplitude-amplitude coupling (AAC)
+% Category: Analysis
+% Tag: Connectivity
+% Implemented as described in Wang et al. (2017). Global (mean) power
 % of the low frequency band is coupled with local gamma power.
 %
 % Usage:
@@ -40,7 +42,6 @@ defaultMeaOn = 0;
 defaultSourceMode = false;
 defaultDuration = 60;
 
-
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
@@ -49,9 +50,7 @@ addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
 addParameter(ip, 'meaOn', defaultMeaOn, @islogical);
 addParameter(ip, 'sourcemode', defaultSourceMode, @islogical);
-addParameter(ip, 'duration', defaultDuration);
-
-
+addParameter(ip, 'duration', defaultDuration, @isnumeric);
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -62,7 +61,6 @@ outputfile = fullfile(ip.Results.outputdir, ...
     [functionstamp '_'  EEG.setname '_' timestamp '.mat']);
 
 % START: Signal Processing
-
 % check if data is continuous, if not epoch to 1 s bins
 if ndims(EEG.data) > 2
     warning("Data is epoched. Converted to continuous.")

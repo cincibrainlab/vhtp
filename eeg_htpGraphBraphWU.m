@@ -1,5 +1,8 @@
 function [EEG, results] = eeg_htpGraphBraphWU( EEG, A, chanlabels, freqlabels )
-% eeg_htpGraphBraphWU() - Comprehensive graph measures using
+% Description: Comprehensive graph measures using
+% Category: Analysis
+% Tags: Connectivity
+%
 %       Braph 1.0 toolbox and Brain Connectivity Toolbox (can be found in fieldtrip). 
 %       G is defined as a chan x chan x freq
 %       matrix of WEIGHTED UNDIRECTED graphs.
