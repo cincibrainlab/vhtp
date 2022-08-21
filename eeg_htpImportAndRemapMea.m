@@ -1,4 +1,4 @@
-function EEG =  eeg_htpMeaImportAndRemapEdf( edfFile )
+function EEG =  eeg_htpImportAndRemapMea( edfFile )
 % Description: Import MEA EDF file
 % Category: Preprocessing
 % Tags: Import
