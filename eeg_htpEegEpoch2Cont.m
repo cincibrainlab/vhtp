@@ -1,6 +1,7 @@
 function EEG = eeg_htpEegEpoch2cont(EEG)
 % Description: Converts epoched to continous data.
 % Category: Preprocessing
+% Tags: Epoching
 
     % MATLAB built-in input validation
     ip = inputParser();
