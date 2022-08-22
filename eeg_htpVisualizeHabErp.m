@@ -1,5 +1,6 @@
 function [EEGcell, results] = eeg_htpVisualizeHabErp( EEGcell, varargin )
 % Description: Creates ERP plots from eeg_htpCalcHabErp.
+% ShortTitle: Visualize Auditory Habituation ERP
 % Category: Analysis
 % Tags: ERP
 %
