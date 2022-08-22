@@ -60,9 +60,9 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     ip = inputParser();
     addRequired(ip, 'EEG', @isstruct);
     addParameter(ip, 'gpuOn', defaultGpu, @islogical);
-    addParameter(ip, 'duration', defaultDuration);
-    addParameter(ip, 'offset', defaultOffset);
-    addParameter(ip, 'window', defaultWindow);
+    addParameter(ip, 'duration', defaultDuration, @isnumeric);
+    addParameter(ip, 'offset', defaultOffset, @isnumeric);
+    addParameter(ip, 'window', defaultWindow, @isnumeric);
     addParameter(ip, 'outputdir', defaultOutputDir, @isfolder);
     addParameter(ip, 'bandDefs', defaultBandDefs, @iscell);
     addParameter(ip, 'useParquet', defaultUseParquet, @islogical);
