@@ -135,7 +135,7 @@ else  % individual results
                 EEGcell{ei}.setname, title_trials, title_amp_rej_trials);
             
             if ip.Results.tag
-                title_tag = sprintf("Tag: %s", ip.Results.tag);
+                title_tag = sprintf("Tags: %s", ip.Results.tag);
                 plot_title_cell{ei} = sprintf('%s %s',plot_title_cell{ei}, title_tag);
             end
             

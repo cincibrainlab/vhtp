@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
 % Description: calculate ITC and single trial power (ERSP)
+% ShortTitle: Auditory Chirp Analysis
 % Category: Analysis
-% Tag: ERP
+% Tags: ERP
 %      Original code designed for auditory chirp presentation.
 %      Note: newtimef() is a legacy EEGLAB function that is highly
 %      dependent on EEGLAB timefreq.m which is frequently updated. Future

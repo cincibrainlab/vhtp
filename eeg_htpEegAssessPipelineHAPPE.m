@@ -1,6 +1,7 @@
 function [summary_table] = eeg_htpEegAssessPipelineHAPPE(EEG1, EEG2, varargin)
 % Description: adaptation of HAPPE pipeline with visual quality assurance
 % Category: Analysis
+% ShortTitle: QA EEG1 vs. EEG2 Comparison
 % Tags: Quality
 %
 % Key Changes from original HAPPE2 script:

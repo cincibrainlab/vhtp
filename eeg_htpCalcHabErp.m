@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcHabErp( EEG, varargin )
 % Description: Auditory habituation ERP N1 and P2 metrics
+% ShortTitle: Auditory Habituation Analysis
 % Category: Analysis
-% Tag: ERP
+% Tags: ERP
 % Derivied from habituation task (Ethridge 2019).
 %
 % Usage:

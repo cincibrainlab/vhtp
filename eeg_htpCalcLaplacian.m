@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcLaplacian(EEG, varargin)
     % Description: compute spatial laplacian 
     % Category: Preprocessing
-    % Tag: Filter
+    % ShortTitle: Laplacian Spatial Filtering
+    % Tags: Filter
     % Cohen's implementation of Perrin et al. (1989). This function is a wrapper
     % for laplacian_perrinX (unmodified) from
     % https://github.com/mikexcohen/AnalyzingNeuralTimeSeries/blob/main/laplacian_perrinX.m

@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 % Description: Perform Independent Component Analysis on data
+% ShortTitle: Independent Component Analysis
 % Category: Preprocessing
 % Tags: Artifact
 %

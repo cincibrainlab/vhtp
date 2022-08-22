@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpCalcSpectralEvents(EEG, varargin)
 % Description: Wrapper for Jones' Lab Spectral Events Toolkit
+% ShortTitle: Spectral Event Toolbox Wrapper
 % Category: Analysis
 % Tags: Non-continuous
 %

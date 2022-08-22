@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
 % Description: calculates amplitude-amplitude coupling (AAC)
+% ShortTitle: Amplitude-Ampliitude Coupling
 % Category: Analysis
-% Tag: Connectivity
+% Tags: Connectivity
 % Implemented as described in Wang et al. (2017). Global (mean) power
 % of the low frequency band is coupled with local gamma power.
 %

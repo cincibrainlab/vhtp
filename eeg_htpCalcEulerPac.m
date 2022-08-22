@@ -1,5 +1,6 @@
 function results = eeg_htpCalcEulerPac(EEG)
 % Description: Euler PAC w/ debiasing term from van Driel et al., 2015
+% ShortTitle: Euler Phase Amplitude Coupling
 % Category: Analysis
 % Tags: Connectivity
 

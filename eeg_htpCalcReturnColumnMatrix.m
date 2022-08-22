@@ -1,7 +1,8 @@
 function [x] = eeg_htpCalcReturnColumnMatrix(EEG)
 % Description: Returns columnwise matrix of each channel.
+% ShortTitle: Convert Data to Column Matrix
 % Category: Analysis
-% Tag: Transform
+% Tags: Transform
 %
 %   Example form: 1000 samples x 100 channels (size(x))
 %   Uses optional fast_fc filtering to return bandpass signal.

@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 % Description: Select and reject/keep components from data
+% ShortTitle: Visual component removal
 % Category: Preprocessing
 % Tags: Artifact
 %

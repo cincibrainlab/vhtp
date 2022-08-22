@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 % Description: Perform various filtering methods (hipass, lowpass, notch, and cleanline) on data
+% ShortTitle: Filter EEG using EEGLAB
 % Category: Preprocessing
 % Tags: Filter
 %

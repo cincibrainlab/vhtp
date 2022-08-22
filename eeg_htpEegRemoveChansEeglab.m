@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpEegRemoveChansEeglab(EEG,varargin)
 % Description: Mark channels for rejection and interpolation
+% ShortTitle: Reject Bad Channels
 % Category: Preprocessing
 % Tags: Channel
 %

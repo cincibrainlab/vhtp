@@ -1,7 +1,8 @@
 function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     % Description: calculate spectral power on continuous data.
     % Category: Analysis
-    % Tag: Power
+    % ShortTitle: Resting Spectral Power Analysis
+    % Tags: Power
     %      Power is calculated using MATLAB pWelch function. Key parameter is
     %      window length with longer window providing increased frequency
     %      resolution. Overlap is set at default at 50%. A hanning window is

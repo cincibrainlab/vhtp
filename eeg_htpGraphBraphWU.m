@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpGraphBraphWU( EEG, A, chanlabels, freqlabels )
-% Description: Comprehensive graph measures using
+% Description: Comprehensive graph measures
+% ShortTitle: Weighted undirected graph via BRAPH 1.0
 % Category: Analysis
 % Tags: Connectivity
 %

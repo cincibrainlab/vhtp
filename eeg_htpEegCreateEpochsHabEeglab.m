@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpEegCreateHabEpochsEeglab(EEG,varargin)
 % Description: Perform epoch creation for Non-ERP datasets
+% ShortTitle: Create Habituation Epochs (EEGLAB)
 % Category: Preprocessing
 % Tags: Epoching
 %

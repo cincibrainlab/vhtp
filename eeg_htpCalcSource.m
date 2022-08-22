@@ -1,7 +1,8 @@
 function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     % Description: Compute forward solution using Brainstorm.
+    % ShortTitle: Source Localization with Brainstorm
     % Category: Analysis
-    % Tag: Source
+    % Tags: Source
     %
     % By default the function creates an minimum norm estimate source model from
     % EGI-128 formatted data. The datasets are stored as SET files with

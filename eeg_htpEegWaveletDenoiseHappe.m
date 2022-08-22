@@ -1,5 +1,6 @@
 function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % Description: standalone implementation of HAPPE 2.0 wavelet thresholding to EEG SET data.
+    % ShortTitle: Wavelet thresholding artifact removal
     % Category: Preprocessing
     % Tags: Artifact
     %              Original implementation by Dr. Gabard-Durham:

@@ -1,5 +1,6 @@
 function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
-% Description:  Phase-based connectivity analysis
+% Description:  Conduct phase-based (DWPLI, IPSC, etc.) measures
+% ShortTitle: Phase-based connectivity analysis
 % Category: Analysis
 % Tags: Connectivity
 % 

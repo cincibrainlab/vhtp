@@ -1,5 +1,6 @@
 function [EEG] = eeg_htpEegSimulateEeg( varargin )
 % Description: Simualte Noisy EEG Signal
+% ShortTitle: Simulate EEG signal
 % Category: Analysis
 % Tags: Simulation
 %      adapted from Michael X Cohen
