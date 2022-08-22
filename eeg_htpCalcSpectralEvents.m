@@ -75,14 +75,14 @@ addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip, 'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip, 'useClassLabels', defaultUseClassLabels, @islogical);
 addParameter(ip, 'classLabels', defaultClassLabels, @iscell);
-addParameter(ip, 'findMethod', defaultFindMethod, @isinteger);
+addParameter(ip, 'findMethod', defaultFindMethod, @isnumeric);
 addParameter(ip, 'fVec', defaultFVec, @isvector);
 addParameter(ip, 'vis', defaultVis, @islogical);
 addParameter(ip, 'meaOn', defaultMea, @islogical);
 
 addParameter(ip, 'writeCsvFile', defaultWriteCsvFile, @islogical);
-addParameter(ip, 'duration', defaultDuration);
-addParameter(ip, 'selectRegions', defaultRegions);
+addParameter(ip, 'duration', defaultDuration, @isnumeric);
+addParameter(ip, 'selectRegions', defaultRegions, @iscell);
 
 parse(ip, EEG, varargin{:});
 

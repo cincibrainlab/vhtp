@@ -53,8 +53,8 @@ defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
 % MATLAB built-in input validation
 ip = inputParser();   
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip,'plotsOn', defaultPlotsOn);
-addParameter(ip,'baseline', defaultBaseline);
+addParameter(ip,'plotsOn', defaultPlotsOn,@islogical);
+addParameter(ip,'baseline', defaultBaseline, @isnumeric);
 addParameter(ip, 'filtOn', defaultFiltOn,@islogical);
 addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell);
