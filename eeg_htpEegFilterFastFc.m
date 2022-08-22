@@ -34,7 +34,7 @@ defaultOrder = missing;
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addRequired(ip, 'filttype', validateFiltType);
+addRequired(ip, 'filttype', validateFiltType); 
 addRequired(ip, 'filtfreq', @isnumeric);
 addParameter(ip, 'order', defaultOrder, @isnumeric);
 
