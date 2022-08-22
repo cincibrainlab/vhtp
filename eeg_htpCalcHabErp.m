@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpCalcHabErp( EEG, varargin )
-% Description: Auditory habituation ERP N1 and P2 metrics
+%% Description: Auditory habituation ERP N1 and P2 metrics
 % ShortTitle: Auditory Habituation Analysis
 % Category: Analysis
 % Tags: ERP
@@ -52,7 +52,7 @@ defaultBandDefs = {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10;
 
 % MATLAB built-in input validation
 ip = inputParser();   
-addRequired(ip, 'EEG', @isstruct);
+addRequired(ip, 'EEG', @isstruct); 
 addParameter(ip,'plotsOn', defaultPlotsOn,@islogical);
 addParameter(ip,'baseline', defaultBaseline, @isnumeric);
 addParameter(ip, 'filtOn', defaultFiltOn,@islogical);
