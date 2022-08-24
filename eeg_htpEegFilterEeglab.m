@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
-% Description: Perform various filtering methods (hipass, lowpass, notch, and cleanline) on data
+% Description: Perform various filtering methods (highpass, lowpass, notch, and cleanline) on data
 % ShortTitle: Filter EEG using EEGLAB
 % Category: Preprocessing
 % Tags: Filter
@@ -176,7 +176,7 @@ try
                 EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.highpassfilt, 'hicutoff', [],'filtorder',highpassfiltorder);
                 EEG.vhtp.eeg_htpEegFilterEeglab.highpassfiltorder    = highpassfiltorder;
             else
-                EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.hipassfilt, 'hicutoff', []);
+                EEG = pop_eegfiltnew(EEG,  'locutoff',ip.Results.highpassfilt, 'hicutoff', []);
                 EEG.vhtp.eeg_htpEegFilterEeglab.highpassfiltorder    = 'dynamic';
             end
             EEG.vhtp.eeg_htpEegFilterEeglab.highpass_completed = 1;
