@@ -108,13 +108,13 @@ try
     for i=1:height(filelist)
         switch process
             case 'All'
-                EEG = pop_loadset('filename',fullfile(filelist.filepath(i),regexprep(filelist.filename(i),ip.Results.ext,'.set')));
+                EEG = pop_loadset('filepath', filelist.filepath{i},'filename',regexprep(filelist.filename{i},ip.Results.ext,'.set'));
                 if ~isfield(EEG.vhtp,'stepPreprocessing')
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
                 processAll(EEG, stepnames,presets,ip.Results.dryrun,ip.Results.outputdir, ip.Results.stepnumbers);
             case 'IndividualStep'
-                EEG = pop_loadset('filename',fullfile(filelist.filepath(i),filelist.filename(i)));
+                EEG = pop_loadset('filepath', filelist.filepath{i},'filename',filelist.filename{i});
                 if ~isfield(EEG.vhtp,'stepPreprocessing')
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
@@ -130,14 +130,14 @@ try
                     end
                 end
             case 'Continuation'
-                EEG = pop_loadset('filename',fullfile(filelist.filepath(i),regexprep(filelist.filename(i),ip.Results.ext,'.set')));
+                EEG = pop_loadset('filepath',filelist.filepath{i},'filename',regexprep(filelist.filename{i},ip.Results.ext,'.set'));
                 if ~isfield(EEG.vhtp,'stepPreprocessing')
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
                 processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
             otherwise
         end 
-        if exists(EEG.etc.lastOutputDir)
+        if isfield(EEG.etc,'lastOutputDir')
             results.last_output_directory = EEG.etc.lastOutputDir;
         else
             results.last_output_directory = [];

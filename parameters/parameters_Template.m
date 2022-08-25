@@ -15,7 +15,7 @@ clear PARAMS;
 %%FILTER HIGHPASS
 PARAMS.filter_highpass.function = @eeg_htpEegFilterEeglab;
 PARAMS.filter_highpass.method='highpass';
-PARAMS.filter_highpass.hipassfilt = 1;
+PARAMS.filter_highpass.highpassfilt = 1;
 
 %%FILTER LOWPASS
 PARAMS.filter_lowpass.function = @eeg_htpEegFilterEeglab;
