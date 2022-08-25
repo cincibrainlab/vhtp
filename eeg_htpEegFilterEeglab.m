@@ -207,26 +207,24 @@ try
             EEG.vhtp.eeg_htpEegFilterEeglab.lowpassMinPhase    = ip.Results.minphase;
             
         case 'notch'
+            harmonics = 3;
+            linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
             if ~(ip.Results.dynamicfiltorder)
                 if ismissing(ip.Results.filtorder)
                     notchfiltorder = 3300;
                 else
                     notchfiltorder = ip.Results.filtorder;
                 end
-                linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
-                harmonics = floor((EEG.srate/2) / linenoise);
                 if EEG.srate < 2000
                     for i = 1 : harmonics
-                        EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'filtorder',notchfiltorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
+                        EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i-(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'hicutoff', (linenoise * i+(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'filtorder',notchfiltorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
                     end
                 end
-                EEG.vhtp.eeg_htpEegFilterEeglab.notchfiltorder    = 3300;
+                EEG.vhtp.eeg_htpEegFilterEeglab.notchfiltorder    = notchfiltorder;
             else
-                linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
-                harmonics = floor((EEG.srate/2) / linenoise);
                 if EEG.srate < 2000
                     for i = 1 : harmonics
-                        EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i)-2, 'hicutoff', (linenoise * i)+2, 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
+                        EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i-(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'hicutoff', (linenoise * i+(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
                     end
                 end
                 EEG.vhtp.eeg_htpEegFilterEeglab.notchfiltorder    = 'dynamic';

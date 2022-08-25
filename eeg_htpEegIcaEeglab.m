@@ -50,7 +50,7 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'method',defaultMethod,@ischar);
 addParameter(ip,'rank',defaultRank,@isnumeric);
 addParameter(ip,'icadir',defaultIcaDir,@ischar);
-addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 
 parse(ip,EEG,varargin{:});
 
@@ -106,7 +106,7 @@ function tmprank2 = getrank(tmpdata)
     %Here: alternate computation of the rank by Sven Hoffman
     covarianceMatrix = cov(tmpdata', 1);
     [E, D] = eig (covarianceMatrix);
-    rankTolerance = 1e-7;
+    rankTolerance = 1e-6; % Per Makoto Miyakoshi recommendation for potential stability
     tmprank2=sum (diag (D) > rankTolerance);
     if tmprank ~= tmprank2
         fprintf('Warning: fixing rank computation inconsistency (%d vs %d) most likely because running under Linux 64-bit Matlab\n', tmprank, tmprank2);
