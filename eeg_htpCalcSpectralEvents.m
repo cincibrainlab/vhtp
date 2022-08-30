@@ -63,7 +63,7 @@ defaultFindMethod = 1;
 defaultFVec = [2:2:80];
 defaultVis = false;
 defaultWriteCsvFile = true;
-defaultDuration = 60;
+defaultNumTrials = 200;
 defaultRegions = {'RF','LF','RPF','LPF', 'RT', 'LT'};
 defaultMea = 0;
 
@@ -81,7 +81,7 @@ addParameter(ip, 'vis', defaultVis, @islogical);
 addParameter(ip, 'meaOn', defaultMea, @islogical);
 
 addParameter(ip, 'writeCsvFile', defaultWriteCsvFile, @islogical);
-addParameter(ip, 'duration', defaultDuration, @isnumeric);
+addParameter(ip, 'numTrials', defaultNumTrials, @isnumeric);
 addParameter(ip, 'selectRegions', defaultRegions, @iscell);
 
 parse(ip, EEG, varargin{:});
@@ -104,20 +104,38 @@ else
     warning('eeg_htpCalcSpectralEvents: No Trials Present. Please segment data.')
 end
 
+% NEW: changed duration argument to numTrials for simplicity/ease of use
 % Consistent Duration
-t = ip.Results.duration; % time in seconds
-fs = EEG.srate; % sampling rate
-samples = t * fs; % if using time, number of samples
-start_sample = 0 * fs; if start_sample == 0, start_sample = 1; end
-total_samples = EEG.pnts * EEG.trials;
+% t = ip.Results.duration; % time in seconds
+% fs = EEG.srate; % sampling rate
+% samples = t * fs; % if using time, number of samples
+% start_sample = 0 * fs; if start_sample == 0, start_sample = 1; end
+% total_samples = EEG.pnts * EEG.trials;
+% 
+% if samples >= total_samples - start_sample
+%     samples = total_samples;
+%     start_samples = 1; % in samples
+%     warning("Insufficient Data, using max samples.")
+% else
+%     EEG = pop_select(EEG, 'trial', [1 : t / (EEG.pnts/ fs)]); % extract baseline
+% end
 
-if samples >= total_samples - start_sample
-    samples = total_samples;
-    start_samples = 1; % in samples
-    warning("Insufficient Data, using max samples.")
+numTrials = ip.Results.numTrials % number of trials to analyze
+if EEG.trials < numTrials % if current EEG has less trials than numTrials, use max
+    warning("Insufficient number of trials, using max trials.")
 else
-    EEG = pop_select(EEG, 'trial', [1 : t / (EEG.pnts/ fs)]); % extract baseline
-end
+    % Option 1: select first trials
+    EEG = pop_select(EEG, 'trial', [1 : numTrials])
+
+    % Option 2: select random sample of trials
+    % rng('default') % set seed for random sample
+    % trialRandSample = randsample(EEG.trials, numTrials);
+    % EEG = pop_select(EEG, 'trial', trialRandSample);
+
+    % Option 3: select the last trials
+    % EEG = pop_select(EEG, 'trial', [(EEG.trials - numTrials + 1) : EEG.trials]);
+
+END
 
 %---------------------------------------------------------------
 % Spectral Events #1: Organize Inputs                         --
