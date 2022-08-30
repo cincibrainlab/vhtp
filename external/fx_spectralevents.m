@@ -1,4 +1,4 @@
-function [specEv_struct, TFRs, X] = spectralevents(eventBand, fVec, Fs, findMethod, vis, varargin)
+function [specEv_struct, TFRs, X] = spectralevents(eventBand, fVec, Fs, findMethod, seThreshold, vis, varargin)
 % SPECTRALEVENTS Find and analyze transient spectral events in a 
 %   time-series dataset. Spectral events are defined as local maxima above a 
 %   power threshold of a specified band in the non-averaged time-frequency
@@ -114,7 +114,7 @@ end
 %KYLE CHANGE
 %Changes for intialization of time vector variable, tvec, ahead of time
 tVec = (1:size(X{1},1))/Fs;
-thrFOM = 6; %Factors of Median threshold (see Shin et al. eLife 2017 for details concerning this value)
+thrFOM = seThreshold; %Factors of Median threshold (see Shin et al. eLife 2017 for details concerning this value)
 
 % Solve for the time-frequency response (TFR) and run spectral event
 % analysis on each trial within each subject/session

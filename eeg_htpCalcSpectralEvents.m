@@ -60,6 +60,7 @@ defaultBandDefs = {
 defaultUseClassLabels = false;
 defaultClassLabels = {'Hit','Miss'};
 defaultFindMethod = 1;
+defaultSeThreshold = 6;
 defaultFVec = [2:2:80];
 defaultVis = false;
 defaultWriteCsvFile = true;
@@ -77,6 +78,7 @@ addParameter(ip, 'bandDefs', defaultBandDefs, @iscell)
 addParameter(ip, 'useClassLabels', defaultUseClassLabels, @islogical);
 addParameter(ip, 'classLabels', defaultClassLabels, @iscell);
 addParameter(ip, 'findMethod', defaultFindMethod, @isnumeric);
+addParameter(ip, 'seThreshold', defaultSeThreshold, @isnumeric);
 addParameter(ip, 'fVec', defaultFVec, @isvector);
 addParameter(ip, 'vis', defaultVis, @islogical);
 addParameter(ip, 'meaOn', defaultMea, @islogical);
@@ -90,6 +92,7 @@ parse(ip, EEG, varargin{:});
 
 outputdir = ip.Results.outputdir;
 bandDefs = ip.Results.bandDefs;
+seThreshold = ip.Results.seThreshold;
 
 % base output file can be modified with strrep()
 outputfile = fullfile(outputdir, [functionstamp '_' EEG.setname '_' timestamp '.mat']);
@@ -245,7 +248,7 @@ for ci = 1 : numel(channames)
             clX = classLabels.(curchan);
             
             [specEvents.(curBand), ~,~] = fx_spectralevents(eventBand,fVec, ...
-                Fs,findMethod, vis, sigX, ...
+                Fs,findMethod, seThreshold, vis, sigX, ...
                 clX);
             
             if isempty(specEvents.(curBand).TrialSummary)
