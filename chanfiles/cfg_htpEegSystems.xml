@@ -65,7 +65,7 @@
    <listitem>
       <net_displayname>EGI Hydrocel 64</net_displayname>
       <net_name>EGI64</net_name>
-      <net_file>chanfiles/GSN-HydroCel-64.sfp</net_file>
+      <net_file>chanfiles/GSN-HydroCel-65.sfp</net_file>
       <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/EEG_64_channel_array_map.pdf</net_graphic>
       <net_filter>*.raw</net_filter>
