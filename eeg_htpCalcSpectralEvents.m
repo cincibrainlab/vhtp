@@ -63,6 +63,7 @@ defaultFindMethod = 1;
 defaultFVec = [2:2:80];
 defaultVis = false;
 defaultWriteCsvFile = true;
+defaultWriteMatFile = true;
 defaultNumTrials = 200;
 defaultRegions = {'RF','LF','RPF','LPF', 'RT', 'LT'};
 defaultMea = 0;
@@ -81,6 +82,7 @@ addParameter(ip, 'vis', defaultVis, @islogical);
 addParameter(ip, 'meaOn', defaultMea, @islogical);
 
 addParameter(ip, 'writeCsvFile', defaultWriteCsvFile, @islogical);
+addParameter(ip, 'writeMatFile', defaultWriteMatFile, @islogical);
 addParameter(ip, 'numTrials', defaultNumTrials, @isnumeric);
 addParameter(ip, 'selectRegions', defaultRegions, @iscell);
 
@@ -104,7 +106,6 @@ else
     warning('eeg_htpCalcSpectralEvents: No Trials Present. Please segment data.')
 end
 
-% NEW: changed duration argument to numTrials for simplicity/ease of use
 % Consistent Duration
 % t = ip.Results.duration; % time in seconds
 % fs = EEG.srate; % sampling rate
@@ -134,7 +135,6 @@ else
 
     % Option 3: select the last trials
     % EEG = pop_select(EEG, 'trial', [(EEG.trials - numTrials + 1) : EEG.trials]);
-
 END
 
 %---------------------------------------------------------------
@@ -379,8 +379,11 @@ EEG.vhtp.eeg_htpCalcSpectralEvents.summary_table = csvtable;
 EEG.vhtp.eeg_htpCalcSpectralEvents.qi_table = qi_table;
 
 matsavefile = fullfile(ip.Results.outputdir, [functionstamp '_' strrep(EEG.filename, '.set', ['_SE_all' timestamp '.mat'])]);
-save(matsavefile, 'chanSpectralEvents' );
-disp(['CSV File:' matsavefile]);
+
+if ip.Results.writeMatFile
+    save(matsavefile, 'chanSpectralEvents' );
+    disp(['CSV File:' matsavefile]);
+end
 
 if ip.Results.writeCsvFile
     writetable(csvtable, strrep(matsavefile,'.mat','.csv'))
