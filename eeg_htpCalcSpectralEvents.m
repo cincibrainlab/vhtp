@@ -155,7 +155,7 @@ end
 %% Define Band Ranges
 bandDefs = ip.Results.bandDefs;
 bandIntervals = [];
-for bi = 1 : length(bandDefs)
+for bi = 1 : size(bandDefs, 1)
     bandIntervals.(bandDefs{bi,1}) = [bandDefs{bi,2} bandDefs{bi,3}];
 end
 
