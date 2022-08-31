@@ -1,18 +1,20 @@
-function EEG = eeg_htpAverageStructByRegion( EEG, scriptname )
+function EEG = eeg_htpAverageStructByRegion( EEG, varargin )
 % Description: ERP dimension reduction (nodes -> regions)
 % Category: Analysis
 % Tags: ERP Source
 % Currently built for DK atlas, however, can be adapted to any atlas.
 
+defaultScriptName = 'eeg_htpVisualizeChirpItcErsp';
+
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip,'scriptname', defaultOutputDir, @isfolder)
+addParameter(ip,'scriptname', defaultScriptName)
 parse(ip,EEG,varargin{:});
 
 atlas_file = 'chanfiles/DK_atlas-68_dict.csv';
 
-switch scriptname
+switch ip.Results.scriptname
     case 'eeg_htpVisualizeChirpItcErsp'
         % placeholder
 end
@@ -33,12 +35,13 @@ end
 % Get index of regions to reduce dimension of channel data
 regiontable = table();
 regiontable.labels = ordered_regions';
-regiontable.category = grp2idx(ordered_regions');
+regiontable.category = categorical(ordered_regions');
+region_categories = unique(regiontable.category);
 category_index = {};
 category_name = {};
-for i = 1 : max(regiontable.category)
-    category_index{i} = find(regiontable.category == i);
-    category_name{i} = char(table2cell(regiontable(i, 'labels')));
+for i = 1 : numel(region_categories)
+    category_index{i} = find(regiontable.category == region_categories(i));
+    category_name{i} = region_categories(i);
 end
 
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.itc1_region = {};
@@ -60,7 +63,7 @@ EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.ersp = cat(3, tmp_region_mean_ersp{:});
 
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_chanlocs = EEGRegion.chanlocs(1);
 for i = 1 : numel(category_name)
-    EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_chanlocs(i).labels = category_name{i};
+    EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_chanlocs(i).labels = char(category_name{i});
 end
 
 EEGRegion.chanlocs = EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_chanlocs;
