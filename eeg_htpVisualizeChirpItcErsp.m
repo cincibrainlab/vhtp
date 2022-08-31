@@ -44,6 +44,7 @@ defaultSingleplot = 1;
 defaultAverageByRegion = false;
 defaultContrasts = {};
 defaultDiffColorLimits = [];
+defaultChannel = missing;
 EEGno =  numel(EEGcell);
 
 % MATLAB built-in input validation
@@ -62,6 +63,7 @@ addParameter(ip,'singleplot', defaultSingleplot, @islogical);
 addParameter(ip, 'averageByRegion', defaultAverageByRegion, @islogical);
 addParameter(ip,'contrasts', defaultContrasts, @iscell);
 addParameter(ip,'diffColorLimits', defaultDiffColorLimits, @isvector);
+addParameter(ip,'channel', defaultChannel, @ischar); % specific channel for plotting
 
 parse(ip,EEGcell,varargin{:});
 outputdir = ip.Results.outputdir;
@@ -84,6 +86,20 @@ if ip.Results.averageByRegion
         EEGcell{ei} = eeg_htpAverageStructByRegion( EEGcell{ei}, 'scriptname','eeg_htpVisualizeChirpItcErsp');
     end
 end
+
+% % filter for specific channel if needed
+% chanOfInterest = ip.Results.channel;
+% if ~ismissing(chanOfInterest)
+% fprintf("Single Channel Mode: %s\n", chanOfInterest);
+% if any(strcmp(chanOfInterest, {EEGcell{1}.chanlocs.labels}))
+%     for i = 1 : numel(EEGcell)
+%         chanIdx = find(strcmp(chanOfInterest, {EEGcell{i}.chanlocs.labels}));
+%         EEGcell{i}.chanlocs = EEGcell{i}.chanlocs{chanIdx};
+%     end
+% else
+%     fprintf("%s channel not found, check input.\n", chanOfInterest);
+% end
+% end
 
 % START: Start Visualization
 chanItc = {};
@@ -311,7 +327,7 @@ h = colorbar;
 ylabel(h,'Power (dB/Hz) Change from Baseline');
 %ylim(h,[0 45]);
 if contains(plot_title, 'diff')
-    caxis([-2 2]); % important
+    caxis([-1 1]); % important
 else
     caxis([-2 2]); % important
 %    caxis([-215 -190]);
