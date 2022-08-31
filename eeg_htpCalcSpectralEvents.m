@@ -124,12 +124,12 @@ end
 %     EEG = pop_select(EEG, 'trial', [1 : t / (EEG.pnts/ fs)]); % extract baseline
 % end
 
-numTrials = ip.Results.numTrials % number of trials to analyze
+numTrials = ip.Results.numTrials; % number of trials to analyze
 if EEG.trials < numTrials % if current EEG has less trials than numTrials, use max
     warning("Insufficient number of trials, using max trials.")
 else
     % Option 1: select first trials
-    EEG = pop_select(EEG, 'trial', [1 : numTrials])
+    EEG = pop_select(EEG, 'trial', [1 : numTrials]);
 
     % Option 2: select random sample of trials
     % rng('default') % set seed for random sample
@@ -138,7 +138,7 @@ else
 
     % Option 3: select the last trials
     % EEG = pop_select(EEG, 'trial', [(EEG.trials - numTrials + 1) : EEG.trials]);
-END
+end
 
 %---------------------------------------------------------------
 % Spectral Events #1: Organize Inputs                         --
