@@ -81,7 +81,7 @@ outfileCell = cellfun( @(EEG) fullfile(outputdir, ...
 % averaging into regions.
 if ip.Results.averageByRegion
     for ei = 1 : numel(EEGcell)
-        EEGcell{ei} = eeg_htpAverageStructByRegion( EEGcell{ei}, 'eeg_htpVisualizeChirpItcErsp');
+        EEGcell{ei} = eeg_htpAverageStructByRegion( EEGcell{ei}, 'scriptname','eeg_htpVisualizeChirpItcErsp');
     end
 end
 
@@ -146,9 +146,9 @@ for ci = 1 : numel(chanlabels)
             plot_title_cell{gi} = sprintf('PLACEHOLDER for group %s (%s)',  char(groups(gi)), channame);
             plot_filename_cell{gi} = fullfile(outputdir, ...
                 ['chirp_itcersp_by_group_' channame '_' char(groups(gi)) '_' timestamp '.png']);
-            itc(:,:,gi) = nanmean(itcArr(:,:,cur_group_idx),3);
-            ersp(:,:,gi) = nanmean(erspArr(:,:,cur_group_idx),3);
-            stp(:,:,gi) = nanmean(stpArr(:,:,cur_group_idx),3);
+            itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3, "omitnan");
+            ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3, "omitnan");
+            stp(:,:,gi) = mean(stpArr(:,:,cur_group_idx),3, "omitnan");
 
         end
         % Perform contrasts and add as additional groups
