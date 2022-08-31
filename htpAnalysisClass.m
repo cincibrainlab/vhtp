@@ -301,7 +301,7 @@ classdef htpAnalysisClass < handle
 
         end
         function list = listAnalysisParameterFiles(o)
-            filelist = util_htpDirListing(fullfile( o.proj_status.vhtp_dir, 'analysis_templates/'), 'ext', '.m', 'keyword', 'parameters');
+            filelist = util_htpDirListing(fullfile( o.proj_status.vhtp_dir, 'parameters/'), 'ext', '.m', 'keyword', 'parameters');
             list = string(regexp(filelist{:,2},'(?<=parameters_)\w*','match'));
         end
         function extractCurrentParameterFile( o, selection )
