@@ -49,17 +49,22 @@ tmp_region_mean = {};
 for i = 1 : numel(category_index)
     tmp_region_mean_itc{i} = mean(EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.itc1(:,:,category_index{i} ),3);
     tmp_region_mean_ersp{i} = mean(EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.ersp1(:,:,category_index{i} ),3);
+    tmp_region_mean_stp{i} = mean(EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.stp1(:,:,category_index{i} ),3);
 end
 
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_itc1 = cat(3, tmp_region_mean_itc{:});
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_ersp = cat(3, tmp_region_mean_ersp{:});
+EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_stp = cat(3, tmp_region_mean_stp{:});
 
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.chan_itc1 = EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.itc1;
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.chan_ersp1 = EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
+EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.chan_stp1 = EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.stp1;
+
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.chan_chanlocs = EEGRegion.chanlocs;
 
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.itc1 = cat(3, tmp_region_mean_itc{:});
-EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.ersp = cat(3, tmp_region_mean_ersp{:});
+EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.ersp1 = cat(3, tmp_region_mean_ersp{:});
+EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.stp1 = cat(3, tmp_region_mean_stp{:});
 
 EEGRegion.vhtp.eeg_htpCalcChirpItcErsp.region_chanlocs = EEGRegion.chanlocs(1);
 for i = 1 : numel(category_name)
