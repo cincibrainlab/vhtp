@@ -1,4 +1,4 @@
-function [specEv_struct, TFRs, X] = spectralevents(eventBand, fVec, Fs, findMethod, seThreshold, vis, varargin)
+function [specEv_struct, TFRs, X] = fx_spectralevents(eventBand, fVec, Fs, findMethod, seThreshold, vis, varargin)
 % SPECTRALEVENTS Find and analyze transient spectral events in a 
 %   time-series dataset. Spectral events are defined as local maxima above a 
 %   power threshold of a specified band in the non-averaged time-frequency

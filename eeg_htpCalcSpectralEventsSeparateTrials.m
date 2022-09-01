@@ -129,12 +129,12 @@ if EEG.trials < numTrials % if current EEG has less trials than numTrials, use m
     warning("Insufficient number of trials, using max trials.")
 else
     % Option 1: select first trials
-    EEG = pop_select(EEG, 'trial', [1 : numTrials]);
+    % EEG = pop_select(EEG, 'trial', [1 : numTrials]);
 
     % Option 2: select random sample of trials
-    % rng('default') % set seed for random sample
-    % trialRandSample = randsample(EEG.trials, numTrials);
-    % EEG = pop_select(EEG, 'trial', trialRandSample);
+    rng('default') % set seed for random sample
+    trialRandSample = randsample(EEG.trials, numTrials);
+    EEG = pop_select(EEG, 'trial', trialRandSample);
 
     % Option 3: select the last trials
     % EEG = pop_select(EEG, 'trial', [(EEG.trials - numTrials + 1) : EEG.trials]);
