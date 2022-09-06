@@ -59,7 +59,7 @@ ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'highpassfilt',defaultLoCutoff,@isnumeric);
-addParameter(ip, 'revfilt',defaultRevFilt,validateRevFilt);
+addParameter(ip, 'revfilt',defaultRevFilt,@islogical);
 addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
 addParameter(ip, 'minphase',defaultMinPhase,@islogical);
 addParameter(ip, 'filtorder',defaultFiltOrder,@isnumeric);

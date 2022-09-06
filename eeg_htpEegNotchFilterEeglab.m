@@ -62,7 +62,7 @@ ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'notchfilt',defaultNotch,@isnumeric);
-addParameter(ip, 'revfilt',defaultRevFilt,validateRevFilt);
+addParameter(ip, 'revfilt',defaultRevFilt,@islogical);
 addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
 addParameter(ip, 'minphase',defaultMinPhase,@islogical);
 addParameter(ip, 'filtorder',defaultFiltOrder,@isnumeric);
