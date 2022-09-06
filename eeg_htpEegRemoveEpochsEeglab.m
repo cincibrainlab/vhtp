@@ -127,6 +127,16 @@ try
 catch e
     throw(e)
 end
+
+EEG = eeg_checkset(EEG);
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_remove_epochs_badtrials = EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badtrials;
+    EEG.vhtp.inforow.proc_remove_epochs_badid = EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_badid;
+    EEG.vhtp.inforow.proc_remove_epochs_percent = EEG.vhtp.eeg_htpEegRemoveEpochsEeglab.epoch_percent;
+    EEG.vhtp.inforow.proc_xmax_remove_epochs = EEG.trials * abs(EEG.xmax-EEG.xmin);
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
 'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegRemoveEpochsEeglab,'qi_table')

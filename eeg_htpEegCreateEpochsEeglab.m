@@ -66,6 +66,14 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_xmax_create_epochs = EEG.vhtp.eeg_htpEegCreateEpochsEeglab.proc_xmax_epoch;
+    EEG.vhtp.inforow.proc_create_epochs_length = ip.Results.epochlength;
+    EEG.vhtp.inforow.proc_create_epochs_limits = ip.Results.epochlimits;
+    EEG.vhtp.inforow.proc_create_epochs_trials = EEG.trials;
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegCreateEpochsEeglab,'qi_table')

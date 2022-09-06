@@ -89,6 +89,12 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_ica_method = ip.Results.method;
+    EEG.vhtp.inforow.proc_ica_dataRank = ip.Results.rank;
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegIcaEeglab,'qi_table')

@@ -13,18 +13,15 @@ function [PARAMS] = parameters_Template()
 clear PARAMS;
 
 %%FILTER HIGHPASS
-PARAMS.filter_highpass.function = @eeg_htpEegFilterEeglab;
-PARAMS.filter_highpass.method='highpass';
+PARAMS.filter_highpass.function = @eeg_htpEegHighpassFilterEeglab;
 PARAMS.filter_highpass.highpassfilt = 1;
 
 %%FILTER LOWPASS
-PARAMS.filter_lowpass.function = @eeg_htpEegFilterEeglab;
-PARAMS.filter_lowpass.method = 'lowpass';
+PARAMS.filter_lowpass.function = @eeg_htpEegLowpassFilterEeglab;
 PARAMS.filter_lowpass.lowpassfilt=80;
 
 %%FILTER NOTCH
-PARAMS.filter_notch.function = @eeg_htpEegFilterEeglab;
-PARAMS.filter_notch.method = 'notch';
+PARAMS.filter_notch.function = @eeg_htpEegNotchFilterEeglab;
 PARAMS.filter_notch.notchfilt=[57 63];
 PARAMS.filter_notch.saveoutput = true;
 
@@ -46,7 +43,7 @@ PARAMS.channel_interpolation.method = 'spherical';
 
 %%SEGMENT REMOVAL
 PARAMS.segment_removal.function = @eeg_htpEegRemoveSegmentsEeglab;
-PARAMS.serment_removal.saveoutput = true;
+PARAMS.segment_removal.saveoutput = true;
 
 %%EPOCH CREATION
 PARAMS.epoch_creation.function = @eeg_htpEegCreateEpochsEeglab;

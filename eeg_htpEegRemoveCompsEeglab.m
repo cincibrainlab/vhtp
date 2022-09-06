@@ -455,6 +455,10 @@ end
 
 EEG = eeg_checkset(EEG);
 
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_remove_comps_removeComps = EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps;
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegRemoveCompsEeglab,'qi_table')

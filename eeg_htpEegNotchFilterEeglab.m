@@ -102,12 +102,18 @@ try
     EEG.vhtp.eeg_htpEegNotchFilterEeglab.revfilt     = ip.Results.revfilt;
     EEG.vhtp.eeg_htpEegNotchFilterEeglab.plotfreqz   = ip.Results.plotfreqz;
     EEG.vhtp.eeg_htpEegNotchFilterEeglab.minphase    = ip.Results.minphase;
-        
 catch e
     throw(e);
 end
 
 EEG = eeg_checkset(EEG);
+
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_filt_notch_lowcutoff = ip.Results.notchfilt(1);
+    EEG.vhtp.inforow.proc_filt_notch_highcutoff = ip.Results.notchfilt(2);
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegNotchFilterEeglab,'qi_table')

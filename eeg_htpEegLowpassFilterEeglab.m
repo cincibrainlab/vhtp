@@ -92,12 +92,16 @@ try
     EEG.vhtp.eeg_htpEegLowpassFilterEeglab.revfilt     = ip.Results.revfilt;
     EEG.vhtp.eeg_htpEegLowpassFilterEeglab.plotfreqz   = ip.Results.plotfreqz;
     EEG.vhtp.eeg_htpEegLowpassFilterEeglab.minphase    = ip.Results.minphase;
-        
 catch e
     throw(e);
 end
 
 EEG = eeg_checkset(EEG);
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_filt_highcutoff = ip.Results.lowpassfilt;
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegLowpassFilterEeglab,'qi_table')

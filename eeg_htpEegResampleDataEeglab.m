@@ -56,11 +56,17 @@ try
     EEG.vhtp.eeg_htpEegResampleDataEeglab.completed=1;
     EEG.vhtp.eeg_htpEegResampleDataEeglab.rawsrate = orig_srate;
     EEG.vhtp.eeg_htpEegResampleDataEeglab.srate = ip.Results.srate;
+    
 catch e
     throw(e)
 end
 
 EEG = eeg_checkset( EEG );
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_resample_srate = ip.Results.srate;
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegResampleDataEeglab,'qi_table')

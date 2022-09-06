@@ -77,7 +77,7 @@ try
    
    for i = 1:length(EEG.epoch); EEG.epoch(i).trialno = i; end
    
-   EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpepochxmax = EEG.xmax;
+   EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpepochxmax = EEG.trials * abs(EEG.xmax-EEG.xmin);
    EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpepochevent = epochevent;
    EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpepochlimits = ip.Results.epochlimits;
    EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpepochtrials = EEG.trials;
@@ -87,6 +87,14 @@ catch e
 end
 
 EEG = eeg_checkset(EEG);
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_create_erp_epochs_limits = ip.Results.epochlimits;
+    EEG.vhtp.inforow.proc_create_erp_epochs_event = EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.erpepochevent;
+    EEG.vhtp.inforow.proc_create_erp_epochs_trials = EEG.trials;
+    EEG.vhtp.inforow.proc_xmax_create_erp_epochs = EEG.trials * abs(EEG.xmax-EEG.xmin);
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab,'qi_table')

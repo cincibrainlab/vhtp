@@ -166,7 +166,7 @@ try
         else
             EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans = proc_badchans;
         end
-
+        
         % display check for user
         channel_labels = {EEG.chanlocs.labels};
         nochannel_idx = channel_labels(proc_badchans);
@@ -216,7 +216,10 @@ else
     fprintf('eeg_htpEegRemoveChannelsEeglab: Mark Channels Only \n')
 end
 %
-
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_removal_chans_badChans = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
+    EEG.vhtp.inforow.proc_removal_chans_nbchan = EEG.vhtp.inforow.raw_nbchan - length(EEG.vhtp.inforow.proc_removal_chans_badChans);
+end
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'qi_table')

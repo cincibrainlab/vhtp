@@ -117,6 +117,10 @@ try
         end
         EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.completed=1;
 
+        if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+            EEG.vhtp.inforow.proc_remove_regions = EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.proc_removed_regions;
+        end
+
     catch
 
         EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab.completed=0;
@@ -129,6 +133,12 @@ catch e
     throw(e)
 end
 EEG=eeg_checkset(EEG);
+
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+    EEG.vhtp.inforow.proc_xmin_remove_regions = EEG.xmin;
+    EEG.vhtp.inforow.proc_xmax_remove_regions = EEG.xmax;
+end
+
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 if isfield(EEG.vhtp.eeg_htpEegRemoveSegmentsEeglab,'qi_table')
