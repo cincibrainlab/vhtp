@@ -136,6 +136,30 @@
       <bst_channelreplace>71</bst_channelreplace>
       <bst_filetype>EEG-EEGLAB</bst_filetype>
       <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
+   </listitem>   <listitem>
+      <net_displayname>Brainvision NIRS</net_displayname>
+      <net_name>BVNIRS</net_name>
+      <net_file>chanfiles/BioSemi_64_10-10.elp</net_file>
+      <net_dict>chanfiles/TBD</net_dict>
+      <net_graphic>chanfiles/BV_64_channel_array_map.pdf</net_graphic>
+      <net_filter>*.eeg</net_filter>
+      <net_nochans>31</net_nochans>
+      <net_regions>
+         <Frontal>[1,27,2,3,4,11,12,31,32]</Frontal>
+         <Premotor>[11,12]</Premotor>
+         <SMA>[17,28]</SMA>
+         <Motor>[5,6,13,14]</Motor>
+         <Somatosensory>[13,7,8,14]</Somatosensory>
+         <Parietal>[23,15,7,19,8,16,24]</Parietal>
+         <Occipital>[15,9,20,19,16]</Occipital>
+      </net_regions>
+      <hdmfile>standard_vol.mat</hdmfile>
+      <mrifile>standard_mri.mat</mrifile>
+      <elcfile>std_129.elc</elcfile>
+      <coord_transform>[2 -15 -4.8248 0.029714 -0.004076 -1.6124 11.5 12 11.9985]</coord_transform>
+      <bst_channelreplace>71</bst_channelreplace>
+      <bst_filetype>EEG-EEGLAB</bst_filetype>
+      <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
    </listitem>
    <listitem>
       <net_displayname>Brainvision 64</net_displayname>

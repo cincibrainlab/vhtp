@@ -158,6 +158,11 @@ if ip.Results.listing == false
                 EEG.urchanlocs = locs;
                 EEG.chaninfo   = chaninfo;
 
+            case 'BVNIRS'
+                % placeholder for import function
+                % htpDoctor plugin for BV import
+                % channel file is BV_nirs_31.sfp 
+
             case 'EGI64'
                 EEG = pop_readegi(original_file);
                 locs = readlocs(netInfo.net_file);
