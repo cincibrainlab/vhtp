@@ -40,6 +40,7 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 defaultMaxComps = 24;
 defaultDPreset = 'dynamic';
 defaultRemoveIcs = [];
+defaultUseDefaultVisuals = 1;
 defaultSaveOutput = false;
 
 ip = inputParser();
@@ -48,6 +49,7 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'maxcomps',defaultMaxComps,@isnumeric);
 addParameter(ip,'dpreset',defaultDPreset, @ischar);
 addParameter(ip,'removeics',defaultRemoveIcs, @isvector);
+addParameter(ip, 'usedefaultvisuals',defaultUseDefaultVisuals, @islogical);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 
 parse(ip,EEG,varargin{:});
@@ -427,29 +429,35 @@ function b1_callback(src, event)
     EEGTMP = EEG;
 
     % remove components
-    EEG=compRemove(EEG, str2num(comps.String));
+    EEG=compRemove(EEG, ip.Results.usedefaultvisuals, str2num(comps.String));
 
     % replot components
-    vis_artifacts( EEG, EEGTMP);
-    vis_h = gcf;
-    vis_h.Units = 'norm';
-    vis_h.Position(1) = 0.05;
-    vis_h.Position(2) = 0.5;
-
-    vis_h.Units = 'pixels';
-    vis_h.Position(3) = 1000;
-    vis_h.Position(4) = 500;
-
-    uiwait(vis_h);
+    if ~ip.Results.usedefaultvisuals
+        vis_artifacts( EEG, EEGTMP);
+        vis_h = gcf;
+        vis_h.Units = 'norm';
+        vis_h.Position(1) = 0.05;
+        vis_h.Position(2) = 0.5;
+    
+        vis_h.Units = 'pixels';
+        vis_h.Position(3) = 1000;
+        vis_h.Position(4) = 500;
+    
+        uiwait(vis_h);
+    
+    end
     EEGTMP = [];
     
-
     h = findobj('Tag', 'selectcomps');
 
     for mi = 1 : length( h )
         close( h(mi) );
     end
 
+    eeglabFigs = findobj('Tag','EEGPLOT');
+    for fig = 1:length(eeglabFigs)
+        close(eeglabFigs(fig));
+    end
 
 end
 
@@ -494,7 +502,7 @@ function comps_artifact = get_icview_comps(var, threshold, range,EEG)
     comps_artifact = getComps(var, threshold);
 end
 
-function EEG = compRemove(EEG,varargin)
+function EEG = compRemove(EEG, visuals, varargin)
             
 
     try
@@ -515,8 +523,11 @@ function EEG = compRemove(EEG,varargin)
         end
       
         try
-            
-            EEG=pop_subcomp(EEG,compIdx, 0);
+            if visuals
+                EEG = pop_subcomp(EEG,compIdx,visuals);
+            else
+                EEG=pop_subcomp(EEG,compIdx, 0);
+            end
         catch
             
         end
