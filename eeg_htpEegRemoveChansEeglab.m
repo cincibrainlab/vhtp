@@ -217,8 +217,13 @@ else
 end
 %
 if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
-    EEG.vhtp.inforow.proc_removal_chans_badChans = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
-    EEG.vhtp.inforow.proc_removal_chans_nbchan = EEG.vhtp.inforow.raw_nbchan - length(EEG.vhtp.inforow.proc_removal_chans_badChans);
+    if isempty(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans)
+        EEG.vhtp.inforow.proc_removal_chans_badChans = 'none';
+        EEG.vhtp.inforow.proc_removal_chans_nbchan = EEG.nbchan;
+    else
+        EEG.vhtp.inforow.proc_removal_chans_badChans = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
+        EEG.vhtp.inforow.proc_removal_chans_nbchan = EEG.vhtp.inforow.raw_nbchan - length(EEG.vhtp.inforow.proc_removal_chans_badChans);
+    end
 end
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
