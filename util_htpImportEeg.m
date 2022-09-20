@@ -206,6 +206,16 @@ if ip.Results.listing == false
 
                % chaninfo.filename = netInfo.net_file;
                % EEG.chaninfo   = chaninfo;
+
+            case 'EDFGENERIC'
+                try
+                    datafile =  filelist.filename{i};
+                    folder = filelist.filepath{i};
+                    edfFile = fullfile(folder, datafile);
+                    EEG = pop_biosig( edfFile );
+                catch e
+                    error('EDF Import Failed.')
+                end
             otherwise
                 
         end
@@ -219,7 +229,12 @@ if ip.Results.listing == false
         % Populate EEG SET structure
         if ~isempty(EEG.event)
             has_events = true;
+            if isnumeric(EEG.event(1).type)
+                event_code_str = cellfun(@(x) num2str(x), {EEG.event.type}, 'uni',0);
+                event_codes = strjoin(unique(event_code_str),'__');
+            else
             event_codes = strjoin(unique({EEG.event.type}),'__');
+            end
         else
             has_events = false;
             event_codes = [];
@@ -249,11 +264,13 @@ if ip.Results.listing == false
 
         if i == 1
             % export figure to verify
-            f = figure;
-            topoplot([],EEG.chanlocs, 'style', 'blank', 'drawaxis', 'on', 'electrodes', ...
-                'labelpoint', 'plotrad', [], 'chaninfo', EEG.chaninfo, 'whitebk', 'on');
-            saveas(f, netverify_filename);
-            close all;
+            if EEG.nbchan > 20
+                f = figure;
+                topoplot([],EEG.chanlocs, 'style', 'blank', 'drawaxis', 'on', 'electrodes', ...
+                    'labelpoint', 'plotrad', [], 'chaninfo', EEG.chaninfo, 'whitebk', 'on');
+                saveas(f, netverify_filename);
+                close all;
+            end
         end
 
 
