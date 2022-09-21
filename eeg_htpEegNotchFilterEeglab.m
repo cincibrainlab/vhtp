@@ -51,7 +51,7 @@ function [EEG,results] = eeg_htpEegNotchFilterEeglab(EEG,varargin)
 %  kyle.cullion@cchmc.org
 
 defaultNotch = [55 65];
-defaultRevFilt=1;
+defaultRevFilt= false;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultFiltOrder = 3300;
