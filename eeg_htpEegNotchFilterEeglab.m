@@ -18,8 +18,8 @@ function [EEG,results] = eeg_htpEegNotchFilterEeglab(EEG,varargin)
 %             used in harmonics calculation for notch filtering
 %             default: [55 65]
 %
-%   'revfilt' - Numeric boolean to invert filter from bandpass to notch
-%               default: 0 e.g. {0 -> bandpass, 1 -> notch}
+%   'revfilt' - Logical boolean to invert filter from bandpass to notch
+%               default: true e.g. {false -> bandpass, true -> notch}
 %
 %   'plotfreqz' - Numeric boolean to indicate whether to plot filter's frequency and phase response
 %                 default: 0
@@ -51,7 +51,7 @@ function [EEG,results] = eeg_htpEegNotchFilterEeglab(EEG,varargin)
 %  kyle.cullion@cchmc.org
 
 defaultNotch = [55 65];
-defaultRevFilt= false;
+defaultRevFilt= true;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultFiltOrder = 3300;
@@ -78,21 +78,16 @@ try
     harmonics = 3;
     linenoise = floor((ip.Results.notchfilt(1) + ip.Results.notchfilt(2)) / 2);
     if ~(ip.Results.dynamicfiltorder)
-        if ismissing(ip.Results.filtorder)
-            notchfiltorder = 3300;
-        else
-            notchfiltorder = ip.Results.filtorder;
-        end
         if EEG.srate < 2000
             for i = 1 : harmonics
-                EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i-(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'hicutoff', (linenoise * i+(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'filtorder',notchfiltorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
+                EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i-(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'hicutoff', (linenoise * i+(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'filtorder',ip.Results.filtorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
             end
         end
-        EEG.vhtp.eeg_htpEegNotchFilterEeglab.filtorder    = notchfiltorder;
+        EEG.vhtp.eeg_htpEegNotchFilterEeglab.filtorder    = ip.Results.filtorder;
     else
         if EEG.srate < 2000
             for i = 1 : harmonics
-                EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i-(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'hicutoff', (linenoise * i+(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz);
+                EEG = pop_eegfiltnew(EEG, 'locutoff', (linenoise * i-(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'hicutoff', (linenoise * i+(abs(ip.Results.notchfilt(1)-ip.Results.notchfilt(2))/2)), 'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
             end
         end
         EEG.vhtp.eeg_htpEegNotchFilterEeglab.filtorder    = 'dynamic';

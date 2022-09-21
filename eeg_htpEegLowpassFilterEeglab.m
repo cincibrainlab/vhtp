@@ -16,8 +16,8 @@ function [EEG,results] = eeg_htpEegLowpassFilterEeglab(EEG,varargin)
 %                   lowpass bandpass filter 
 %                   default: 80
 %
-%   'revfilt' - Numeric boolean to invert filter from bandpass to notch
-%               default: 0 e.g. {0 -> bandpass, 1 -> notch}
+%   'revfilt' - Logical boolean to invert filter from bandpass to notch
+%               default: false e.g. {false -> bandpass, true -> notch}
 %
 %   'plotfreqz' - Numeric boolean to indicate whether to plot filter's frequency and phase response
 %                 default: 0
@@ -27,7 +27,7 @@ function [EEG,results] = eeg_htpEegLowpassFilterEeglab(EEG,varargin)
 %                default: false
 %
 %   'filtorder' - numeric override of default EEG filters
-%                 default: missing
+%                 default: 3300
 %
 %   'dynamicfiltorder' - numeric boolean indicating whether to use dynamic filtorder determined via EEGLAB filtering function
 %                        default: 0
@@ -49,7 +49,7 @@ function [EEG,results] = eeg_htpEegLowpassFilterEeglab(EEG,varargin)
 %  kyle.cullion@cchmc.org
 
 defaultHiCutoff = 80;
-defaultRevFilt=0;
+defaultRevFilt=false;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultFiltOrder = 3300;
@@ -74,17 +74,12 @@ functionstamp = mfilename; % function name for logging/output
 
 try
     if ~(ip.Results.dynamicfiltorder)
-        if ismissing(ip.Results.filtorder)
-            lowpassfiltorder = 3300;
-        else
-            lowpassfiltorder = ip.Results.filtorder;
-        end
         EEG = pop_eegfiltnew(EEG,  ...
-            'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',lowpassfiltorder);
-        EEG.vhtp.eeg_htpEegLowpassFilterEeglab.lowpassfiltorder    = lowpassfiltorder;
+            'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'filtorder',ip.Results.filtorder, 'revfilt',ip.Results.revfilt,'plotfreqz',ip.Results.plotfreqz, 'minphase',ip.Results.minphase);
+        EEG.vhtp.eeg_htpEegLowpassFilterEeglab.lowpassfiltorder    = ip.Results.filtorder;
     else
         EEG = pop_eegfiltnew(EEG,  ...
-            'locutoff', [],  'hicutoff', ip.Results.lowpassfilt);
+            'locutoff', [],  'hicutoff', ip.Results.lowpassfilt,'revfilt',ip.Results.revfilt,'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
         EEG.vhtp.eeg_htpEegLowpassFilterEeglab.lowpassfiltorder    = 'dynamic';
     end
     EEG.vhtp.eeg_htpEegLowpassFilterEeglab.completed = 1;
