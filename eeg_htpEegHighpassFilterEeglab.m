@@ -51,7 +51,7 @@ defaultLoCutoff = 1;
 defaultRevFilt = 0;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
-defaultFiltOrder = missing;
+defaultFiltOrder = 6600;
 defaultDynamicFiltOrder = 0;
 defaultSaveOutput = false;
 

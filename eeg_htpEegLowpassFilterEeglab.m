@@ -52,7 +52,7 @@ defaultHiCutoff = 80;
 defaultRevFilt=0;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
-defaultFiltOrder = missing;
+defaultFiltOrder = 3300;
 defaultDynamicFiltOrder = 0;
 defaultSaveOutput = false;
     

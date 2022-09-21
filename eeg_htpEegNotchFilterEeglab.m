@@ -54,7 +54,7 @@ defaultNotch = [55 65];
 defaultRevFilt=1;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
-defaultFiltOrder = missing;
+defaultFiltOrder = 3300;
 defaultDynamicFiltOrder = 0;
 defaultSaveOutput = false;
    
