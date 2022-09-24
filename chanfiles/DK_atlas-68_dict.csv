@@ -8,7 +8,7 @@ caudalmiddlefrontal R,Right-caudalmiddlefrontal,Caudal Middle Frontal R,caudalmi
 cuneus L,Left-cuneus,Cuneus L,cuneusL,LO,93,0.862745098,0.078431373,0.392156863,-5.825780866,-79.8351715,19.42173702,CUN L,cuneus L,VIS,CUNL,Left,Occipital
 cuneus R,Right-cuneus,Cuneus R,cuneusR,RO,99,0.862745098,0.078431373,0.392156863,7.998451041,-77.92548579,20.32712091,CUN R,cuneus R,VIS,CUNR,Right,Occipital
 entorhinal L,Left-entorhinal,Entorhinal L,entorhinalL,LT,30,0.862745098,0.078431373,0.039215686,-26.37986643,-4.79147216,-33.2702963,ENT L,entorhinal L,other,ENTL,Left,Temporal
-entorhinal R,Right-entorhinal,Entorhinal R,entorhinalR,RT,32,0.862745098,0.078431373,0.039215686,s,-5.681483021,-35.09085675,ENT R,entorhinal R,other,ENTR,Right,Temporal
+entorhinal R,Right-entorhinal,Entorhinal R,entorhinalR,RT,32,0.862745098,0.078431373,0.039215686,23.46317216,-5.681483021,-35.09085675,ENT R,entorhinal R,other,ENTR,Right,Temporal
 frontalpole L,Left-frontalpole,Frontal Pole L,frontalpoleL,LPF,22,0.392156863,0,0.392156863,-7.326240498,68.35492443,-10.88895031,FP L,frontalpole L,other,FPL,Left,Prefrontal
 frontalpole R,Right-frontalpole,Frontal Pole R,frontalpoleR,RPF,30,0.392156863,0,0.392156863,7.323236893,67.77775614,-14.68464709,FP R,frontalpole R,other,FPR,Right,Prefrontal
 fusiform L,Left-fusiform,Fusiform L,fusiformL,LT,268,0.705882353,0.862745098,0.549019608,-36.28704753,-43.48326492,-22.24514535,FUS L,fusiform L,VIS,FUSL,Left,Temporal
