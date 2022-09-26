@@ -38,7 +38,7 @@ ip.StructExpand = 0;
 addRequired(ip, 'filepath', @isfolder)
 addRequired(ip,'presets',@isstruct)
 addParameter(ip,'ext', defaultExt, validateExt)
-addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
+addParameter(ip,'subdirOn', defaultSubDirOn, @mustBeNumericOrLogical)
 addParameter(ip,'outputdir', defaultOutputDir, @ischar)
 addParameter(ip,'paradigm',defaultParadigm,@ischar)
 
@@ -69,8 +69,11 @@ finaloutput = fullfile(ip.Results.outputdir, 'derivatives',ip.Results.paradigm);
 if ~exist(finaloutput,"dir")
     mkdir(finaloutput);
 end
+try
 copyfile(fullfile(filepath,'preprocess',ip.Results.paradigm),finaloutput)
-
+catch
+    disp("No preprocessing directory available.")
+end
 end
 
 function data = populateData(filelist)
