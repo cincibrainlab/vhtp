@@ -42,8 +42,8 @@ ip = inputParser();
 addRequired(ip, 'filepath', @isfolder)
 addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
-addParameter(ip,'notKeyword', defaultNotKeyword, @islogical)
-addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
+addParameter(ip,'notKeyword', defaultNotKeyword, @mustBeNumericOrLogical)
+addParameter(ip,'subdirOn', defaultSubDirOn, @mustBeNumericOrLogical)
 parse(ip,filepath,varargin{:});
 
 % START: Utilty code
