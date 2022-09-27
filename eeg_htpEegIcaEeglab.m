@@ -41,7 +41,7 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 
 if length(size(EEG.data))==3; defaultRank = getrank(double(reshape(EEG.data,EEG.nbchan,[]))); else; defaultRank = getrank(double(EEG.data)); end
 defaultMethod = 'binica';
-defaultIcaDir = fullfile(pwd,'icaweights');
+defaultIcaDir = fullfile(dir(which('vhtpPreprocessGui')).folder,'icaweights');
 defaultSaveOutput = false;
 % MATLAB built-in input validation
 ip = inputParser();

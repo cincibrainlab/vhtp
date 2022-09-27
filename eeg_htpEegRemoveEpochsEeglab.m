@@ -128,6 +128,7 @@ catch e
     throw(e)
 end
 
+close(findobj('Type','figure'));
 EEG = eeg_checkset(EEG);
 
 if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
