@@ -114,7 +114,7 @@ try
                 end
                 processAll(EEG, stepnames,presets,ip.Results.dryrun,ip.Results.outputdir, ip.Results.stepnumbers);
                 fileWildcard = sprintf('%s.*',string(regexp(filelist.filename{i},'^[^.]+','match')));
-                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(filepath,'completed'));
+                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(char(filelist.filepath(i)),'completed'));
             case 'IndividualStep'
                 EEG = pop_loadset('filepath', filelist.filepath{i},'filename',filelist.filename{i}); 
                 if ~isfield(EEG,'vhtp') || (isfield(EEG,'vhtp') && ~isfield(EEG.vhtp,'stepPreprocessing'))
@@ -138,7 +138,7 @@ try
                 end
                 processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
                 fileWildcard = sprintf('%s.*',string(regexp(filelist.filename{i},'^[^.]+','match')));
-                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(filepath,'completed'));
+                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(char(filelist.filepath(i)),'completed'));
             otherwise
         end 
         if isfield(EEG.etc,'lastOutputDir')
@@ -200,7 +200,10 @@ function [EEG]=runAnalysisStep(EEG, params, step, functionName, dryRun,outputdir
     if ~dryRun && (isfield(params,'saveoutput') && params.saveoutput == 1)
         EEG.filename = [regexprep(EEG.subject,'.set','') '_' step '.set'];
         EEG.vhtp.stepPlacement = stepNumber;
-        pop_saveset(EEG,'filename',fullfile(outputdir,EEG.filename));
+        if ~exist(outputdir,'dir')
+            mkdir(outputdir);
+        end
+        pop_saveset(EEG,'filename', EEG.filename, 'filepath', outputdir);
     end
 end
 
@@ -215,6 +218,9 @@ function [EEG]=runStep(EEG, params, step, functionName, dryRun,outputdir, stepNu
     if ~dryRun && (isfield(params,'saveoutput') && params.saveoutput == 1)
         EEG.filename = [regexprep(EEG.subject,'.set','') '_' step '.set'];
         EEG.vhtp.stepPlacement = stepNumber;
+        if ~exist(outputdir,'dir')
+            mkdir(outputdir);
+        end
         pop_saveset(EEG,'filename', EEG.filename, 'filepath', outputdir);
         EEG.etc.lastOutputDir = outputdir;
     end
