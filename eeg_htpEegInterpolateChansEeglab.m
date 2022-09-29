@@ -90,7 +90,11 @@ end
 EEG = eeg_checkset(EEG);
 
 if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
-    EEG.vhtp.inforow.proc_interpolate_chans_ipChans = badchannels;
+    if isempty(badchannels)
+        EEG.vhtp.inforow.proc_interpolate_chans_ipChans = 'none';
+    else
+        EEG.vhtp.inforow.proc_interpolate_chans_ipChans = badchannels;
+    end
 end
 
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...

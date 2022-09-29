@@ -217,21 +217,28 @@ EEG=eeg_checkset(EEG);
 % added to optimize inline ASR
 
 if ip.Results.removechannel
-    fprintf('eeg_htpEegRemoveChannelsEeglab: Remove Channels ON \n');
-    channel_labels = {EEG.chanlocs.labels};
-    nochannel_idx = channel_labels(proc_badchans);
-    EEG = pop_select( EEG, 'nochannel',  nochannel_idx);
+    if ~isempty(proc_badchans)
+        fprintf('eeg_htpEegRemoveChannelsEeglab: Remove Channels ON \n');
+        channel_labels = {EEG.chanlocs.labels};
+        nochannel_idx = channel_labels(proc_badchans);
+        EEG = pop_select( EEG, 'nochannel',  nochannel_idx);
+    end
 else
     fprintf('eeg_htpEegRemoveChannelsEeglab: Mark Channels Only \n')
 end
 %
 if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
-    if isempty(EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans)
+    if isempty(proc_badchans)
         EEG.vhtp.inforow.proc_removal_chans_badChans = 'none';
         EEG.vhtp.inforow.proc_removal_chans_nbchan = EEG.nbchan;
     else
         EEG.vhtp.inforow.proc_removal_chans_badChans = EEG.vhtp.eeg_htpEegRemoveChansEeglab.proc_badchans;
         EEG.vhtp.inforow.proc_removal_chans_nbchan = EEG.vhtp.inforow.raw_nbchan - length(EEG.vhtp.inforow.proc_removal_chans_badChans);
+    end
+    if ip.Results.removechannel
+        EEG.vhtp.inforow.proc_removal_chans_method = 'Remove';
+    else
+        EEG.vhtp.inforow.proc_removal_chans_method = 'Mark';
     end
 end
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...

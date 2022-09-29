@@ -113,6 +113,8 @@ try
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
                 processAll(EEG, stepnames,presets,ip.Results.dryrun,ip.Results.outputdir, ip.Results.stepnumbers);
+                fileWildcard = sprintf('%s.*',string(regexp(filelist.filename{i},'^[^.]+','match')));
+                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(filepath,'completed'));
             case 'IndividualStep'
                 EEG = pop_loadset('filepath', filelist.filepath{i},'filename',filelist.filename{i}); 
                 if ~isfield(EEG,'vhtp') || (isfield(EEG,'vhtp') && ~isfield(EEG.vhtp,'stepPreprocessing'))
@@ -135,6 +137,8 @@ try
                     EEG = initializeStepProcessingHistory(EEG,fieldnames(stepnames));
                 end
                 processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
+                fileWildcard = sprintf('%s.*',string(regexp(filelist.filename{i},'^[^.]+','match')));
+                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(filepath,'completed'));
             otherwise
         end 
         if isfield(EEG.etc,'lastOutputDir')
