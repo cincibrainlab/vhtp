@@ -25,6 +25,9 @@ function [EEG, results] = eeg_htpEegIcaEeglab(EEG,varargin)
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %               
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: '' 
 %
 %% Outputs:
 %     EEG [struct]         - Updated EEGLAB structure
@@ -43,6 +46,8 @@ if length(size(EEG.data))==3; defaultRank = getrank(double(reshape(EEG.data,EEG.
 defaultMethod = 'binica';
 defaultIcaDir = fullfile(dir(which('vhtpPreprocessGui')).folder,'icaweights');
 defaultSaveOutput = false;
+defaultOutputDir = '';
+
 % MATLAB built-in input validation
 ip = inputParser();
 ip.StructExpand = 0;
@@ -51,6 +56,7 @@ addParameter(ip, 'method',defaultMethod,@ischar);
 addParameter(ip,'rank',defaultRank,@isnumeric);
 addParameter(ip,'icadir',defaultIcaDir,@ischar);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -103,6 +109,19 @@ else
     EEG.vhtp.eeg_htpEegIcaEeglab.qi_table = qi_table;
 end
 results = EEG.vhtp.eeg_htpEegIcaEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'ica');
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
+
 end
 
 function tmprank2 = getrank(tmpdata)

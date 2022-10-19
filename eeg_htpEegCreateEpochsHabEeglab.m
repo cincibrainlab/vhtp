@@ -19,19 +19,26 @@ function [EEG, results] = eeg_htpEegCreateHabEpochsEeglab(EEG,varargin)
 %                   relative to the time-locking events 
 %               default: [0 epochlength]
 %
-%           
-% Outputs:
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: ''      
+%        
+%% Outputs:
 %     EEG         - Updated EEGLAB structure
 %
+%% Disclaimer:
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%  
+%  Please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%% Contact:
+%  kyle.cullion@cchmc.org
 
 defaultEpochLength = 2;
 defaultTargetDin = 'DIN8';
 defaultEpochLimits = [0 defaultEpochLength];
 defaultSaveOutput = false;
+defaultOutputDir = '';
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -40,7 +47,8 @@ addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'epochlength',defaultEpochLength,@isnumeric);
 addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
 addParameter(ip, 'targetdin', defaultTargetDin, @ischar);
-addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -99,5 +107,18 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
     'VariableNames', {'eegid','scriptname','timestamp'});
 EEG.vhtp.eeg_htpEegCreateEpochsEeglab.qi_table = qi_table;
 results = EEG.vhtp.eeg_htpEegCreateEpochsEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'epoch_creation');
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
+
 end
 

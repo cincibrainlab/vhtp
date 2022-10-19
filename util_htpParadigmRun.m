@@ -92,7 +92,7 @@ switch exist(filepath)
     case 7
         filelist = util_htpDirListing(filepath, 'ext', ip.Results.ext, 'subdirOn', ip.Results.subdirOn);
         if ip.Results.subdirOn
-            filelist = filelist(~contains(filelist.filepath, fullfile(filepath,'preprocess')),:);
+            filelist = filelist(~contains(filelist.filepath, fullfile(filepath,'preprocess')) & ~contains(filelist.filepath, fullfile(filepath,'completed')),:);
         end
         is_single_file = false;
     case 2
@@ -131,6 +131,8 @@ try
                         processRerunStep(EEG,stepnames,presets,ip.Results.dryrun,ip.Results.outputdir,ip.Results.stepnumbers);
                     end
                 end
+                fileWildcard = sprintf('%s.*',string(regexp(filelist.filename{i},'^[^.]+','match')));
+                movefile(fullfile(char(filelist.filepath(i)),fileWildcard),fullfile(char(filelist.filepath(i)),'completed'));
             case 'Continuation'
                 EEG = pop_loadset('filepath',filelist.filepath{i},'filename',regexprep(filelist.filename{i},ip.Results.ext,'.set'));
                 if ~isfield(EEG,'vhtp') || (isfield(EEG,'vhtp') && ~isfield(EEG.vhtp,'stepPreprocessing'))
@@ -211,19 +213,16 @@ function [EEG]=runStep(EEG, params, step, functionName, dryRun,outputdir, stepNu
     inputs = [fieldnames(params).'; struct2cell(params).'];
     inputs = inputs(:).';
     prior_file = EEG.filename;
-    
-    EEG = functionName(EEG,inputs{3:end});
-    EEG.vhtp.stepPreprocessing.(step) = true;
-    EEG.vhtp.prior_file = prior_file;
-    if ~dryRun && (isfield(params,'saveoutput') && params.saveoutput == 1)
-        EEG.filename = [regexprep(EEG.subject,'.set','') '_' step '.set'];
-        EEG.vhtp.stepPlacement = stepNumber;
-        if ~exist(outputdir,'dir')
-            mkdir(outputdir);
-        end
-        pop_saveset(EEG,'filename', EEG.filename, 'filepath', outputdir);
-        EEG.etc.lastOutputDir = outputdir;
+    EEG.vhtp.currentStep = step; 
+    if dryRun && ~isempty(find(strcmp(inputs,'saveoutput')))
+        inputs{find(strcmp(inputs,'saveoutput'))+1} = false;
     end
+    EEG = functionName(EEG,inputs{3:end});
+    EEG.vhtp.prior_file = prior_file;
+    if ~EEG.vhtp.stepPreprocessing.(step)
+        EEG.vhtp.stepPreprocessing.(step) = true;
+    end
+
 end
 
 function processAll(EEG,stepnames,options,dryrun,outputdir,stepnumbers)

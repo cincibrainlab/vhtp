@@ -58,6 +58,10 @@ function [EEG,results] = eeg_htpEegCleanlineFilterEeglab(EEG,varargin)
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: ''
+%
 %% Outputs:
 %     EEG [struct]         - Updated EEGLAB structure
 %
@@ -86,6 +90,7 @@ defaultCleanlineVerb = 1;
 defaultCleanlineWinSize = 4;
 defaultCleanlineWinStep = 4;
 defaultSaveOutput = false;
+defaultOutputDir = '';
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -104,7 +109,8 @@ addParameter(ip, 'cleanlinetau',defaultCleanlineTau,@isnumeric);
 addParameter(ip, 'cleanlineverb',defaultCleanlineVerb,@isnumeric);
 addParameter(ip, 'cleanlinewinsize',defaultCleanlineWinSize,@isnumeric);
 addParameter(ip, 'cleanlinewinstep',defaultCleanlineWinStep,@isnumeric);
-addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -144,5 +150,17 @@ else
     EEG.vhtp.eeg_htpEegCleanlineFilterEeglab.qi_table = qi_table;
 end
 results = EEG.vhtp.eeg_htpEegCleanlineFilterEeglab;
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,['cleanline_filter' ip.Results.method]);
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
+
 end
 

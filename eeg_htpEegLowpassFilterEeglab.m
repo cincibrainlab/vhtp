@@ -35,6 +35,10 @@ function [EEG,results] = eeg_htpEegLowpassFilterEeglab(EEG,varargin)
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: '' 
+%
 %% Outputs:
 %     EEG [struct]         - Updated EEGLAB structure
 %
@@ -55,6 +59,7 @@ defaultMinPhase    = false;
 defaultFiltOrder = 3300;
 defaultDynamicFiltOrder = 0;
 defaultSaveOutput = false;
+defaultOutputDir = '';
     
 ip = inputParser();
 ip.StructExpand = 0;
@@ -65,7 +70,8 @@ addParameter(ip, 'plotfreqz',defaultPlotFreqz,@isnumeric);
 addParameter(ip, 'minphase',defaultMinPhase,@islogical);
 addParameter(ip, 'filtorder',defaultFiltOrder,@isnumeric);
 addParameter(ip, 'dynamicfiltorder', defaultDynamicFiltOrder,@islogical);
-addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -105,5 +111,18 @@ else
     EEG.vhtp.eeg_htpEegLowpassFilterEeglab.qi_table = qi_table;
 end
 results = EEG.vhtp.eeg_htpEegLowpassFilterEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'filter_lowpass');
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
+
 end
 

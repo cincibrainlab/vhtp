@@ -13,10 +13,16 @@ function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 %% Function Specific Inputs:
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
-%% Output:
+%
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: '' 
+%
+%% Outputs:
 %   EEG [struct] - output structure with updated dataset
 %
 %   results [struct]   - Updated function-specific structure containing qi table and input parameters used
+%
 %% Disclaimer:
 %   Part of the Cincinnati Visual High Throughput EEG Pipeline
 %   
@@ -25,11 +31,14 @@ function [EEG, results] = eeg_htpEegRereferenceEeglab(EEG,varargin)
 %% Contact:
 %   kyle.cullion@cchmc.org
 defaultSaveOutput = false;
+defaultOutputDir = '';
 
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
+
 
 parse(ip,EEG,varargin{:});
 
@@ -70,5 +79,18 @@ else
     EEG.vhtp.eeg_htpEegRereferenceEeglab.qi_table = qi_table;
 end
 results = EEG.vhtp.eeg_htpEegRereferenceEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'rereference');
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
+
 end
 

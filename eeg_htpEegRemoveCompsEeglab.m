@@ -25,16 +25,22 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %    'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                   default: false
 %
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: '' 
 %
-% Outputs:
+%% Outputs:
 %     EEG         - Updated EEGLAB structure
 %
 %     results   - Updated function-specific structure containing qi table
 %                 and input parameters used
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
+%% Disclaimer:
+% This file is part of the Cincinnati Visual High Throughput Pipeline,
+%  
+% Please see http://github.com/cincibrainlab
 %
+%% Contact:
 %  Contact: kyle.cullion@cchmc.org
 
 defaultMaxComps = 24;
@@ -42,6 +48,7 @@ defaultDPreset = 'dynamic';
 defaultRemoveIcs = [];
 defaultUseDefaultVisuals = 1;
 defaultSaveOutput = false;
+defaultOutputDir = '';
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -51,6 +58,7 @@ addParameter(ip,'dpreset',defaultDPreset, @ischar);
 addParameter(ip,'removeics',defaultRemoveIcs, @isvector);
 addParameter(ip, 'usedefaultvisuals',defaultUseDefaultVisuals, @islogical);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -475,6 +483,18 @@ else
     EEG.vhtp.eeg_htpEegRemoveCompsEeglab.qi_table = qi_table;
 end
 results = EEG.vhtp.eeg_htpEegRemoveCompsEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'component_removal');
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
 end
 
 function EEG = remove_comps_action( EEG, components_to_remove_vector )

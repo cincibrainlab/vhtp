@@ -24,8 +24,12 @@ function [EEG, results] = eeg_htpEegCreateErpEpochsEeglab(EEG, varargin)
 %
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
-%      
-%% Output:
+%
+%   'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: ''   
+%
+%% Outputs:
 %     EEG [struct]        - Updated EEGLAB structure
 %
 %     results [struct]   - Updated function-specific structure containing qi table and input parameters used
@@ -45,6 +49,7 @@ defaultEpochLimits = [-.500 2.750];
 defaultRmBaseline = false;
 defaultBaselineLimits = [-.500 0];
 defaultSaveOutput = false;
+defaultOutputDir = '';
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -54,6 +59,7 @@ addParameter(ip,'epochlimits',defaultEpochLimits,@isnumeric);
 addParameter(ip, 'rmbaseline', defaultRmBaseline, @islogical);
 addParameter(ip, 'baselinelimits', defaultBaselineLimits, @isnumeric);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip, EEG, varargin{:});
 
@@ -103,5 +109,18 @@ else
     EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab.qi_table = qi_table;
 end
 results = EEG.vhtp.eeg_htpEegCreateErpEpochsEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'epoch_creation_erp');
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
+
 end
 

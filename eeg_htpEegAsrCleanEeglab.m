@@ -58,7 +58,10 @@ function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
-%           
+%  'outputdir' - text representing the output directory for the function
+%                 output to be saved to
+%                 default: ''      
+%
 %% Outputs:
 %     EEG [struct]         - Updated EEGLAB structure
 %
@@ -75,7 +78,6 @@ function [EEG,results] = eeg_htpEegAsrCleanEeglab(EEG,varargin)
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
 
-defaultSaveOutput = false;
 defaultAsrMode = 2;
 defaultAsrFlatline = 5;
 defaultAsrHighpass = [0.25 0.75];
@@ -84,6 +86,8 @@ defaultAsrNoisy = 4;
 defaultAsrBurst = 20;
 defaultAsrWindow = 0.25;
 defaultAsrMaxMem = 64;
+defaultSaveOutput = false;
+defaultOutputDir = '';
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -96,7 +100,8 @@ addParameter(ip, 'asrnoisy', defaultAsrNoisy, @isnumeric);
 addParameter(ip, 'asrburst',defaultAsrBurst,@isnumeric);
 addParameter(ip, 'asrwindow', defaultAsrWindow, @isnumeric);
 addParameter(ip, 'asrmaxmem', defaultAsrMaxMem, @isnumeric);
-addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical)
+addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,EEG,varargin{:});
 
@@ -198,6 +203,18 @@ qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
 'VariableNames', {'eegid','scriptname','timestamp'});
 EEG.vhtp.eeg_htpEegAsrCleanEeglab.qi_table = qi_table;
 results = EEG.vhtp.eeg_htpEegAsrCleanEeglab;
+
+if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
+    if isfield(EEG.vhtp, 'currentStep')
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,EEG.vhtp.currentStep);
+    else
+        EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,['asr' ip.Results.method]);
+    end
+elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
+    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
+else
+    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+end
 
 end
 
