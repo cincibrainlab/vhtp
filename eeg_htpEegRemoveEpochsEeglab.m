@@ -159,10 +159,7 @@ if ip.Results.saveoutput && ~isempty(ip.Results.outputdir)
     else
         EEG = util_htpSaveOutput(EEG,ip.Results.outputdir,'epoch_removal');
     end
-elseif ip.Results.saveoutput && isempty(ip.Results.outputdir)
-    fprintf('File was NOT SAVED due to no output directory parameter specified\n\n');
-else
-    fprintf('File was NOT SAVED due to save out parameter being false\n\n');
+    fprintf('Output was copied to %s\n\n',ip.Results.outputdir);
 end
 
 end

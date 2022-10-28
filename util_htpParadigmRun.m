@@ -218,9 +218,23 @@ function [EEG]=runStep(EEG, params, step, functionName, dryRun,outputdir, stepNu
         inputs{find(strcmp(inputs,'saveoutput'))+1} = false;
     end
     EEG = functionName(EEG,inputs{3:end});
-    EEG.vhtp.prior_file = prior_file;
     if ~EEG.vhtp.stepPreprocessing.(step)
         EEG.vhtp.stepPreprocessing.(step) = true;
+    end
+    EEG.vhtp.prior_file = prior_file;
+    if ~dryRun && (isfield(params,'saveoutput') && params.saveoutput == 1)
+        if ~isempty(EEG.subject)
+            EEG.filename = [regexprep(EEG.subject,'.set','') '_' step '.set'];
+        else
+            EEG.subject = EEG.filename;
+            EEG.filename = [regexprep(EEG.filename,'.set','') '_' step '.set'];
+        end
+        EEG.vhtp.stepPlacement = stepNumber;
+        if ~exist(outputdir,'dir')
+            mkdir(outputdir);
+        end
+        EEG.etc.lastOutputDir = outputdir;
+        pop_saveset(EEG,'filename', EEG.filename, 'filepath', outputdir);
     end
 
 end
