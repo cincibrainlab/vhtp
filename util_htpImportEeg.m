@@ -164,7 +164,32 @@ if ip.Results.listing == false
                 % channel file is BV_nirs_31.sfp 
 
             case 'EGI64'
-                EEG = pop_readegi(original_file);
+                try EEG = pop_readegi(original_file);
+                catch, error('Check if EEGLAB 2021 is installed'); end
+
+                locs = readlocs(netInfo.net_file);
+                locs(1).type = 'FID'; locs(2).type = 'FID'; locs(3).type = 'FID';
+                %Remove just the file identifiers for non-ref datasets
+                %Otherwise remove file identifiers and ref
+                if mod(EEG.nbchan,2) ~= 0
+                    chaninfo.nodatchans = locs([1 2 3]);
+                    locs([1 2 3]) = [];
+                else
+                    locs(end).type = 'REF';
+                    chaninfo.nodatchans = locs([1 2 3 end]);
+                    locs([1 2 3 end]) = [];
+                end
+
+                chaninfo.filename = netInfo.net_file;
+                EEG.chanlocs = locs;
+                EEG.urchanlocs = locs;
+                EEG.chaninfo = chaninfo;
+
+
+            case 'EGI32'
+                try EEG = pop_readegi(original_file);
+                catch, error('Check if EEGLAB 2021 is installed'); end
+
                 locs = readlocs(netInfo.net_file);
                 locs(1).type = 'FID'; locs(2).type = 'FID'; locs(3).type = 'FID';
                 %Remove just the file identifiers for non-ref datasets
