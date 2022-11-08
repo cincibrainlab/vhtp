@@ -29,6 +29,11 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %                 output to be saved to
 %                 default: '' 
 %
+%   'freqrange' - Array of two numbers utilized for the frequency range for 
+%                 extended detail about specific components when plotting 
+%                 activity
+%                 default: [2 80]
+%
 %% Outputs:
 %     EEG         - Updated EEGLAB structure
 %
@@ -49,6 +54,7 @@ defaultRemoveIcs = [];
 defaultUseDefaultVisuals = 1;
 defaultSaveOutput = false;
 defaultOutputDir = '';
+defaultFreqRange = [2 80];
 
 ip = inputParser();
 ip.StructExpand = 0;
@@ -59,6 +65,7 @@ addParameter(ip,'removeics',defaultRemoveIcs, @isvector);
 addParameter(ip, 'usedefaultvisuals',defaultUseDefaultVisuals, @islogical);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 addParameter(ip,'outputdir', defaultOutputDir, @ischar);
+addParameter(ip,'freqrange',defaultFreqRange,@isnumeric);
 
 parse(ip,EEG,varargin{:});
 
@@ -320,7 +327,7 @@ function prop_extended( src, event)
 
     EEG = src.UserData{1};
     ri = src.UserData{2};
-    pop_prop_extended( EEG, 0, ri,  NaN, {'freqrange', [0 120]});
+    pop_prop_extended( EEG, 0, ri,  NaN, {'freqrange', ip.Results.freqrange});
 
  end
 
@@ -389,7 +396,7 @@ function b2_callback(src, event)
     EEG = src.UserData;
 
 
-    pop_prop_extended( EEG, 0, str2num(comps.String), NaN, {'freqrange', [0 120]});
+    pop_prop_extended( EEG, 0, str2num(comps.String), NaN, {'freqrange', ip.Results.freqrange});
 
 
 
