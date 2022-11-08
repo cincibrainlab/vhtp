@@ -82,10 +82,9 @@ try
     
     % Open component topoplot, 20 components
     pop_selectcomps(EEG, 1:maxcomps);
-
-    h.tp = gcf;
-    h.tp.Units = 'norm';
-    h.tp.Position = [sc_width/200/sc_width .5 main_width main_height];
+    h.tp = findobj('-regexp','tag','selcomp');
+    [h.tp.Units] = deal('norm');
+    [h.tp.Position] = deal([sc_width/200/sc_width .5 main_width main_height]);
     
     switch ip.Results.dpreset
         case '1080p'
@@ -183,7 +182,7 @@ try
 
     for ri = 1 : maxcomps
 
-        chbutton = findobj('tag', ['comp' num2str(ri)], 'Parent', h.tp);
+        chbutton = findobj('tag', ['comp' num2str(ri)]);
 
         chbutton.UserData = {EEG, ri};
         chbutton.Callback = @prop_extended;
@@ -288,8 +287,13 @@ try
     allui = {p, h.tp, h.ep, ts.ep};
 
     for mi = 1 : length(allui)
-        allui{mi}.Position(2) = allui{mi}.Position(2) * 1.20;
-        allui{mi}.Tag = 'selectcomps';
+        if length(allui{mi}) > 1
+            arrayfun(@(x) set(x,'Position',x.Position.*[1 1.20 1 1]),allui{mi},'uniformOutput',false);
+            arrayfun(@(x) set(x,'Tag','selectcomps'),allui{mi},'uniformOutput',false);
+        else
+            allui{mi}.Position(2) = allui{mi}.Position(2) * 1.20;
+            allui{mi}.Tag = 'selectcomps';
+        end
     end
 
     position_factor = [];
@@ -316,7 +320,7 @@ function prop_extended( src, event)
 
     EEG = src.UserData{1};
     ri = src.UserData{2};
-    pop_prop_extended( EEG, 0, ri,  NaN, {'freqrange', [0 55]});
+    pop_prop_extended( EEG, 0, ri,  NaN, {'freqrange', [0 120]});
 
  end
 
@@ -385,7 +389,7 @@ function b2_callback(src, event)
     EEG = src.UserData;
 
 
-    pop_prop_extended( EEG, 0, str2num(comps.String), NaN, {'freqrange', [0 55]});
+    pop_prop_extended( EEG, 0, str2num(comps.String), NaN, {'freqrange', [0 120]});
 
 
 
