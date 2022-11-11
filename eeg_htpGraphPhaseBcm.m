@@ -55,7 +55,7 @@ assert( exist('eigenvector_centrality_und', 'file') == 2, 'ERROR: Add Brain Conn
 
 % === EXPORT RESULT FILES ADDIN: 1/3 INITIALIZE  =================================
 
-defaultUseParquet = false; defaultOutputDir = tempdir;
+defaultUseParquet = true; defaultOutputDir = tempdir;
 addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
 addParameter(ip, 'useParquet', defaultUseParquet, @islogical);
 
@@ -85,13 +85,13 @@ combo_size = size(ncombos,1);
 
 %% Define Band Ranges
 bandDefs = {
-    'delta', 2 , 3.5;
+%    'delta', 2 , 3.5;
     'theta', 3.5, 7.5;
     'alpha1', 8, 10;
     'alpha2', 10.5, 12.5;
-    'beta', 13, 30;
+%    'beta', 13, 30;
     'gamma1', 30, 55;
-    'gamma2', 65, 90;
+%    'gamma2', 65, 90;
     };
 
 note(' = Band Definitions =');
