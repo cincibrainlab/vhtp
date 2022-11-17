@@ -311,85 +311,104 @@ classdef htpAnalysisClass < handle
             o.parameterHandler('loadParameterFile');
         end
         function res = createManualTemplate( o )
-            t = fileread('templates\eeg_htpAnalysisTemplate_dynamic.m');
-            template = regexp(t, '\r\n|\r|\n', 'split');
 
-            commands = o.createFxString( o.proj_status.current_parameter_PARAMS );
-
-            % create single struct
-            v = o.proj_status;
-            for fn = fieldnames(o.proj_status.toolbox_paths)'
-                v.(fn{1}) = o.proj_status.toolbox_paths.(fn{1});
+            % run checks
+            check_vector =struct();
+            if o.proj_status.all_dependencies_present % 0 NO 1 YES
+                check_vector.all_dependencies = 1;
+                o.util.failednote('Please check dependencies (run htpDoctor).');
             end
-            % fill in black values
-            if isempty(v.project_name), v.project_name = 'TBD'; end
-            if isempty(v.author_name), v.author_name = 'TBD'; end
-            if isempty(v.description), v.description = 'TBD'; end
 
-            if o.proj_status.useMaxEpochs
-                startchar = '%- Use Max Trials -'; 
-                linechar = '%';
-                endchar = '%}';
+            if isempty(o.input_filelist) % 0 no files, 1 files present
+                check_vector.input_filelist = 0;
+                o.util.failednote('No files loaded.');
+
+            end
+
+            if ~all(cell2mat(struct2cell(check_vector))) % 0 not met
+              o.util.failednote('Check errors before continuing.');
             else
-                startchar = '';
-                linechar = '';
-                endchar = '';
+
+                t = fileread('templates\eeg_htpAnalysisTemplate_dynamic.m');
+                template = regexp(t, '\r\n|\r|\n', 'split');
+
+                commands = o.createFxString( o.proj_status.current_parameter_PARAMS );
+
+                % create single struct
+                v = o.proj_status;
+                for fn = fieldnames(o.proj_status.toolbox_paths)'
+                    v.(fn{1}) = o.proj_status.toolbox_paths.(fn{1});
+                end
+                % fill in black values
+                if isempty(v.project_name), v.project_name = 'TBD'; end
+                if isempty(v.author_name), v.author_name = 'TBD'; end
+                if isempty(v.description), v.description = 'TBD'; end
+
+                if o.proj_status.useMaxEpochs
+                    startchar = '%- Use Max Trials -';
+                    linechar = '%';
+                    endchar = '%}';
+                else
+                    startchar = '';
+                    linechar = '';
+                    endchar = '';
+                end
+                select_trials = sprintf('%s\t\n%s\tif EEG.trials >= %d\n%s\t\tEEG = pop_select(EEG, ''trial'', 1:%d);\n%s\tend\n\t\n', ...
+                    startchar,...
+                    linechar, ...
+                    o.proj_status.minTrials, ...
+                    linechar, ...
+                    o.proj_status.minTrials, ...
+                    linechar);
+
+                repstr = {...
+                    '$filename'
+                    '$creation_date'
+                    '$project_name'
+                    '$author_name'
+                    '$description'
+                    '$eeglab_dir'
+                    '$brainstorm_dir'
+                    '$vhtp_dir'
+                    '$se_dir'
+                    '$braph_dir'
+                    '$bct_dir'
+                    '$set_dir'
+                    '$temp_dir'
+                    '$results_dir'
+                    '$select_trials'
+                    '$loopcode'};
+
+                repwithstr = {...
+                    upper( v.project_name )
+                    datestr(now, 29)
+                    v.project_name
+                    v.author_name
+                    v.description
+                    v.eeglab_dir
+                    v.brainstorm_dir
+                    v.vhtp_dir
+                    v.spectralevents_dir
+                    v.braph_dir
+                    v.bct_dir
+                    v.data_dir
+                    v.temp_dir
+                    v.results_dir
+                    select_trials
+                    commands
+                    };
+
+                for k = 1:numel(repwithstr)
+                    template = strrep(template, repstr{k}, repwithstr{k});
+                end
+                out = sprintf('%s\n', template{:});
+
+                % Write data to text file
+                savefile = fullfile(v.results_dir,  strcat("htpAnalysis_", v.current_parameter_code,"_" ,datestr(now, 30), ".m"));
+                writematrix(out, savefile, 'FileType', 'text', 'QuoteStrings','none');
+                fprintf('Analysis template saved to %s', savefile);
+                open(savefile);
             end
-            select_trials = sprintf('%s\t\n%s\tif EEG.trials >= %d\n%s\t\tEEG = pop_select(EEG, ''trial'', 1:%d);\n%s\tend\n\t\n', ...
-                startchar,...
-                linechar, ...
-                o.proj_status.minTrials, ...
-                linechar, ...
-                o.proj_status.minTrials, ...
-                linechar);
-
-            repstr = {...
-                '$filename'
-                '$creation_date'
-                '$project_name'
-                '$author_name'
-                '$description'
-                '$eeglab_dir'
-                '$brainstorm_dir'
-                '$vhtp_dir'
-                '$se_dir'
-                '$braph_dir'
-                '$bct_dir'
-                '$set_dir'
-                '$temp_dir'
-                '$results_dir'
-                '$select_trials'
-                '$loopcode'};
-
-            repwithstr = {...
-                upper( v.project_name )
-                datestr(now, 29)
-                v.project_name
-                v.author_name
-                v.description
-                v.eeglab_dir
-                v.brainstorm_dir
-                v.vhtp_dir
-                v.spectralevents_dir
-                v.braph_dir
-                v.bct_dir
-                v.data_dir
-                v.temp_dir
-                v.results_dir
-                select_trials
-                commands
-                };
-
-            for k = 1:numel(repwithstr)
-                template = strrep(template, repstr{k}, repwithstr{k});
-            end
-            out = sprintf('%s\n', template{:});
-
-            % Write data to text file
-            savefile = fullfile(v.results_dir,  strcat("htpAnalysis_", v.current_parameter_code,"_" ,datestr(now, 30), ".m"));
-            writematrix(out, savefile, 'FileType', 'text', 'QuoteStrings','none');
-            fprintf('Analysis template saved to %s', savefile);
-            open(savefile);
         end
         function res = parameterHandler( o, action )
             switch action
