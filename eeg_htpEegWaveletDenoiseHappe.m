@@ -77,7 +77,7 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     ip = inputParser();
     addRequired(ip, 'EEG', @isstruct);
     addParameter(ip, 'outputdir', defaultOutputDir, @isfolder)
-    addParameter(ip, 'isErp', defaultOutputDir, @islogical)
+    addParameter(ip, 'isErp', defaultIsErp, @islogical)
     addParameter(ip, 'wavLvl', defaultWavLvl, @isnumeric)
     addParameter(ip, 'wavelet', defaultWavelet, @char)
     addParameter(ip, 'DenoisingMethod', defaultDenoisingMethod, @char)
@@ -185,7 +185,7 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     qi_temp.EEG = [];
     qi_temp.ThresholdRule = ThresholdRule;
     qi_temp.wavLvl = wavLvl;
-    qi_temp.pre_post_corr = corr(reshape(preEEG, 1,[])', reshape(postEEG, 1,[])');
+    qi_temp.pre_post_corr = fast_corr(reshape(preEEG, 1,[])', reshape(postEEG, 1,[])');
     qi_table = [qi_table qi_temp];
     
     summary_table = table();
