@@ -332,7 +332,8 @@ classdef htpAnalysisClass < handle
               o.util.failednote('Check errors before continuing.');
             else
 
-                t = fileread('templates\eeg_htpAnalysisTemplate_dynamic.m');
+                t = fileread(fullfile(o.proj_status.vhtp_dir, ...
+                    'templates', filesep, 'eeg_htpAnalysisTemplate_dynamic.m'));
                 template = regexp(t, '\r\n|\r|\n', 'split');
 
                 commands = o.createFxString( o.proj_status.current_parameter_PARAMS );
