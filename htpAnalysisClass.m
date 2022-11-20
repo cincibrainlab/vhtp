@@ -284,6 +284,9 @@ classdef htpAnalysisClass < handle
         function openExplorer( o )
             winopen(o.datasets.active_EEG.filepath);
         end
+        function openPathInExplorer( o, target_path )
+            winopen( target_path );
+        end
         function openResultsFolder( o )
             winopen(o.proj_status.results_dir);
         end
