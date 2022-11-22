@@ -314,15 +314,18 @@ classdef htpAnalysisClass < handle
 
             % run checks
             check_vector =struct();
-            if o.proj_status.all_dependencies_present % 0 NO 1 YES
-                check_vector.all_dependencies = 1;
+            if ~o.proj_status.all_dependencies_present % 0 NO 1 YES
+                check_vector.all_dependencies = 0;
                 o.util.failednote('Please check dependencies (run htpDoctor).');
+            else
+                check_vector.all_dependencies = 1;
             end
 
             if isempty(o.input_filelist) % 0 no files, 1 files present
                 check_vector.input_filelist = 0;
                 o.util.failednote('No files loaded.');
-
+            else
+                check_vector.failednote = 1;
             end
 
             if ~all(cell2mat(struct2cell(check_vector))) % 0 not met
@@ -406,7 +409,11 @@ classdef htpAnalysisClass < handle
 
                 % Write data to text file
                 savefile = fullfile(v.results_dir,  strcat("htpAnalysis_", v.current_parameter_code,"_" ,datestr(now, 30), ".m"));
-                writematrix(out, savefile, 'FileType', 'text', 'QuoteStrings','none');
+                try
+                    writematrix(out, savefile, 'FileType', 'text', 'QuoteStrings','none');
+                catch
+                    writematrix(out, savefile, 'FileType', 'text', 'QuoteStrings',0);
+                end
                 fprintf('Analysis template saved to %s', savefile);
                 open(savefile);
             end
