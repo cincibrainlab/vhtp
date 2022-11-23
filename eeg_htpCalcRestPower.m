@@ -79,8 +79,9 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     if ~exist("analysis_outputdir", "dir")
         mkdir(analysis_outputdir);
     end
-    pow_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower.csv']);
-    
+    pow_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower_band.csv']);
+    spectro_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower_spectro.csv']);
+
 
     % START: Signal Processing
 
@@ -167,12 +168,28 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
 
     csvtable = [infocolumns, powertable];
 
-    spectro_values = array2table([f ...
-                                mean(pow_abs, 2) mean(pow_db, 2) mean(pow_rel, 2)], ...
-        'VariableNames', {'freq', 'abspow', 'dbpow', 'relpow'});
+    chan_names = {EEG.chanlocs.labels};
+    slabel = @( measure_prefix ) cellfun(@(chan_name_cell) sprintf('%s_%s', ...
+        measure_prefix, chan_name_cell), chan_names, 'uni',0);
 
+    abs_labels = slabel('abspow');
+    db_labels = slabel('dbpow');
+    rel_labels = slabel('relpow');
+    spectro_labels = [{'freq'} {abs_labels{:}} ...
+         {db_labels{:}} {rel_labels{:}}];
+
+    spectro_values = array2table([f pow_abs pow_db pow_rel ], ...
+         'VariableNames', spectro_labels);
     spectro_info = table(repmat(EEG.subject, length(f), 1), ...
-        repmat('mean', length(f), 1), 'VariableNames', {'eegid', 'chan'});
+        repmat('spectrogram', length(f), 1), 'VariableNames', {'eegid', 'measure'});
+
+    % deprecated: mean spectrogram across channels
+%     spectro_values = array2table([f ...
+%                                 mean(pow_abs, 2) mean(pow_db, 2) mean(pow_rel, 2)], ...
+%         'VariableNames', {'freq', 'abspow', 'dbpow', 'relpow'});
+% 
+%     spectro_info = table(repmat(EEG.subject, length(f), 1), ...
+%         repmat('mean', length(f), 1), 'VariableNames', {'eegid', 'chan'});
 
     % END: Signal Processing
 
@@ -189,11 +206,13 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     % file management
     if ~isempty(ip.Results.outputdir)
         if ~ip.Results.useParquet
-        writetable(results.summary_table, pow_file);
-        else, parquetwrite(strrep(pow_file,'.csv','.parquet'),results.summary_table);
+            writetable(results.summary_table, pow_file);
+            writetable(results.pow.spectro, spectro_file);
+        else
+            parquetwrite(strrep(pow_file,'.csv','.parquet'),results.summary_table);
+            parquetwrite(strrep(spectro_file,'.csv','.parquet'),results.pow.spectro);
         end
         note(sprintf('%s saved in %s.\n', EEG.setname, ip.Results.outputdir))
-
     else
         note('Specify output directory to save results.\n')
     end
