@@ -81,6 +81,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     end
     pow_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower_band.csv']);
     spectro_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower_spectro.csv']);
+    qi_file   = fullfile(analysis_outputdir, [basename '_eeg_htpCalcRestPower_qi.csv']);
 
 
     % START: Signal Processing
@@ -194,8 +195,10 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     % END: Signal Processing
 
     % QI Table
-    qi_table = cell2table({EEG.setname, EEG.filename, functionstamp, timestamp}, ...
-    'VariableNames', {'eegid', 'filename', 'scriptname', 'timestamp'});
+    qi_table = cell2table({EEG.setname, EEG.filename, functionstamp, timestamp, ...
+        EEG.trials, EEG.pnts, EEG.srate, EEG.xmin, EEG.xmax}, ...
+    'VariableNames', {'eegid', 'filename', 'scriptname', 'timestamp', ...
+    'trials', 'points', 'srate', 'xmin', 'xmax'});
 
     % Outputs:
     EEG.vhtp.eeg_htpCalcRestPower.summary_table = csvtable;
@@ -208,9 +211,13 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
         if ~ip.Results.useParquet
             writetable(results.summary_table, pow_file);
             writetable(results.pow.spectro, spectro_file);
+            writetable(results.qi_table, qi_file);
+
         else
             parquetwrite(strrep(pow_file,'.csv','.parquet'),results.summary_table);
             parquetwrite(strrep(spectro_file,'.csv','.parquet'),results.pow.spectro);
+            writetable(results.qi_table, qi_file);
+
         end
         note(sprintf('%s saved in %s.\n', EEG.setname, ip.Results.outputdir))
     else
