@@ -37,14 +37,14 @@ note(sprintf('Loading %s', EEG.filename));
 
 % Inputs: Common across Visual HTP functions
 defaultGpuOn = 1;
-defaultThreshold = missing;
-%defaultThreshold = 'mediansd';
+% defaultThreshold = missing;
+defaultThreshold = 'mediansd';
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
-addParameter(ip, 'threshold', defaultThreshold, @ischar);
+addParameter(ip, 'gpuon', defaultGpuOn, @mustBeNumericOrLogical);
+addParameter(ip, 'threshold', defaultThreshold);
 
 % Confirm Dependencies for Graph Measures
 % BRAPH
