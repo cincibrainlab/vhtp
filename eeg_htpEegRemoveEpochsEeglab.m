@@ -11,7 +11,7 @@ function [EEG, results] = eeg_htpEegRemoveEpochsEeglab(EEG,varargin)
 %     EEG [struct]          - EEGLAB Structure
 %    
 %% Function Specific Inputs
-%    'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
+%   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                   default: false
 %
 %   'outputdir' - text representing the output directory for the function

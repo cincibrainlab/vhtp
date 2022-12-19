@@ -4,11 +4,11 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 % Category: Preprocessing
 % Tags: Artifact
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpEegRemoveCompsEeglab( EEG, varargin )
+% Syntax:
+%    [ EEG, results ] = eeg_htpEegRemoveCompsEeglab( EEG, varargin )
 %
 % Require Inputs:
-%     EEG           - EEGLAB Structure
+%     EEG [struct]         - EEGLAB Structure
 %
 % Function Specific Inputs:
 %    'maxcomps'  - Number of maximum components to utilize
@@ -25,20 +25,19 @@ function [EEG, results] = eeg_htpEegRemoveCompsEeglab(EEG,varargin)
 %    'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                   default: false
 %
-%   'outputdir' - text representing the output directory for the function
+%    'outputdir' - text representing the output directory for the function
 %                 output to be saved to
 %                 default: '' 
 %
-%   'freqrange' - Array of two numbers utilized for the frequency range for 
+%    'freqrange' - Array of two numbers utilized for the frequency range for 
 %                 extended detail about specific components when plotting 
 %                 activity
 %                 default: [2 80]
 %
 %% Outputs:
-%     EEG         - Updated EEGLAB structure
+%     EEG [struct]        - Updated EEGLAB structure
 %
-%     results   - Updated function-specific structure containing qi table
-%                 and input parameters used
+%     results [struct]  - Updated function-specific structure containing qi table and input parameters used
 %
 %% Disclaimer:
 % This file is part of the Cincinnati Visual High Throughput Pipeline,
