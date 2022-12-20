@@ -10,7 +10,7 @@ function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
 % MIT Press 2014.
 
 % Usage:
-%    >> [ EEG, results ] = eeg_htpFunctionTemplate( EEG )
+%    >> [ EEG, results ] = eeg_htpGraphPhaseBcm( EEG )
 %
 % Require Inputs:
 %     EEG       - EEGLAB Structure
@@ -18,7 +18,7 @@ function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
 %     'outputdir' - description
 %     'threshold'   - thresholding type 'mediansd' implemented by default
 %     for graph measures
-%
+%     'combos' - manually specify cell array of channel pairs to calculate
 % Outputs:
 %     EEG       - EEGLAB Structure with modified .vhtp field
 %     results   - .vhtp structure
