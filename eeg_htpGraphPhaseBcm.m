@@ -70,13 +70,21 @@ parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 note(sprintf('Output Dir: %s', ip.Results.outputdir));
 
 % Create channel combos
-if ismissing(ip.Results.combos)
+if all(all(ismissing(ip.Results.combos)))
     combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
     ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
-    note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
 else
     combos = ip.Results.combos;
+    ncombos = zeros(size(combos));
+    for ci = 1 : size(combos,1)
+        ncombos(ci,1) = find(strcmp(combos{ci,1}, {EEG.chanlocs(:).labels}'));
+        ncombos(ci,2) = find(strcmp(combos{ci,2}, {EEG.chanlocs(:).labels}'));
+    end
 end
+
+strmatch(combos{1,1}, {EEG.chanlocs(:).labels}')
+
+    note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
 
 if ip.Results.gpuon
     note('GPU Assist is ON.');
