@@ -38,6 +38,7 @@ note(sprintf('Loading %s', EEG.filename));
 % Inputs: Common across Visual HTP functions
 defaultGpuOn = 1;
 defaultThreshold = missing;
+defaultCombos = missing;
 %defaultThreshold = 'mediansd';
 
 % MATLAB built-in input validation
@@ -45,6 +46,8 @@ ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
 addParameter(ip, 'threshold', defaultThreshold, @ischar);
+addParameter(ip, 'combos', defaultCombos, @iscell);
+
 
 % Confirm Dependencies for Graph Measures
 % BRAPH
@@ -67,10 +70,13 @@ parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 note(sprintf('Output Dir: %s', ip.Results.outputdir));
 
 % Create channel combos
-combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
-ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
-note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
-
+if ip.Results.combos ~= missing
+    combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
+    ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
+    note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
+else
+    combo = ip.Results.combos;
+end
 
 if ip.Results.gpuon
     note('GPU Assist is ON.');
@@ -124,9 +130,9 @@ freqs2use = frex;
 
 tic;
 note('Starting BCM calculations ...');
-try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
+% try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
 
-parfor ci = 1 : combo_size
+for ci = 1 : combo_size
 
     channel1 = combo_left(ci);
     channel2 = combo_right(ci);
@@ -150,7 +156,7 @@ parfor ci = 1 : combo_size
     dwpli   = zeros(length(freqs2use),EEG.pnts);
     scoh    = zeros(length(freqs2use),EEG.pnts);
 
-    for fi=1:length(freqs2use)
+    parfor fi=1:length(freqs2use)
         % create wavelet and take FFT
         s = num_cycles(fi)/(2*pi*freqs2use(fi));
         wavelet_fft = fft( exp(2*1i*pi*freqs2use(fi).*time) .* exp(-time.^2./(2*(s^2))) ,n_convolution);
@@ -210,10 +216,10 @@ parfor ci = 1 : combo_size
     res_chan(ci,1) = channel1;
     res_chan2(ci,1) = channel2;
 
-if HasParProgress, ppm.increment(); end
+% if HasParProgress, ppm.increment(); end
 end
 toc;
-ppm.close;
+%ppm.close;
 
 % create graphs for each frequency and measure
 for fi = 1 : numel(frex)
