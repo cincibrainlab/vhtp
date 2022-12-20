@@ -70,12 +70,12 @@ parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 note(sprintf('Output Dir: %s', ip.Results.outputdir));
 
 % Create channel combos
-if ip.Results.combos ~= missing
+if ismissing(ip.Results.combos)
     combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
     ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
     note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
 else
-    combo = ip.Results.combos;
+    combos = ip.Results.combos;
 end
 
 if ip.Results.gpuon
@@ -130,10 +130,10 @@ freqs2use = frex;
 
 tic;
 note('Starting BCM calculations ...');
-% try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
+try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
 
-for ci = 1 : combo_size
-
+parfor ci = 1 : combo_size
+fprintf('CI: %d\n', ci);
     channel1 = combo_left(ci);
     channel2 = combo_right(ci);
 
@@ -156,7 +156,8 @@ for ci = 1 : combo_size
     dwpli   = zeros(length(freqs2use),EEG.pnts);
     scoh    = zeros(length(freqs2use),EEG.pnts);
 
-    parfor fi=1:length(freqs2use)
+   for fi=1:length(freqs2use)
+        % fprintf('%d', fi);
         % create wavelet and take FFT
         s = num_cycles(fi)/(2*pi*freqs2use(fi));
         wavelet_fft = fft( exp(2*1i*pi*freqs2use(fi).*time) .* exp(-time.^2./(2*(s^2))) ,n_convolution);
@@ -216,10 +217,10 @@ for ci = 1 : combo_size
     res_chan(ci,1) = channel1;
     res_chan2(ci,1) = channel2;
 
-% if HasParProgress, ppm.increment(); end
+if HasParProgress, ppm.increment(); end
 end
 toc;
-%ppm.close;
+ppm.close;
 
 % create graphs for each frequency and measure
 for fi = 1 : numel(frex)
@@ -277,7 +278,7 @@ if ~ismissing(ip.Results.threshold)
             [t_fwpli, tvec1] = threshold_bcm_mediansd( fwpli );
             [t_fispc, tvec2] = threshold_bcm_mediansd( fispc );
             [t_fscoh, tvec3] = threshold_bcm_mediansd( fscoh );
-            note('Calculating graph measures ...');
+            note('Calculating thresholded graph measures ...');
             [~, wpli_graph] = eeg_htpGraphBraphWU(EEG, t_fwpli, labels, frex);
             [~, ispc_graph] = eeg_htpGraphBraphWU(EEG, t_fispc, labels, frex);
             [~, scoh_graph] = eeg_htpGraphBraphWU(EEG, t_fscoh, labels, frex);
