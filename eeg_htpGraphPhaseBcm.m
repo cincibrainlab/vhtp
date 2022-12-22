@@ -140,8 +140,8 @@ tic;
 HasParProgress = false;
 note('Starting BCM calculations ...');
 % try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
-EEG.data = double(EEG.data .* 10e9);
-for ci = 1 : combo_size
+% EEG.data = double(EEG.data .* 10e9);
+parfor ci = 1 : combo_size
     fprintf('CI: %d\n', ci);
     channel1 = combo_left(ci);
     channel2 = combo_right(ci);
