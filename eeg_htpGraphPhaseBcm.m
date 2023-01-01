@@ -3,14 +3,14 @@ function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
 % ShortTitle: Phase-based connectivity analysis
 % Category: Analysis
 % Tags: Connectivity
-% 
+%
 % Michael X Cohen's PLI code from Chapter 26.
 %
 % Cohen, Mike X. Analyzing neural time series data: theory and practice.
 % MIT Press 2014.
 
 % Usage:
-%    >> [ EEG, results ] = eeg_htpFunctionTemplate( EEG )
+%    >> [ EEG, results ] = eeg_htpGraphPhaseBcm( EEG )
 %
 % Require Inputs:
 %     EEG       - EEGLAB Structure
@@ -18,7 +18,7 @@ function [EEG, results] = eeg_htpGraphPhaseBcm(EEG, varargin)
 %     'outputdir' - description
 %     'threshold'   - thresholding type 'mediansd' implemented by default
 %     for graph measures
-%
+%     'combos' - manually specify cell array of channel pairs to calculate
 % Outputs:
 %     EEG       - EEGLAB Structure with modified .vhtp field
 %     results   - .vhtp structure
@@ -37,14 +37,17 @@ note(sprintf('Loading %s', EEG.filename));
 
 % Inputs: Common across Visual HTP functions
 defaultGpuOn = 1;
-% defaultThreshold = missing;
-defaultThreshold = 'mediansd';
+defaultThreshold = missing;
+defaultCombos = missing;
+%defaultThreshold = 'mediansd';
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'gpuon', defaultGpuOn, @mustBeNumericOrLogical);
-addParameter(ip, 'threshold', defaultThreshold);
+addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
+addParameter(ip, 'threshold', defaultThreshold, @ischar);
+addParameter(ip, 'combos', defaultCombos, @iscell);
+
 
 % Confirm Dependencies for Graph Measures
 % BRAPH
@@ -67,10 +70,18 @@ parse(ip, EEG, varargin{:});% specify some time-frequency parameters
 note(sprintf('Output Dir: %s', ip.Results.outputdir));
 
 % Create channel combos
-combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
-ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
+if all(all(ismissing(ip.Results.combos)))
+    combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
+    ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
+else
+    combos = ip.Results.combos;
+    ncombos = zeros(size(combos));
+    for ci = 1 : size(combos,1)
+        ncombos(ci,1) = find(strcmp(combos{ci,1}, {EEG.chanlocs(:).labels}'));
+        ncombos(ci,2) = find(strcmp(combos{ci,2}, {EEG.chanlocs(:).labels}'));
+    end
+end
 note(sprintf('%d channel combos created from %d channels', length(ncombos), EEG.nbchan));
-
 
 if ip.Results.gpuon
     note('GPU Assist is ON.');
@@ -79,19 +90,22 @@ else
     note('GPU Assist is OFF.');
 end
 
+% confirm that data is epoched
+assert(ndims(EEG.data) == 3, 'Data must be epoched prior to function run.')
+
 combo_left = ncombos(:,1);
 combo_right = ncombos(:,2);
 combo_size = size(ncombos,1);
 
 %% Define Band Ranges
 bandDefs = {
-%    'delta', 2 , 3.5;
+    'delta', 2 , 3.5;
     'theta', 3.5, 7.5;
     'alpha1', 8, 10;
     'alpha2', 10.5, 12.5;
-%    'beta', 13, 30;
+    'beta', 13, 30;
     'gamma1', 30, 55;
-%    'gamma2', 65, 90;
+    'gamma2', 65, 90;
     };
 
 note(' = Band Definitions =');
@@ -123,11 +137,12 @@ note(sprintf('EEG: srate: %d, pnts: %d, trials %d', srate,pnts,trials))
 freqs2use = frex;
 
 tic;
+HasParProgress = false;
 note('Starting BCM calculations ...');
-try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
-
+% try ppm = ParforProgressbar(combo_size); HasParProgress = true; catch, warning('Missing ParFor Progressbar'); HasParProgress = false; end
+% EEG.data = double(EEG.data .* 10e9);
 parfor ci = 1 : combo_size
-
+    fprintf('CI: %d\n', ci);
     channel1 = combo_left(ci);
     channel2 = combo_right(ci);
 
@@ -151,6 +166,7 @@ parfor ci = 1 : combo_size
     scoh    = zeros(length(freqs2use),EEG.pnts);
 
     for fi=1:length(freqs2use)
+        % fprintf('%d', fi);
         % create wavelet and take FFT
         s = num_cycles(fi)/(2*pi*freqs2use(fi));
         wavelet_fft = fft( exp(2*1i*pi*freqs2use(fi).*time) .* exp(-time.^2./(2*(s^2))) ,n_convolution);
@@ -166,7 +182,7 @@ parfor ci = 1 : combo_size
         sig2 = reshape(convolution_result_fft,EEG.pnts,EEG.trials);
 
         % cross-spectral density
-        % A high csd value indicates the two time domain signals tend to have high power spectral density, 
+        % A high csd value indicates the two time domain signals tend to have high power spectral density,
         cdd = sig1 .* conj(sig2);
 
         % ISPC
@@ -188,19 +204,19 @@ parfor ci = 1 : combo_size
         dwpli(fi,:)  = (imagsum.^2 - debiasfactor)./(imagsumW.^2 - debiasfactor);
 
 
-    % compute power and cross-spectral power
-    spec1 = mean(sig1.*conj(sig1),2);
-    spec2 = mean(sig2.*conj(sig2),2);
-    specX = abs(mean(sig1.*conj(sig2),2)).^2;
-    
-    % alternative notation for the same procedure, using the Euler-like expression: Me^ik
-    %spec1 = mean(abs(sig1).^2,2);
-    %spec2 = mean(abs(sig2).^2,2);
-    %specX = abs(mean( abs(sig1).*abs(sig2) .* exp(1i*(angle(sig1)-angle(sig2))) ,2)).^2;
-    
-    % compute spectral coherence, using only requested time points
-    scoh(fi,:) = specX ./ (spec1 .* spec2);
-   
+        % compute power and cross-spectral power
+        spec1 = mean(sig1.*conj(sig1),2);
+        spec2 = mean(sig2.*conj(sig2),2);
+        specX = abs(mean(sig1.*conj(sig2),2)).^2;
+
+        % alternative notation for the same procedure, using the Euler-like expression: Me^ik
+        %spec1 = mean(abs(sig1).^2,2);
+        %spec2 = mean(abs(sig2).^2,2);
+        %specX = abs(mean( abs(sig1).*abs(sig2) .* exp(1i*(angle(sig1)-angle(sig2))) ,2)).^2;
+
+        % compute spectral coherence, using only requested time points
+        scoh(fi,:) = specX ./ (spec1 .* spec2);
+
     end
 
     res_ispc(ci,:) = mean(ispc,2);
@@ -210,10 +226,11 @@ parfor ci = 1 : combo_size
     res_chan(ci,1) = channel1;
     res_chan2(ci,1) = channel2;
 
-if HasParProgress, ppm.increment(); end
+ %   if HasParProgress, ppm.increment(); end
 end
 toc;
-ppm.close;
+if HasParProgress, ppm.close; end
+
 
 % create graphs for each frequency and measure
 for fi = 1 : numel(frex)
@@ -239,12 +256,12 @@ toc;
 %     current_ispc = fispc(:,:,fi);
 %     current_wpli = fwpli(:,:,fi);
 %     current_scoh = fscoh(:,:,fi);
-% 
+%
 %     for ci = 1 : size(current_wpli,1)
 %         ispc_row = current_ispc(ci,:);
 %         wpli_row = current_wpli(ci,:);
 %         scoh_row = current_scoh(ci,:);
-% 
+%
 %         for ci2 = 1 : size(current_wpli,2)
 %             bconn_table{count,1} = EEG.filename;
 %             bconn_table{count,2} = labels(ci);
@@ -257,11 +274,11 @@ toc;
 %         end
 %     end
 % end
-% 
+%
 % bconn_table2 = cell2table(bconn_table, ...
 %     'VariableNames', {'eegid','chan1','chan2','freq','wpli','ispc', 'scoh'});
 % toc;
-% 
+%
 
 % Thresholding
 if ~ismissing(ip.Results.threshold)
@@ -271,7 +288,7 @@ if ~ismissing(ip.Results.threshold)
             [t_fwpli, tvec1] = threshold_bcm_mediansd( fwpli );
             [t_fispc, tvec2] = threshold_bcm_mediansd( fispc );
             [t_fscoh, tvec3] = threshold_bcm_mediansd( fscoh );
-            note('Calculating graph measures ...');
+            note('Calculating thresholded graph measures ...');
             [~, wpli_graph] = eeg_htpGraphBraphWU(EEG, t_fwpli, labels, frex);
             [~, ispc_graph] = eeg_htpGraphBraphWU(EEG, t_fispc, labels, frex);
             [~, scoh_graph] = eeg_htpGraphBraphWU(EEG, t_fscoh, labels, frex);
@@ -393,7 +410,7 @@ reset(gpuDevice);
 
 % === UTILITIES ADDIN: 2/2 ================================================
     function note = htp_utilities()
-            note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
+        note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
     end
 % === UTILITIES ADDIN: 2/2 ================================================
 end

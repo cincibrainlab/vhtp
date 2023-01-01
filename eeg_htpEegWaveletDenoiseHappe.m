@@ -62,7 +62,7 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % Inputs: Common across Visual HTP functions
     defaultOutputDir = tempdir;
     defaultIsErp = false;
-    defaultWavelet = 'coif4';
+    defaultWavelet = 'bior6.8' % 'coif4' update with HAPPEv3;
     defaultWavLvl = [];
     defaultThresholdRule = '';
     defaultDenoisingMethod = "Bayes";
@@ -102,9 +102,9 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % (level depending). Threshold the wavelet coefficients to generate 
     % artifact signals, reconstructing signal as channels x samples format.
     if ip.Results.isErp
-        if EEG.srate > 500; wavLvl = 13 ;
-            elseif EEG.srate > 250 && EEG.srate <= 500; wavLvl= 12 ;
-            elseif EEG.srate <= 250; wavLvl = 11 ;
+        if EEG.srate > 500; wavLvl = 10 ;
+            elseif EEG.srate > 250 && EEG.srate <= 500; wavLvl= 9 ;
+            elseif EEG.srate <= 250; wavLvl = 8 ;
         end
         ThresholdRule = 'Soft' ;
     else
