@@ -1,8 +1,8 @@
 label,brainpaint,publish,labelclean,region,no_vertices,color_r,color_g,color_b,mni_avg_x,mni_avg_y,mni_avg_z,Acronyms,Name,RSN,shorthand,side,lobe
 bankssts L,Left-bankssts,Banks of Sup. Temp. Sulcus L,banksstsL,LT,76,0.098039216,0.392156863,0.156862745,-53.09083136,-45.17865159,7.536198996,BSTS L,bankssts L,other,BSTSL,Left,Temporal
 bankssts R,Right-bankssts,Banks of Sup. Temp. Sulcus R,banksstsR,RT,70,0.098039216,0.392156863,0.156862745,53.59659233,-40.68084022,9.873798663,BSTS R,bankssts R,other,BSTSR,Right,Temporal
-caudalanteriorcingulate L,Left-caudalanteriorcingulate,Caudal Anterior Cingulate L,caudalanteriorcingulateL,LL,48,0.490196078,0.392156863,0.62745098,-5.068496306,20.59873183,26.43535837,cACC L,caudalanteriorcingulate L,DAN,cACCL,Left,Limbic
-caudalanteriorcingulate R,Right-caudalanteriorcingulate,Caudal Anterior Cingulate R,caudalanteriorcingulateR,RL,68,0.490196078,0.392156863,0.62745098,4.415227087,21.79904881,26.58150997,cACC R,caudalanteriorcingulate R,DMN,cACCR,Right,Limbic
+caudalanteriorcingulate L,Left-caudalanteriorcingulate,Caudal Anterior Cingulate L,caudalanteriorcingulateL,LL,48,0.490196078,0.392156863,0.62745098,-5.068496306,20.59873183,26.43535837,cACC L,caudalanteriorcingulate L,DAN,cACCL,Left,Cingulate
+caudalanteriorcingulate R,Right-caudalanteriorcingulate,Caudal Anterior Cingulate R,caudalanteriorcingulateR,RL,68,0.490196078,0.392156863,0.62745098,4.415227087,21.79904881,26.58150997,cACC R,caudalanteriorcingulate R,DMN,cACCR,Right,Cingulate
 caudalmiddlefrontal L,Left-caudalmiddlefrontal,Caudal Middle Frontal L,caudalmiddlefrontalL,LF,224,0.392156863,0.098039216,0,-37.30340602,11.31617858,46.93655853,cMFG L,caudalmiddlefrontal L,SAN,cMFGL,Left,Frontal
 caudalmiddlefrontal R,Right-caudalmiddlefrontal,Caudal Middle Frontal R,caudalmiddlefrontalR,RF,186,0.392156863,0.098039216,0,36.60156017,13.21335674,48.06370396,cMFG R,caudalmiddlefrontal R,SAN,cMFGR,Right,Frontal
 cuneus L,Left-cuneus,Cuneus L,cuneusL,LO,93,0.862745098,0.078431373,0.392156863,-5.825780866,-79.8351715,19.42173702,CUN L,cuneus L,VIS,CUNL,Left,Occipital
@@ -19,8 +19,8 @@ inferiortemporal L,Left-inferiortemporal,Inferior Temporal L,inferiortemporalL,L
 inferiortemporal R,Right-inferiortemporal,Inferior Temporal R,inferiortemporalR,RT,316,0.705882353,0.156862745,0.470588235,51.25452103,-32.43625409,-24.85532647,ITG R,inferiortemporal R,DAN,ITGR,Right,Temporal
 insula L,Left-insula,Insula L,insulaL,LT,174,1,0.752941176,0.125490196,-37.79276926,-2.220496392,2.419510623,INS L,insula L,SAN,INSL,Left,Temporal
 insula R,Right-insula,Insula R,insulaR,RT,196,1,0.752941176,0.125490196,35.56993301,1.978799405,-1.937606786,INS R,insula R,SAN,INSR,Right,Temporal
-isthmuscingulate L,Left-isthmuscingulate,Isthmus Cingulate L,isthmuscingulateL,LL,81,0.549019608,0.078431373,0.549019608,-6.687263419,-45.3652672,18.1150999,iCC L,isthmuscingulate L,DMN,iCCL,Left,Limbic
-isthmuscingulate R,Right-isthmuscingulate,Isthmus Cingulate R,isthmuscingulateR,RL,91,0.549019608,0.078431373,0.549019608,5.607010749,-42.04117388,18.81716772,iCC R,isthmuscingulate R,DMN,iCCR,Right,Limbic
+isthmuscingulate L,Left-isthmuscingulate,Isthmus Cingulate L,isthmuscingulateL,LL,81,0.549019608,0.078431373,0.549019608,-6.687263419,-45.3652672,18.1150999,iCC L,isthmuscingulate L,DMN,iCCL,Left,Cingulate
+isthmuscingulate R,Right-isthmuscingulate,Isthmus Cingulate R,isthmuscingulateR,RL,91,0.549019608,0.078431373,0.549019608,5.607010749,-42.04117388,18.81716772,iCC R,isthmuscingulate R,DMN,iCCR,Right,Cingulate
 lateraloccipital L,Left-lateraloccipital,Lateral Occipital L,lateraloccipitalL,LO,371,0.078431373,0.117647059,0.549019608,-31.15324077,-89.15737025,0.43169462,LOG L,lateraloccipital L,VIS,LOGL,Left,Occipital
 lateraloccipital R,Right-lateraloccipital,Lateral Occipital R,lateraloccipitalR,RO,367,0.078431373,0.117647059,0.549019608,34.79646911,-84.77412531,1.523084489,LOG R,lateraloccipital R,VIS,LOGR,Right,Occipital
 lateralorbitofrontal L,Left-lateralorbitofrontal,Lateral Orbitofrontal L,lateralorbitofrontalL,LPF,221,0.137254902,0.294117647,0.196078431,-24.67895488,30.19012959,-18.91690676,LOF L,lateralorbitofrontal L,DMN,LOFL,Left,Prefrontal
@@ -45,14 +45,14 @@ pericalcarine L,Left-pericalcarine,Pericalcarine L,pericalcarineL,LO,109,0.47058
 pericalcarine R,Right-pericalcarine,Pericalcarine R,pericalcarineR,RO,110,0.470588235,0.392156863,0.235294118,11.68981526,-80.17201335,6.952899412,periCAL R,pericalcarine R,other,periCALR,Right,Occipital
 postcentral L,Left-postcentral,Postcentral L,postcentralL,LC,333,0.862745098,0.078431373,0.078431373,-45.80022755,-22.45623466,45.01462956,postC L,postcentral L,other,postCL,Left,Central
 postcentral R,Right-postcentral,Postcentral R,postcentralR,RC,307,0.862745098,0.078431373,0.078431373,43.75794697,-20.28489574,46.21474526,postC R,postcentral R,other,postCR,Right,Central
-posteriorcingulate L,Left-posteriorcingulate,Posteriorcingulate L,posteriorcingulateL,LL,85,0.862745098,0.705882353,0.862745098,-5.135518083,-15.06914101,38.21034144,PCC L,posteriorcingulate L,DMN,PCCL,Left,Limbic
-posteriorcingulate R,Right-posteriorcingulate,Posteriorcingulate R,posteriorcingulateR,RL,93,0.862745098,0.705882353,0.862745098,5.073456817,-16.70049141,39.23004879,PCC R,posteriorcingulate R,DMN,PCCR,Right,Limbic
+posteriorcingulate L,Left-posteriorcingulate,Posteriorcingulate L,posteriorcingulateL,LL,85,0.862745098,0.705882353,0.862745098,-5.135518083,-15.06914101,38.21034144,PCC L,posteriorcingulate L,DMN,PCCL,Left,Cingulate
+posteriorcingulate R,Right-posteriorcingulate,Posteriorcingulate R,posteriorcingulateR,RL,93,0.862745098,0.705882353,0.862745098,5.073456817,-16.70049141,39.23004879,PCC R,posteriorcingulate R,DMN,PCCR,Right,Cingulate
 precentral L,Left-precentral,Precentral L,precentralL,LC,339,0.235294118,0.078431373,0.862745098,-40.52230103,-9.455406982,46.04406984,preC L,precentral L,other,preCL,Left,Central
 precentral R,Right-precentral,Precentral R,precentralR,RC,353,0.235294118,0.078431373,0.862745098,40.19710605,-7.360544765,45.81849655,preC R,precentral R,other,preCR,Right,Central
 precuneus L,Left-precuneus,Precuneus L,precuneusL,LP,314,0.62745098,0.549019608,0.705882353,-9.097383784,-59.48551434,37.61989446,PCUN L,precuneus L,DMN,PCUNL,Left,Parietal
 precuneus R,Right-precuneus,Precuneus R,precuneusR,RP,325,0.62745098,0.549019608,0.705882353,9.594222782,-57.74741573,38.39015067,PCUN R,precuneus R,DMN,PCUNR,Right,Parietal
-rostralanteriorcingulate L,Left-rostralanteriorcingulate,Rostral Anterior Cingulate L,rostralanteriorcingulateL,LL,78,0.31372549,0.078431373,0.549019608,-4.571633164,39.23418572,1.080687962,rACC L,rostralanteriorcingulate L,DMN,rACCL,Left,Limbic
-rostralanteriorcingulate R,Right-rostralanteriorcingulate,Rostral Anterior Cingulate R,rostralanteriorcingulateR,RL,56,0.31372549,0.078431373,0.549019608,4.145604526,37.9307865,2.874655456,rACC R,rostralanteriorcingulate R,DMN,rACCR,Right,Limbic
+rostralanteriorcingulate L,Left-rostralanteriorcingulate,Rostral Anterior Cingulate L,rostralanteriorcingulateL,LL,78,0.31372549,0.078431373,0.549019608,-4.571633164,39.23418572,1.080687962,rACC L,rostralanteriorcingulate L,DMN,rACCL,Left,Cingulate
+rostralanteriorcingulate R,Right-rostralanteriorcingulate,Rostral Anterior Cingulate R,rostralanteriorcingulateR,RL,56,0.31372549,0.078431373,0.549019608,4.145604526,37.9307865,2.874655456,rACC R,rostralanteriorcingulate R,DMN,rACCR,Right,Cingulate
 rostralmiddlefrontal L,Left-rostralmiddlefrontal,Rostral Middle Frontal L,rostralmiddlefrontalL,LF,543,0.294117647,0.196078431,0.490196078,-34.09391229,47.17612868,16.94516718,rMFG L,rostralmiddlefrontal L,SAN,rMFGL,Left,Frontal
 rostralmiddlefrontal R,Right-rostralmiddlefrontal,Rostral Middle Frontal R,rostralmiddlefrontalR,RF,551,0.294117647,0.196078431,0.490196078,34.22282861,48.18248485,17.04976001,rMFG R,rostralmiddlefrontal R,SAN,rMFGR,Right,Frontal
 superiorfrontal L,Left-superiorfrontal,Superior Frontal L,superiorfrontalL,LF,671,0.078431373,0.862745098,0.62745098,-11.54649123,29.75148874,41.30284262,sFG L,superiorfrontal L,other,sFGL,Left,Frontal
