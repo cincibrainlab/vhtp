@@ -15,6 +15,10 @@ function [EEG,results] = eeg_htpEegFrequencyInterpolation(EEG,varargin)
 %                       filtering and interpolation calculations
 %                       default: 60
 %   
+%   'halfmargin' - Number indicating width of neighbouring frequencies used
+%                  in spectrum interpolation
+%                  default: 2
+%   
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
 %
@@ -36,13 +40,15 @@ function [EEG,results] = eeg_htpEegFrequencyInterpolation(EEG,varargin)
 %  kyle.cullion@cchmc.org
 
 defaultTargetFrequency = 60;
+defaultHalfMargin = 2;
 defaultSaveOutput = false;
 defaultOutputDir = '';
    
 ip = inputParser();
 ip.StructExpand = 0;
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip,'targetfrequency',defaultTargetFrequency,@isnumeric)
+addParameter(ip,'targetfrequency',defaultTargetFrequency,@isnumeric);
+addParameter(ip, 'halfmargin',defaultHalfMargin, @isnumeric);
 addParameter(ip, 'saveoutput', defaultSaveOutput,@islogical);
 addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
@@ -53,9 +59,9 @@ functionstamp = mfilename; % function name for logging/output
 
 try
     targetFreqs = ip.Results.targetfrequency:ip.Results.targetfrequency:EEG.srate/2;
-    halfMargin  = 2;
+    halfMargin  = ip.Results.halfmargin;
     onsetOffsetFreqbandWidth = 1;
-    
+
     correctedData = zeros(size(EEG.data));
     for elecIdx = 1:EEG.nbchan
         
@@ -80,11 +86,11 @@ try
         end
         
         correctedData(elecIdx,:) = ifft(currentFft, [], 2, 'symmetric');
-        
     end
     EEG.data = correctedData;
     EEG.vhtp.eeg_htpEegFrequencyInterpolation.completed = 1;
     EEG.vhtp.eeg_htpEegFrequencyInterpolation.targetfrequency = ip.Results.targetfrequency;
+    EEG.vhtp.eeg_htpEegFrequencyInterpolation.halfmargin = ip.Results.halfmargin;
 
 catch e
     throw(e);
@@ -92,10 +98,10 @@ end
 
 EEG = eeg_checkset(EEG);
 
-
 if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
     EEG.vhtp.inforow.proc_filt_frequency_interpolation = true;
     EEG.vhtp.inforow.proc_filt_frequency_interpolation_target_freq = ip.Results.targetfrequency;
+    EEG.vhtp.inforow.proc_filt_frequency_interpolation_half_margin = ip.Results.halfmargin;
 end
 
 qi_table = cell2table({EEG.filename, functionstamp, timestamp}, ...
