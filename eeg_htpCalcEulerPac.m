@@ -14,7 +14,7 @@ function results = eeg_htpCalcEulerPac(EEG)
 %     EEG [struct]          - EEGLAB Structure
 %
 % Outputs:
-%     EEG       - EEGLAB Structure with modified .etc.htp field
+%     EEG       - Updated EEGLAB Structure
 %
 % Disclaimer:
 %   Part of the Cincinnati Visual High Throughput EEG Pipeline
