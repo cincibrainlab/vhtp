@@ -62,7 +62,7 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     % Inputs: Common across Visual HTP functions
     defaultOutputDir = tempdir;
     defaultIsErp = false;
-    defaultWavelet = 'bior6.8' % 'coif4' update with HAPPEv3;
+    defaultWavelet = 'bior6.8'; % 'coif4' update with HAPPEv3;
     defaultWavLvl = [];
     defaultThresholdRule = '';
     defaultDenoisingMethod = "Bayes";
