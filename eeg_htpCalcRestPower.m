@@ -6,7 +6,7 @@ function [EEG, results] = eeg_htpCalcRestPower(EEG, varargin)
     %      Power is calculated using MATLAB pWelch function. Key parameter is
     %      window length with longer window providing increased frequency
     %      resolution. Overlap is set at default at 50%. A hanning window is
-    %      also implemented. Speed is greatly incrased by GPU.
+    %      also implemented. Speed is greatly increased by GPU.
     %
     % Usage:
     %    >> [ EEG, results ] = eeg_htpCalcRestPower( EEG, varargin )

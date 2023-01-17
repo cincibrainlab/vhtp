@@ -77,10 +77,10 @@ functionstamp = mfilename; % function name for logging/output
 
 try
     if ~(ip.Results.dynamicfiltorder)
-        EEG = pop_eegfiltnew(EEG, 'locutoff', ip.Results.bandpassfilt(1), 'hicutoff', ip.Results.bandpassfilt(2), 'filtorder',ip.results.filtorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
+        EEG = pop_eegfiltnew(EEG, 'locutoff', ip.Results.bandpassfilt(1), 'hicutoff', ip.Results.bandpassfilt(2), 'filtorder',ip.Results.filtorder,'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
         EEG.vhtp.eeg_htpEegBandpassFilterEeglab.filtorder    = ip.Results.filtorder;
     else
-        EEG = pop_eegfiltnew(EEG, 'locutoff', bandpassfilt(1), 'hicutoff', ip.Results.bandpassfilt(2),'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
+        EEG = pop_eegfiltnew(EEG, 'locutoff', ip.Results.bandpassfilt(1), 'hicutoff', ip.Results.bandpassfilt(2),'revfilt', ip.Results.revfilt, 'plotfreqz',ip.Results.plotfreqz,'minphase',ip.Results.minphase);
         EEG.vhtp.eeg_htpEegBandpassFilterEeglab.filtorder    = 'dynamic';
     end
     EEG.vhtp.eeg_htpEegBandpassFilterEeglab.completed = 1;
