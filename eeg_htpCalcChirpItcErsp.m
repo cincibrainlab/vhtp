@@ -9,7 +9,7 @@ function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
 %      version of this code will embed relevant itc/ersp functions.
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpCalcChirpItcErsp( EEG )
+%    >> [ EEG ] = eeg_htpCalcChirpItcErsp( EEG, varargin )
 %
 % Require Inputs:
 %     EEG       - EEGLAB Structure
