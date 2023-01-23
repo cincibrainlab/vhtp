@@ -14,6 +14,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
+
+      - name: Checkout eeglab repo
+        uses: actions/checkout@v2
+        with:
+          repository:  sccn/eeglab
+          path: eeglab2022.0
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
 
