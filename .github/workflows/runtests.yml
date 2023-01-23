@@ -8,6 +8,11 @@ on:
     branches: [ Coop-Develop ]
 
 jobs:
+
+  initialize:
+    name: Initialize EEGLAB Setup
+    run: eeglab
+    
   test:
     name: Run MATLAB Tests and Generate Artifacts
     runs-on: ubuntu-20.04
@@ -20,6 +25,7 @@ jobs:
         with:
           repository:  sccn/eeglab
           path: eeglab2022.0
+
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
 
