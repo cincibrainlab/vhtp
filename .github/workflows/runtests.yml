@@ -10,9 +10,10 @@ on:
 jobs:
 
   initialize:
-    name: Initialize EEGLAB Setup
-    run: eeglab
-    
+    steps:
+      name: Initialize EEGLAB Setup
+      run: eeglab
+
   test:
     name: Run MATLAB Tests and Generate Artifacts
     runs-on: ubuntu-20.04
