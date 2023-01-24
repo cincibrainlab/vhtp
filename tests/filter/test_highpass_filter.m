@@ -11,7 +11,7 @@ function testHighpassFilter(testCase)
 
     EEG = pop_loadset('filepath','../','filename','example_data_32.set');
 
-    EEG2 = eeg_htpEegHighpassFilterEeglab(EEG,'highpassfilt',80,'filtorder',3300);
+    EEG2 = eeg_htpEegHighpassFilterEeglab(EEG,'highpassfilt',1,'filtorder',3300);
 
     %Verify existence of vhtp structure and relevant function structure
     testCase.verifyThat(EEG2,HasField("vhtp"));
