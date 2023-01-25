@@ -195,7 +195,7 @@ if ~ip.Results.tableonly
         %set(h1, 'Units', 'normalized');
         %set(h1, 'OuterPosition', [[], [], .8, .2]);
         title(coefStruct(bi).label, 'FontSize', 12);
-        %caxis([.20 1]);
+        caxis([.20 1]);
         
     end
     
@@ -258,7 +258,7 @@ for bi = 1 : numel(coefStruct)
     tmpBand = coefStruct(bi);
     summarytmp(bi).label = tmpBand.bandname;
     summarytmp(bi).mean = mean( tmpBand.meancf );
-    for ti = 1 : numel(tmpBand.meancf)
+    for ti = 1 : length(tmpBand.meancf)
         if tmpBand.meancf(ti) < .95
             troubleStruct(count).setname = EEG1.setname;
             troubleStruct(count).bandname = tmpBand.bandname;
