@@ -23,9 +23,13 @@ jobs:
           repository:  sccn/eeglab
           path: eeglab2022.0
 
+      - run: |
+          git submodule update --init --recursive --remote
+          git pull --recurse-submodules
+
       - uses: matlab-actions/run-command@v1
         with:
-          command: addpath('eeglab2022.0'), git submodule update --init --recursive --remote, git pull --recurse-submodules, eeglab
+          command: addpath('eeglab2022.0'), eeglab
           
       - name: Check out repository
         uses: actions/checkout@v2
