@@ -22,7 +22,7 @@ jobs:
 
 
       - run: |
-          cd /home/runner/work/vhtp
+          cd /home/runner/work
 
       - name: Checkout eeglab repo
         uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
 
       - uses: matlab-actions/run-command@v1
         with:
-          command: addpath('eeglab2022.0'), eeglab nogui
+          command: genpath('eeglab2022.0')
 
       - name: Run tests and generate artifacts
         uses: matlab-actions/run-tests@v1
