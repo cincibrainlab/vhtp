@@ -26,7 +26,6 @@ jobs:
       - run: |
           cd eeglab2022.0
           git submodule update --init --recursive --remote
-          git pull --recurse-submodules
           cd ..
 
       - uses: matlab-actions/run-command@v1
