@@ -33,7 +33,7 @@ jobs:
       - run: |
           cd eeglab2022.0
           git submodule update --init --recursive --remote
-          cd cd /home/runner/work/vhtp/vhtp
+          cd /home/runner/work/vhtp/vhtp
 
       - uses: matlab-actions/run-command@v1
         with:
