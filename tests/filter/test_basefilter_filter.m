@@ -11,14 +11,14 @@ function testBasefilterFilter(testCase)
 
     EEG = pop_loadset('filepath','../','filename','example_data_32.set');
 
-
+    %Opens eeglab, so that cleanline filter can be used.
+    %Only needed on first run of new session.
+    eeglab
 
     EEGhighpass = eeg_htpEegFilterEeglab(EEG,'method','highpass','highpassfilt',1,'filtorder',3300);
     EEGlowpass = eeg_htpEegFilterEeglab(EEG,'method','lowpass','lowpassfilt',80,'filtorder',3300);
     EEGnotch = eeg_htpEegFilterEeglab(EEG,'method','notch','notchfilt',[55 65],'filtorder',3300);
-    
     EEGcleanline = eeg_htpEegFilterEeglab(EEG,'method','cleanline','cleanlinebandwidth',2,'cleanlinechanlist',[1:EEG.nbchan]);
-
 
     %%EEGhighpass
     %Verify existence of vhtp structure and relevant function structure
@@ -31,14 +31,18 @@ function testBasefilterFilter(testCase)
     testCase.verifyThat(EEGhighpass.vhtp.eeg_htpEegFilterEeglab,HasField("highpassRevfilt"));
     testCase.verifyThat(EEGhighpass.vhtp.eeg_htpEegFilterEeglab,HasField("highpassPlotfreqz"));
     testCase.verifyThat(EEGhighpass.vhtp.eeg_htpEegFilterEeglab,HasField("highpassMinPhase"));
-    testCase.verifyThat(EEGhighpass.vhtp.eeg_htpEegFilterEeglab,HasField("qi_table"));  
+    testCase.verifyThat(EEGhighpass.vhtp.eeg_htpEegFilterEeglab,HasField("qi_table")); 
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEGhighpass.vhtp.eeg_htpEegFilterEeglab,HasField("highpass_completed"));
+    testCase.verifyEqual(EEGhighpass.vhtp.eeg_htpEegFilterEeglab.highpass_completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEGhighpass.data),size(EEG.data));   
     
     %%EEGlowpass
     %Verify existence of vhtp structure and relevant function structure
-    testCase.verifyThat(EEGhighpass,HasField("vhtp"));
+    testCase.verifyThat(EEGlowpass,HasField("vhtp"));
     testCase.verifyThat(EEGlowpass.vhtp,HasField("eeg_htpEegFilterEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to basefilter-lowpass filter
@@ -48,14 +52,17 @@ function testBasefilterFilter(testCase)
     testCase.verifyThat(EEGlowpass.vhtp.eeg_htpEegFilterEeglab,HasField("lowpassPlotfreqz"));
     testCase.verifyThat(EEGlowpass.vhtp.eeg_htpEegFilterEeglab,HasField("lowpassMinPhase"));
     testCase.verifyThat(EEGlowpass.vhtp.eeg_htpEegFilterEeglab,HasField("qi_table")); 
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEGlowpass.vhtp.eeg_htpEegFilterEeglab,HasField("lowpass_completed"));
+    testCase.verifyEqual(EEGlowpass.vhtp.eeg_htpEegFilterEeglab.lowpass_completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEGlowpass.data),size(EEG.data)); 
 
-
     %%EEGnotch
     %Verify existence of vhtp structure and relevant function structure
-    testCase.verifyThat(EEGhighpass,HasField("vhtp"));
+    testCase.verifyThat(EEGnotch,HasField("vhtp"));
     testCase.verifyThat(EEGnotch.vhtp,HasField("eeg_htpEegFilterEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to basefilter-notch filter
@@ -65,13 +72,17 @@ function testBasefilterFilter(testCase)
     testCase.verifyThat(EEGnotch.vhtp.eeg_htpEegFilterEeglab,HasField("notchPlotfreqz"));
     testCase.verifyThat(EEGnotch.vhtp.eeg_htpEegFilterEeglab,HasField("notchMinPhase"));
     testCase.verifyThat(EEGnotch.vhtp.eeg_htpEegFilterEeglab,HasField("qi_table"));  
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEGnotch.vhtp.eeg_htpEegFilterEeglab,HasField("notch_completed"));
+    testCase.verifyEqual(EEGnotch.vhtp.eeg_htpEegFilterEeglab.notch_completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEGnotch.data),size(EEG.data)); 
 
     %%EEGcleanline
     %Verify existence of vhtp structure and relevant function structure
-    testCase.verifyThat(EEGhighpass,HasField("vhtp"));
+    testCase.verifyThat(EEGcleanline,HasField("vhtp"));
     testCase.verifyThat(EEGcleanline.vhtp,HasField("eeg_htpEegFilterEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to basefilter-cleanline filter
@@ -90,6 +101,10 @@ function testBasefilterFilter(testCase)
     testCase.verifyThat(EEGcleanline.vhtp.eeg_htpEegFilterEeglab,HasField('cleanlineWinSize'));
     testCase.verifyThat(EEGcleanline.vhtp.eeg_htpEegFilterEeglab,HasField('cleanlineWinStep'));
     testCase.verifyThat(EEGcleanline.vhtp.eeg_htpEegFilterEeglab,HasField('qi_table'));
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEGcleanline.vhtp.eeg_htpEegFilterEeglab,HasField("cleanline_completed"));
+    testCase.verifyEqual(EEGcleanline.vhtp.eeg_htpEegFilterEeglab.cleanline_completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEGcleanline.data),size(EEG.data)); 

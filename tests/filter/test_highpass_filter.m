@@ -23,11 +23,14 @@ function testHighpassFilter(testCase)
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab,HasField("revfilt"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab,HasField("plotfreqz"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab,HasField("minphase"));
-    testCase.verifyThat(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab,HasField("qi_table"));  
+    testCase.verifyThat(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab,HasField("qi_table"));
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab,HasField("completed"));
+    testCase.verifyEqual(EEG2.vhtp.eeg_htpEegHighpassFilterEeglab.completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEG2.data),size(EEG.data));   
     
-
 end
 

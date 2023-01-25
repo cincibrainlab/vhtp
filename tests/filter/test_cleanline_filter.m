@@ -10,6 +10,10 @@ function testCleanlineFilter(testCase)
     import matlab.unittest.constraints.HasField
 
     EEG = pop_loadset('filepath','../','filename','example_data_32.set');
+    
+    %Opens eeglab, so that cleanline filter can be used.
+    %Only needed on first run of new session.
+    eeglab
 
     EEG2 = eeg_htpEegCleanlineFilterEeglab(EEG,'cleanlinebandwidth',2,'cleanlinechanlist',[1:EEG.nbchan]);
 
@@ -33,9 +37,12 @@ function testCleanlineFilter(testCase)
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegCleanlineFilterEeglab,HasField("winsize"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegCleanlineFilterEeglab,HasField("winstep"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegCleanlineFilterEeglab,HasField("qi_table"));  
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEG2.vhtp.eeg_htpEegCleanlineFilterEeglab,HasField("completed"));
+    testCase.verifyEqual(EEG2.vhtp.eeg_htpEegCleanlineFilterEeglab.completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEG2.data),size(EEG.data));   
     
-
 end

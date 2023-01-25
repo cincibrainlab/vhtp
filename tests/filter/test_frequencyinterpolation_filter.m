@@ -24,10 +24,13 @@ function testFrequencyinterpolationFilter(testCase)
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegFrequencyInterpolation,HasField("targetfrequency"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegFrequencyInterpolation,HasField("halfmargin"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegFrequencyInterpolation,HasField("qi_table"));  
+
+    %Verify that function has been completed
+    testCase.verifyThat(EEG2.vhtp.eeg_htpEegFrequencyInterpolation,HasField("completed"));
+    testCase.verifyEqual(EEG2.vhtp.eeg_htpEegFrequencyInterpolation.completed,1);
     
     %Verification that output data is identical size
     testCase.verifyEqual(size(EEG2.data),size(EEG.data));   
     
-
 end
 
