@@ -37,7 +37,7 @@ jobs:
 
       - uses: matlab-actions/run-command@v1
         with:
-          command: genpath('eeglab2022.0')
+          command: genpath('eeglab2022.0'), path
 
       - name: Run tests and generate artifacts
         uses: matlab-actions/run-tests@v1
@@ -45,4 +45,4 @@ jobs:
           test-results-junit: test-results/results.xml
           code-coverage-cobertura: code-coverage/coverage.xml
 
-          select-by-folder: tests
+          select-by-folder: vhtp/tests
