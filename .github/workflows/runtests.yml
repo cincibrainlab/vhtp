@@ -21,6 +21,9 @@ jobs:
         uses: actions/checkout@v2
 
 
+      - run: |
+          cd /home/runner/work/vhtp
+
       - name: Checkout eeglab repo
         uses: actions/checkout@v2
         with:
@@ -30,11 +33,11 @@ jobs:
       - run: |
           cd eeglab2022.0
           git submodule update --init --recursive --remote
-          cd ..
+          cd cd /home/runner/work/vhtp/vhtp
 
       - uses: matlab-actions/run-command@v1
         with:
-          command: addpath('eeglab2022.0'), eeglab
+          command: addpath('eeglab2022.0'), eeglab nogui
 
       - name: Run tests and generate artifacts
         uses: matlab-actions/run-tests@v1
