@@ -18,7 +18,7 @@ function testRemoveSegments(testCase)
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegRemoveSegmentsEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    %segment removal function
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRemoveSegmentsEeglab,HasField("proc_removed_regions"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRemoveSegmentsEeglab,HasField("qi_table"));  
     

@@ -13,14 +13,14 @@ function testCreateEpochs(testCase)
     
     inputEEG = eeg_htpEegEpoch2Cont(EEG)
 
-    EEG2 = eeg_htpEegCreateEpochsEeglab(inputEEG,'epochlength',2,'saveoutput',false);
+    EEG2 = eeg_htpEegCreateEpochsEeglab(inputEEG,'epochlength',22,'saveoutput',false);
 
     %Verify existence of vhtp structure and relevant function structure
     testCase.verifyThat(EEG2,HasField("vhtp"));
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegCreateEpochsEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    %create epochs function
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegCreateEpochsEeglab,HasField("proc_xmax_epoch"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegCreateEpochsEeglab,HasField("epochlength"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegCreateEpochsEeglab,HasField("epochlimits"));
@@ -29,6 +29,12 @@ function testCreateEpochs(testCase)
     
     %!!!!!!! How do you want me to check size in this one ????
     %Verification that output data is identical size
-    %testCase.verifyEqual(size(EEG2.data),size(EEG.data));
+    testCase.verifyEqual(size(EEG2.data),size(EEG.data));
+
+    %check data is preserved 
+    CheckDataEEG = eeg_htpEegEpoch2Cont(EEG)
+    CheckDatainputEEG2 = eeg_htpEegEpoch2Cont(EEG2)
+    %CheckDatainputEEG2 = EEG2
+    testCase.verifyEqual(size(CheckDatainputEEG2.data),size(CheckDataEEG.data));
     
 end

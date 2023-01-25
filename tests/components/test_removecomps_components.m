@@ -18,7 +18,7 @@ function testRemoveComps(testCase)
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegRemoveCompsEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    %components removal function
 
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRemoveCompsEeglab,HasField("qi_table"));  
     

@@ -18,7 +18,7 @@ function test_Rereference(testCase)
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegRereferenceEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    %rereference function
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRereferenceEeglab,HasField("method"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRereferenceEeglab,HasField("qi_table"));  
     

@@ -17,8 +17,8 @@ function test_RemoveEpochs(testCase)
     testCase.verifyThat(EEG2,HasField("vhtp"));
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegRemoveEpochsEeglab"));
 
-    %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    %Verify existence of function's outputs to mark input parameters to 
+    %remove epochs function
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRemoveEpochsEeglab,HasField("epoch_badtrials"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRemoveEpochsEeglab,HasField("epoch_badid"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegRemoveEpochsEeglab,HasField("epoch_percent"));

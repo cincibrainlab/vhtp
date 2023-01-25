@@ -18,7 +18,7 @@ function test_Ica(testCase)
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegIcaEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    % ica function
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegIcaEeglab,HasField("epoch_badtrials"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegIcaEeglab,HasField("epoch_badid"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegIcaEeglab,HasField("epoch_percent"));

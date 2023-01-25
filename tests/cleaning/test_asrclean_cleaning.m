@@ -24,7 +24,7 @@ function testAsrClean(testCase)
     testCase.verifyThat(EEG2.vhtp,HasField("eeg_htpEegAsrCleanEeglab"));
 
     %Verify existence of function's outputs to mark input parameters to
-    %channel removal function
+    %Asr clean function
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegAsrCleanEeglab,HasField("asrflatline"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegAsrCleanEeglab,HasField("asrhighpass"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegAsrCleanEeglab,HasField("asrchannel"));
@@ -35,9 +35,9 @@ function testAsrClean(testCase)
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegAsrCleanEeglab,HasField("asrmode"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegAsrCleanEeglab,HasField("qi_table"));  
     
-    %!!! Kyle are these supposed to not be equal?
+    %!!! Are these supposed to not be equal?
 
     %Verification that output data is identical size
-    %testCase.verifyEqual(size(EEG2.data),size(EEG.data));
-    
+    testCase.verifyEqual(size(EEG2.data),size(EEG.data));
+    testCase.verifyEqual(vis_artifacts(EEG2),EEG);
 end
