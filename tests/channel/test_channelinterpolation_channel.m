@@ -1,5 +1,4 @@
-
-function tests = test_channel_interpolation
+function tests = test_channelinterpolation_channel
   tests = functiontests(localfunctions);
 end
 
@@ -33,5 +32,4 @@ function testChannelInterpolation(testCase)
     %EEG2.nbchan-1 due to single interpolated channel
     testCase.verifyEqual(EEG2.vhtp.eeg_htpEegInterpolateChansEeglab.dataRank,EEG2.nbchan-1);
     
-
 end
