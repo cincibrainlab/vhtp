@@ -28,7 +28,7 @@ jobs:
           command: eeglab
           
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Run tests and generate artifacts
         uses: matlab-actions/run-tests@v1
