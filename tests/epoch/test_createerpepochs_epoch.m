@@ -11,9 +11,11 @@ function testCreateErpEpochs(testCase)
 
     EEG = pop_loadset('filepath','../','filename','example_data_erp.set');
     
+    inputEEG = eeg_htpEegEpoch2Cont(EEG);
+
     %%! need epochevent string !
     %EEG2 = eeg_htpEegCreateErpEpochsEeglab(EEG,'epochevent','DIN8','saveoutput',false);
-    EEG2 = eeg_htpEegCreateErpEpochsEeglab(EEG,'epochevent','DIN6','saveoutput',false);
+    EEG2 = eeg_htpEegCreateErpEpochsEeglab(inputEEG,'epochevent','DIN6','saveoutput',false);
 
     %Verify existence of vhtp structure and relevant function structure
     testCase.verifyThat(EEG2,HasField("vhtp"));

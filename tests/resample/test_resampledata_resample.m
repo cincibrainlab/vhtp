@@ -12,9 +12,10 @@ function test_Resampledata(testCase)
     EEG = pop_loadset('filepath','../','filename','example_data_32.set');
     % impleneted to make sure data size is preserved through data
     % resampling 
-    EEGtemp = eeg_htpEegResampleDataEeglab(EEG,'srate',500,'saveoutput',false);
 
-    EEG2 = eeg_htpEegResampleDataEeglab(EEGtemp,'srate',1000,'saveoutput',false);
+    EEG = eeg_htpEegEpoch2Cont(EEG);
+
+    EEG2 = eeg_htpEegResampleDataEeglab(EEG,'srate',500,'saveoutput',false);
 
     %Verify existence of vhtp structure and relevant function structure
     testCase.verifyThat(EEG2,HasField("vhtp"));
@@ -25,9 +26,8 @@ function test_Resampledata(testCase)
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegResampleDataEeglab,HasField("rawsrate"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegResampleDataEeglab,HasField("srate"));
     testCase.verifyThat(EEG2.vhtp.eeg_htpEegResampleDataEeglab,HasField("qi_table"));  
-    
-    % How should I test size ???
+   
     %Verification that output data is identical size
-    testCase.verifyEqual(size(EEG2.data),size(EEG.data));
+    testCase.verifyEqual(size(EEG2.data,2),size(EEG.data,2)/2);
     
 end
