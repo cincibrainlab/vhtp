@@ -37,7 +37,7 @@ jobs:
 
       - uses: matlab-actions/run-command@v1
         with:
-          command: addpath(genpath('eeglab2022.0')), eeglab nogui
+          command: addpath('eeglab2022.0'), eeglab nogui, path
 
       - name: Run tests and generate artifacts
         uses: matlab-actions/run-tests@v1
