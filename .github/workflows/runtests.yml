@@ -36,7 +36,7 @@ jobs:
 
       - uses: matlab-actions/run-command@v1
         with:
-          command: addpath('eeglab2022.0'); eeglab nogui; path; which pop_loadset;
+          command: eeglab nogui; path; which pop_loadset;
 
       - run: |
           cd /home/runner/work/vhtp/vhtp
