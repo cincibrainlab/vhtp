@@ -33,11 +33,13 @@ jobs:
       - run: |
           cd eeglab2022.0
           git submodule update --init --recursive --remote
-          cd /home/runner/work/vhtp/vhtp
 
       - uses: matlab-actions/run-command@v1
         with:
           command: addpath('eeglab2022.0'); eeglab nogui; path; which pop_loadset;
+
+      - run: |
+          cd /home/runner/work/vhtp/vhtp
 
       - name: Run tests and generate artifacts
         uses: matlab-actions/run-tests@v1
