@@ -218,7 +218,7 @@ function [EEG]=runStep(EEG, params, step, functionName, dryRun,outputdir, stepNu
         inputs{find(strcmp(inputs,'saveoutput'))+1} = false;
     end
     EEG = functionName(EEG,inputs{3:end});
-    if ~EEG.vhtp.stepPreprocessing.(step)
+    if ~isfield(EEG.vhtp.stepPreprocessing,step) || ~EEG.vhtp.stepPreprocessing.(step)
         EEG.vhtp.stepPreprocessing.(step) = true;
     end
     EEG.vhtp.prior_file = prior_file;
