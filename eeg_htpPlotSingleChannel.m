@@ -1,24 +1,31 @@
 function [EEG, results] = eeg_htpPlotSingleChannel( EEG, varargin )
-% eeg_htpPlotSingleChannel() - plots single channel EEG data
-%      Add 'help' comments here to be viewed on command line.
+% Description: Plots single channel EEG data
+% ShortTitle: Plot single channel
+% Category: Preprocessing
+% Tags: 
 %
-% Usage:
-%    >> [ EEG, results ] = eeg_htpPlotSingleChannel( EEG, options )
+%% Syntax:
+%   [ EEG, results ] = eeg_htpPlotSingleChannel( EEG, varargin )
 %
-% Require Inputs:
-%     EEG       - EEGLAB Structure
-% Function Specific Inputs:
-%     'chan' - channel number
-%     'outputdir' - output directory to save files
-%     
-% Outputs:
-%     EEG       - EEGLAB Structure with modified .etc.htp field
-%     results   - etc.htp results structure or customized
+%% Required Inputs:
+%   EEG [struct]           - EEGLAB Structure
 %
-%  This file is part of the Cincinnati Visual High Throughput Pipeline,
-%  please see http://github.com/cincibrainlab
-%    
-%  Contact: ernest.pedapati@cchmc.org
+%% Function Specific Inputs:
+%       'chan' - channel number
+%       'outputdir' - output directory to save files
+%
+%% Outputs:
+%     EEG [struct]         - Updated EEGLAB structure
+%
+%     results [struct]     - Updated function-specfic structure containing qi table and input parameters used
+%
+%% Disclaimer:
+%   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   
+%   Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%   ernest.pedapati@cchmc.org
 
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
 functionstamp = mfilename; % function name for logging/output

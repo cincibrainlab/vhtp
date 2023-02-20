@@ -1,8 +1,32 @@
 function EEG = eeg_htpMiscEvent2Csv( EEG, varargin)
+% Description: ?? Does this ouput a table of all the events that occured on
+% a Set file and a converted SET table ?
+% ShortTitle: Misc Events to CSV
+% Category: ??
+% Tags: 
+%
+%% Syntax:
+%   EEG = eeg_htpMiscEvent2Csv( EEG, varargin)
+%
+%% Required Inputs:
+%   EEG [struct]           - EEGLAB Structure
+%
+%% Function Specific Inputs:
+%       'outputdir' - output directory to save files
+%
+%% Outputs:
+%     EEG [struct]         - Updated EEGLAB structure
+%
+%% Disclaimer:
+%   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   
+%   Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%   kyle.cullion@cchmc.org
 
-
-    timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
-    functionstamp = mfilename; % function name for logging/output
+timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+functionstamp = mfilename; % function name for logging/output
 
 % Default inputs
 defaultOutputDir = tempdir;

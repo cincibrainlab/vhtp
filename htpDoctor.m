@@ -1,9 +1,10 @@
 function [results, paths]  = htpDoctor( action )
-timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
+%timestamp = datestr(now, 'SS,MM,HH,dd,mm,yyyy'); % timestamp 
 [note, fixnote, failednote, successnote, successpath] = htp_utilities();
 
 if nargin < 1, action = missing;
-    fprintf('\nWelcome to VHTP! - http://github.com/cincibrainlab/vhtp\n', timestamp);
+    % What is the purpose of the TimeStamp
+    fprintf('\nWelcome to VHTP! - http://github.com/cincibrainlab/vhtp\n');
     fprintf('VHTP is an extensible, easy to learn framework for EEG analysis.\n');
     fprintf('================================================================\n');
     fprintf('The VHTP Doctor verifies the installation and any necessary toolkits.\n\n');
@@ -11,7 +12,7 @@ if nargin < 1, action = missing;
 end
 
 if ~ismissing(action)
-    isValidAction =  ismember(action, {'fix_eeglab', 'check_eeglab', 'check_brainstorm',... 
+    isValidAction = ismember(action, {'fix_eeglab', 'check_eeglab', 'check_brainstorm',... 
         'check_biosig', 'check_braph', 'check_bct', 'fix_bct', 'fix_braph', 'fix_biosig', 'fix_viewprops', 'fix_cleanrawdata', 'fix_brainstorm', ...
         'fix_firfilt', 'check_spectralevents', 'fix_spectralevents'});
 else
@@ -55,7 +56,6 @@ if isValidAction
             results = fixHandler('firfilt');
         case 'fix_brainstorm'
             results = fixHandler('brainstorm');
-
         case 'check_spectralevents'
             results = checkRequirements( 'spectralevents' );
         case 'fix_spectralevents'
@@ -114,6 +114,7 @@ end
     end
 
 % === CHECK DEPENDENCIES FUNCTIONS
+    
     function results = checkRequirements( action )
         switch action
             case 'eeglab'
@@ -123,9 +124,9 @@ end
             case 'spectralevents'
                 results = checkScriptName( 'spectralevents' );
             case 'braph'
-                results =  checkScriptName( 'braph' );
+                results = checkScriptName( 'braph' );
             case 'bct'
-                results =  checkScriptName( 'eigenvector_centrality_und.m' );
+                results = checkScriptName( 'eigenvector_centrality_und.m' );
             otherwise
                 results = checkEeglabPlugin(action);
         end
@@ -163,51 +164,17 @@ end
             case 'brainstorm'
                 results = addMatlabPath( action );
             case 'spectralevents'
-                results = addMatlabPath( action );
+                results = downloadPlugin( action );
             case 'braph'
-                results = addMatlabPathWithSubfolders( action );
+                results = downloadPluginSubfolders( action );
             case 'bct'
-                results = addMatlabPathWithSubfolders( action );
+                results = downloadPluginSubfolders( action );
             otherwise
                 results = downloadEegLabPlugin( action );
         end
 
     end
 
-    function results = addMatlabPathWithSubfolders( action )
-
-         ToolIsAvailable = checkRequirements( action );
-        try_matlab_path = missing;
-        while ToolIsAvailable == false
-            try
-                if ~ismissing(try_matlab_path), 
-                    addpath(genpath(fullfile(try_matlab_path))); 
-                    % addpath(genpath(fullfile(try_matlab_path))); 
-
-                end
-                assert(checkRequirements( action ) );
-                ToolIsAvailable = true;
-                successnote( action );
-                results = ToolIsAvailable;
-            catch
-                if ~ismissing(try_matlab_path), rmpath(try_matlab_path); end
-                try_matlab_path = uigetdir([], ...
-                    sprintf('Choose %s directory or hit Cancel.', action));
-                if try_matlab_path == false
-                    failednote([action ': No directory selected.']);
-                    switch action
-                        otherwise
-                    end
-                    results = ToolIsAvailable;
-                    break;
-                end
-            end
-
-        end
-        results = ToolIsAvailable;
-
-
-    end
 
     function results = addMatlabPath( action )
 
@@ -215,7 +182,7 @@ end
         try_matlab_path = missing;
         while ToolIsAvailable == false
             try
-                if ~ismissing(try_matlab_path), 
+                if ~ismissing(try_matlab_path)
                     addpath(fullfile(try_matlab_path)); 
                     % addpath(genpath(fullfile(try_matlab_path))); 
 
@@ -232,11 +199,11 @@ end
                     failednote([action ': No directory selected.']);
                     switch action
                         case 'eeglab'
-                            note('Install from https://eeglab.org/download/')
+                            note('Install from https://eeglab.org/download/');
                         case 'brainstorm'
                             note('Install from https://neuroimage.usc.edu/brainstorm/Installation');
                         case 'spectralevents'
-                            note('Install from https://github.com/jonescompneurolab/SpectralEvents')
+                            note('Install from https://github.com/jonescompneurolab/SpectralEvents');
                     end
                     results = ToolIsAvailable;
                     break;
@@ -249,19 +216,103 @@ end
 
     end
 
-    function res = downloadGitHubRepository( action )
+    function results = downloadPlugin( action )
         switch action
+            case 'eeglab'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/eeglab.zip';
+                name = 'eeglab';
+            case 'brainstorm'
+                note('Install from https://neuroimage.usc.edu/brainstorm/Installation');
             case 'spectralevents'
-                zip = 'https://github.com/jonescompneurolab/SpectralEvents/archive/refs/heads/master.zip';
-                name = 'SpectralEvents';
-            otherwise
-                note('Github repository not configured. Please see htpDoctor code.');
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/SpectralEvents.zip';
+                name = 'spectralevents';
+            case 'braph'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/BRAPH.zip';
+                name = 'braph';
+            case 'bct'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/BCT.zip';
+                name = 'bct';
+            case 'biosig'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/BIOSIG.zip';
+                name = 'biosig';
+            case 'viewprops'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/Viewprops.zip';
+                name = 'viewprops';
+    
         end
-
-
+    
+        ToolIsAvailable = checkRequirements( action );
+        try_matlab_path = missing;
+        while ToolIsAvailable == false
+            try
+                if ~ismissing(try_matlab_path) 
+                    addpath(fullfile(try_matlab_path)); 
+                end
+                assert(checkRequirements( action ) );
+                ToolIsAvailable = true;
+                successnote( action );
+                results = ToolIsAvailable;
+            catch
+                if ~ismissing(try_matlab_path), rmpath(try_matlab_path); end
+                downloadFileFromWebsite(zip,name);
+                current_folder = pwd;
+                addpath(genpath(fullfile(current_folder)));
+                results = ToolIsAvailable;
+            end
+        end
+        results = ToolIsAvailable;
     end
 
+    function results = downloadPluginSubfolders( action )
+        switch action
+            case 'eeglab'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/eeglab.zip';
+                name = 'eeglab';
+            case 'brainstorm'
+                note('Install from https://neuroimage.usc.edu/brainstorm/Installation');
+            case 'spectralevents'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/SpectralEvents.zip';
+                name = 'spectralevents';
+            case 'braph'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/BRAPH.zip';
+                name = 'braph';
+            case 'bct'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/BCT.zip';
+                name = 'bct';
+            case 'biosig'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/BIOSIG.zip';
+                name = 'biosig';
+            case 'viewprops'
+                zip = 'https://raw.githubusercontent.com/cincibrainlab/vhtp_dependencies/main/Viewprops.zip';
+                name = 'viewprops';
+    
+        end
+    
+        ToolIsAvailable = checkRequirements( action );
+        try_matlab_path = missing;
+        while ToolIsAvailable == false
+            try
+                if ~ismissing(try_matlab_path) 
+                    addpath(genpath(fullfile(try_matlab_path))); 
+                end
+                assert(checkRequirements( action ) );
+                ToolIsAvailable = true;
+                successnote( action );
+                results = ToolIsAvailable;
+            catch
+                if ~ismissing(try_matlab_path), rmpath(try_matlab_path); end
+                downloadFileFromWebsite(zip,name);
+                current_folder = pwd;
+                addpath(genpath(fullfile(current_folder)));
+                results = ToolIsAvailable;
+            end
+        end
+        results = ToolIsAvailable;
+    end
+
+
     function res = downloadEegLabPlugin( action )
+        % eeglab();
         switch action
             case 'clean_rawdata'
                 zip = 'http://sccn.ucsd.edu/eeglab/plugins/clean_rawdata2.7.zip';
@@ -276,9 +327,12 @@ end
             case 'iclabel'
                 name = 'ICLabel';
             case 'viewprops'
-                name = 'viewprops';
+                zip = 'https://sccn.ucsd.edu/eeglab/plugins/Viewprops1.5.4.zip';
+                name = 'Viewprops';
+                version = '1.5.4';
+                pluginsize = 217;
             case 'firfilt'
-                zip =  'http://sccn.ucsd.edu/eeglab/plugins/firfilt2.4.zip';
+                zip = 'http://sccn.ucsd.edu/eeglab/plugins/firfilt2.4.zip';
                 name = 'firfilt';
                 version = '2.4';
                 pluginsize = 42.7;
@@ -386,11 +440,10 @@ end
 % === UTILITIES ADDIN: 2/2 ================================================
     function [note, fixnote, failednote, successnote, successpath] = htp_utilities()
         note        = @(msg) fprintf('%s: %s\n', mfilename, msg );
-        fixnote        = @(msg) fprintf('%s: \tFix command: %s\n', mfilename, msg );
-        failednote = @(msg) fprintf('%s: [N] FAILED: %s\n', mfilename, upper(msg) );
+        fixnote     = @(msg) fprintf('%s: \tFix command: %s\n', mfilename, msg );
+        failednote  = @(msg) fprintf('%s: [N] FAILED: %s\n', mfilename, upper(msg) );
         successnote = @(msg) fprintf('%s:[Y] SUCCESS: %s\n', mfilename, upper(msg) );
         successpath = @(msg) fprintf('%s:[Y] Path: %s;\n', mfilename, msg );
-
     end
 
 % === UTILITIES ADDIN: 2/2 ================================================

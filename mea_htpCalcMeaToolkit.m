@@ -1,17 +1,32 @@
 function MEA = mea_htpCalcMeaToolkit( MEA, path_to_results, varargin)
-%  Multielectrode array signal toolkit based on vHtp Functions
+% Description: Multielectrode array signal toolkit based on vHtp Functions
+% ShortTitle: MEA Toolkit
+% Category: Toolkit
+% Tags:
 %
-%% Syntax
+%% Syntax:
 %   MEA = mea_htpCalcMeaToolkit( MEA )
-%% Input
-%   path_to_results [char] - folder to place result files
-%   functionname [char] - htp function name (subfolder for results)
-%   isParquet [logical] - alternative input for Parquet file
-%% Output
-%   results [struct] - output files
-%% Disclaimer
-%   Part of the Cincinnati Visual High Throughput EEG Pipeline
 %
+%% Required Inputs:
+%   MEA [struct]           - EEGLAB Structure
+%
+%   path_to_results [char] - folder to place result files
+%
+%% Function Specific Inputs:
+%   functionname [char] - htp function name (subfolder for results)
+%
+%   isParquet [logical] - alternative input for Parquet file
+%
+%% Outputs:
+%   MEA [struct] - output structure with updated dataset
+%
+%% Disclaimer:
+%   Part of the Cincinnati Visual High Throughput EEG Pipeline
+%   
+%   Please see http://github.com/cincibrainlab
+%
+%% Contact:
+%   kyle.cullion@cchmc.org
 
 %% Helper Function Initialization
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp

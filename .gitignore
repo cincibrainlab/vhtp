@@ -14,3 +14,9 @@
 *.wts
 vhtp_gui_savedata.mat
 .DS_Store
+\bct
+\braph
+\eeglab2022.1
+\spectralevents
+\biosig
+\brainstorm3
