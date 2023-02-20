@@ -212,8 +212,8 @@
       <surficeMNI>128_chanlocsMNI.txt</surficeMNI>
    </listitem>
    <listitem>
-      <net_displayname>MEA XDAT</net_displayname>
-      <net_name>MEAXDAT</net_name>
+      <net_displayname>MEA 30 XDAT</net_displayname>
+      <net_name>MEA30XDAT</net_name>
       <net_file>chanfiles/mea3d.mat</net_file>
       <net_dict>chanfiles/TBD</net_dict>
       <net_graphic>chanfiles/meaimg.PNG</net_graphic>

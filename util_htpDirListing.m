@@ -12,6 +12,7 @@ function [results] = util_htpDirListing( filepath, varargin )
 %     'ext'          - specify file extenstion
 %     'keyword'      - keyword search
 %     'subdirOn'     - (true/false) search subdirectories
+%     'keepentireext' - keep entire file extension
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
@@ -34,8 +35,9 @@ defaultExt = [];
 defaultKeyword = [];
 defaultSubDirOn = true;
 defaultNotKeyword = false;
+defaultKeepEntireExt = false;
 
-validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
+validateExt = @( ext ) (any(strcmp(varargin,{'keepentireext'})) && varargin{find(strcmp(varargin,'keepentireext'))+1}) || (ischar( ext ) & all(ismember(ext(1), '.')));
 
 % MATLAB built-in input validation
 ip = inputParser();   
@@ -44,6 +46,7 @@ addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
 addParameter(ip,'notKeyword', defaultNotKeyword, @mustBeNumericOrLogical)
 addParameter(ip,'subdirOn', defaultSubDirOn, @mustBeNumericOrLogical)
+addParameter(ip, 'keepentireext',defaultKeepEntireExt, @mustBeNumericOrLogical);
 parse(ip,filepath,varargin{:});
 
 % START: Utilty code

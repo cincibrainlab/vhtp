@@ -77,7 +77,13 @@ if ~exist(ip.Results.chanxml,'file'), error('Channel XML File is missing. Downlo
 
 netInfo = util_htpReadNetCatalog('nettype', ip.Results.nettype);
 
-[~,~, file_ext] = fileparts(netInfo.net_filter);
+multiFileNetSwitch = ~isempty(regexp(netInfo.net_filter,'_','match'));
+
+if multiFileNetSwitch
+    file_ext = strrep(netInfo.net_filter,'*','');
+else
+    [~,~, file_ext] = fileparts(netInfo.net_filter);
+end
 
 % Prompt user to enter net type for correct import
 if strcmpi('undefined',(ip.Results.nettype))
@@ -90,7 +96,11 @@ changeExtToSet = @( str ) strrep(str, file_ext, '.set'); % convert new filename 
 
 switch exist(filepath)
     case 7
-        filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn);
+        if multiFileNetSwitch
+            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, 'keepentireext',true);
+        else
+            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn);
+        end
         is_single_file = false;
     case 2
         [tmppath, tmpfile, tmpext] = fileparts(filepath);
@@ -104,7 +114,7 @@ if ~isempty(filelist)
     filelist.success = false(height(filelist),1);
     filelist.importdate = repmat(string(timestamp), height(filelist),1);
     filelist.electype = repmat(ip.Results.nettype, height(filelist),1);
-    filelist.ext = repmat(ip.Results.ext, height(filelist),1);
+    filelist.ext = repmat(file_ext, height(filelist),1);
     outputfile_rows = varfun(changeExtToSet, filelist, 'InputVariables', {'filename'}, 'OutputFormat','cell');
     filelist.outputfile = outputfile_rows{1};
     filelist.outputdir = repmat(string(ip.Results.outputdir), height(filelist),1);
@@ -121,7 +131,7 @@ if ip.Results.listing == false
 
     % Summary Message
     fprintf('\n [Visual HTP EEG Import to SET]\n-Input Dir: %s\n-Ext: %s\n-Total Files: %d\n-Preset:%s\n-Output Dir: %s\n\n',...
-        ip.Results.filepath, ip.Results.ext, height(filelist), ip.Results.ext, ip.Results.outputdir);
+        ip.Results.filepath, file_ext, height(filelist), ip.Results.nettype, ip.Results.outputdir);
 
     % Prompt for continue?
 
@@ -220,7 +230,7 @@ if ip.Results.listing == false
                     edfFile = fullfile(folder, datafile);
 
                     % using remap function for Neuronexus
-                    EEG = eeg_htpMeaImportAndRemapEdf( edfFile );
+                    EEG = util_htpImportAndRemapMea( edfFile );
 
                     EEG.filename = datafile;
                     % EEG.chaninfo.filename = 'meachanlocs.mat';
@@ -229,6 +239,31 @@ if ip.Results.listing == false
                     error('MEA EDF Import Failed.')
                 end
 
+               % chaninfo.filename = netInfo.net_file;
+               % EEG.chaninfo   = chaninfo;
+
+
+            case 'MEA30XDAT'
+                % chan 2 is reference
+                % chan 32 EDF is reference
+                % chan 33 EDF is piezo
+    
+                try
+                    datafile =  filelist.filename{i};
+                    folder = filelist.filepath{i};
+                    
+                    xdatfile = fullfile(folder, datafile);
+                      
+                    % using remap function for Neuronexus
+                    EEG = util_htpImportAndRemapMea( xdatfile );
+    
+                    EEG.filename = datafile;
+                    % EEG.chaninfo.filename = 'meachanlocs.mat';
+    
+                catch e
+                    error('MEA EDF Import Failed.')
+                end
+    
                % chaninfo.filename = netInfo.net_file;
                % EEG.chaninfo   = chaninfo;
 
@@ -265,7 +300,7 @@ if ip.Results.listing == false
             event_codes = [];
         end
 
-        setinfo = cell2table({filelist.outputfile(i) ip.Results.nettype ip.Results.ext timestamp EEG.nbchan EEG.trials EEG.pnts EEG.srate EEG.xmin ...
+        setinfo = cell2table({filelist.outputfile(i) ip.Results.nettype file_ext timestamp EEG.nbchan EEG.trials EEG.pnts EEG.srate EEG.xmin ...
             EEG.xmax EEG.ref has_events numel(EEG.event) event_codes filelist.outputfile{i} filelist.outputdir(i) ...
             EEG.subject filelist.filename{i} filelist.filepath{i}...
             }, ...
