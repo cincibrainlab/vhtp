@@ -201,7 +201,8 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             fprintf('Headmodel: Default file available & No external file provided.\n');
             fprintf('Dowloading %s to %s\nFigshare URL: %s\n', openmeeg_file, default_headmodel_target, openmeeg_url);
             try
-                websave(default_headmodel_target, openmeeg_url);
+                options = weboptions('CertificateFilename', '');
+                websave(default_headmodel_target, openmeeg_url, options);
                 disp("Headmodel: Successful download and save of headmodel to default protocol directory.");
             catch
                 error("Headmodel: Unable to successfully download and save headmodel.");
