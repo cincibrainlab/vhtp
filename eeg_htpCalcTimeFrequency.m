@@ -9,7 +9,7 @@ function [EEG, results] = eeg_htpCalcTimeFrequency(EEG, varargin)
 %      version of this code will embed relevant itc/ersp functions.
 %
 % Usage:
-%    >> [ EEG ] = eeg_htpCalcChirpItcErsp( EEG, varargin )
+%    >> [ EEG ] = eeg_htpCalcTimeFrequenfcy( EEG, varargin )
 %
 % Require Inputs:
 %     EEG       - EEGLAB Structure
@@ -275,17 +275,18 @@ csvTable = cell2table(csvRow, "VariableNames", {'eegid', 'trials', 'chan', 'rejt
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid', 'scriptname', 'timestamp'});
 
 % Outputs:
-EEG.vhtp.eeg_htpCalcChirpItcErsp.itc1 = cat(3,chanItc{:});
-EEG.vhtp.eeg_htpCalcChirpItcErsp.rawitc1 = cat(3,chanRawItc{:});
-EEG.vhtp.eeg_htpCalcChirpItcErsp.ersp1 = cat(3,chanErsp{:});
-EEG.vhtp.eeg_htpCalcChirpItcErsp.stp1 = cat(3,chanStp{:});
-EEG.vhtp.eeg_htpCalcChirpItcErsp.t_s = t_s;
-EEG.vhtp.eeg_htpCalcChirpItcErsp.f_s = f_s;
-EEG.vhtp.eeg_htpCalcChirpItcErsp.summary_table = csvTable;
-EEG.vhtp.eeg_htpCalcChirpItcErsp.qi_table = qi_table;
-EEG.vhtp.eeg_htpCalcChirpItcErsp.trials = EEG.trials;
-EEG.vhtp.eeg_htpCalcChirpItcErsp.amp_rej_trials = num2str(bad_trial_idx);
-EEG.vhtp.eeg_htpCalcChirpItcErsp.amp_threshold = amp_threshold;
-results =  EEG.vhtp.eeg_htpCalcChirpItcErsp;
+EEG.vhtp.(mfilename).itc1 = cat(3,chanItc{:});
+EEG.vhtp.(mfilename).rawitc1 = cat(3,chanRawItc{:});
+EEG.vhtp.(mfilename).ersp1 = cat(3,chanErsp{:});
+EEG.vhtp.(mfilename).stp1 = cat(3,chanStp{:});
+EEG.vhtp.(mfilename).t_s = t_s;
+EEG.vhtp.(mfilename).f_s = f_s;
+EEG.vhtp.(mfilename).summary_table = csvTable;
+EEG.vhtp.(mfilename).qi_table = qi_table;
+EEG.vhtp.(mfilename).trials = EEG.trials;
+EEG.vhtp.(mfilename).amp_rej_trials = num2str(bad_trial_idx);
+EEG.vhtp.(mfilename).amp_threshold = amp_threshold;
+results =  EEG.vhtp.(mfilename);
+
 
 end
