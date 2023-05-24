@@ -93,6 +93,14 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
     if ~isa(EEG.data,'double')
         EEG.data = double(EEG.data);
     end
+
+    if ndims(EEG.data) > 2
+        isEpoched = true;
+        samples_per_trial = size(EEG.data,2);
+    else
+        isEpoched = false;
+        samples_per_trial = size(EEG.data,2);
+    end
     
     parse(ip, EEG, varargin{:});
 
@@ -152,27 +160,27 @@ function [EEG, results, aEEG] = eeg_htpEegWaveletDenoiseHappe(EEG, varargin)
             ip.Results.lowpass, [], 0, [], 0).data, ...
             size(EEG.data, 1), []) ;
 
-    else
-        if ndims(EEG.data) >2
-            isEpoched = true;
-            samples_per_trial = size(EEG.data,2);
-        else 
-            isEpoched = false;
-            samples_per_trial = size(EEG.data,2);
+        % bring back trials if needed
+        if isEpoched
+            postEEG = reshape(postEEG, size(EEG.data,1), samples_per_trial,[]) ;
         end
-    preEEG = reshape(EEG.data, size(EEG.data,1), []) ;
+        EEG.data = postEEG ;
+
+    else
+
+        preEEG = reshape(EEG.data, size(EEG.data,1), []) ;
         postEEG = preEEG - artifacts ;
 
         % create artifact only EEG SET
         aEEG = EEG;
         aEEG.data = artifacts;
-        
+
         % bring back trials if needed
         if isEpoched
-        postEEG = reshape(postEEG, size(EEG.data,1), samples_per_trial,[]) ;
+            postEEG = reshape(postEEG, size(EEG.data,1), samples_per_trial,[]) ;
         end
         EEG.data = postEEG ;
-    end 
+    end
 
 
 

@@ -354,6 +354,8 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     EEG2 = eeg_checkchanlocs(EEG2);
     EEG2.times = sFileExtract.Time; % times vector from bst
     EEG2.data = sFileExtract.Value(:, :); % data for each source channel
+    EEG2.trials = 1;
+    EEG2.pnts = size(EEG2.data ,2);
 
     % added 3/4/22 to strip ICA information on conversion which causes load issues on some systems.
     EEG2.icawinv        = [];
@@ -366,6 +368,8 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
         EEG2.chanlocs(j).labels = genvarname(tmpatlas.Label);
         EEG2.chanlocs(j).type = 'EEG';
     end
+    EEG2.nbchan = numel(EEG2.chanlocs);
+
 
     EEG2.filename = strrep(EEG2.filename, '.set', ['_' sourceDesc '.set']);
     EEG2.filepath = fullfile(ip.Results.outputdir, sourceDesc);
@@ -373,6 +377,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
 
     EEG2.vhtp.eeg_htpCalcSource.atlas = atlas;
     EEG2.etc.atlas = atlas;
+
     EEG2 = eeg_checkset(EEG2);
 
     if ip.Results.saveset
