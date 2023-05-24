@@ -27,7 +27,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     %                       default: false
     %     'resetprotocol'         - delete and reset protocol (logical: default false)
     %     If option is true, cannot visualize results in brainstorm GUI.
-    %
+    % 
     % Common Visual HTP Inputs:
     %     'bandDefs'   - cell-array describing frequency band definitions
     %     {'delta', 2 ,3.5;'theta', 3.5, 7.5; 'alpha1', 8, 10; 'alpha2', 10.5, 12.5;
@@ -367,7 +367,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
         EEG2.chanlocs(j).type = 'EEG';
     end
 
-    EEG2.filename = strrep(EEG2.filename, '.set', [sourceDesc '.set']);
+    EEG2.filename = strrep(EEG2.filename, '.set', ['_' sourceDesc '.set']);
     EEG2.filepath = fullfile(ip.Results.outputdir, sourceDesc);
     savefile = fullfile(EEG2.filepath, EEG2.filename);
 
@@ -383,7 +383,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     end
 
     % END: Signal Processing
-
+    EEG = EEG2;
     % QI Table
     EEG.vhtp.eeg_htpCalcSource.qi_table = ...
         cell2table({EEG.setname, functionstamp, timestamp ip.Results.outputdir, ...
