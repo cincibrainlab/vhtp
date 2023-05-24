@@ -371,7 +371,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     EEG2.filepath = fullfile(ip.Results.outputdir, sourceDesc);
     savefile = fullfile(EEG2.filepath, EEG2.filename);
 
-    EEG.vhtp.eeg_htpCalcSource.atlas = atlas;
+    EEG2.vhtp.eeg_htpCalcSource.atlas = atlas;
     EEG2.etc.atlas = atlas;
     EEG2 = eeg_checkset(EEG2);
 
@@ -383,16 +383,15 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     end
 
     % END: Signal Processing
-    EEG = EEG2;
     % QI Table
-    EEG.vhtp.eeg_htpCalcSource.qi_table = ...
+    EEG2.vhtp.eeg_htpCalcSource.qi_table = ...
         cell2table({EEG.setname, functionstamp, timestamp ip.Results.outputdir, ...
         ip.Results.headless, ip.Results.nettype, ip.Results.confirmplot, ip.Results.saveset}, ...
         'VariableNames', {'eegid', 'scriptname', 'timestamp', 'outputdir', ...
         'headless','nettype','confirmplot','saveset'});
 
     % Outputs:
-    results = EEG.vhtp.eeg_htpCalcSource;
+    results = EEG2.vhtp.eeg_htpCalcSource;
 
 end
 
