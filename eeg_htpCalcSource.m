@@ -354,8 +354,8 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     EEG2 = eeg_checkchanlocs(EEG2);
     EEG2.times = sFileExtract.Time; % times vector from bst
     EEG2.data = sFileExtract.Value(:, :); % data for each source channel
-    EEG2.trials = 1;
-    EEG2.pnts = size(EEG2.data ,2);
+    %EEG2.trials = 1;
+    %EEG2.pnts = size(EEG2.data ,2);
 
     % added 3/4/22 to strip ICA information on conversion which causes load issues on some systems.
     EEG2.icawinv        = [];
