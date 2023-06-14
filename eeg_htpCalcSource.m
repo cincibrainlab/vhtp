@@ -187,7 +187,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     isDefaultHeadModelAvailable = exist(default_headmodel_target, 'file');
 
     % see if user requests file to be overwritten
-    isExternalHeadmodelAvailable = isempty(ip.Results.headmodelfile);
+    isExternalHeadmodelAvailable = ~isempty(ip.Results.headmodelfile);
 
     if ip.Results.computeheadmodel
         delete(default_headmodel_target);  % remove any existing headmodel 
@@ -216,7 +216,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
             if isExternalHeadmodelAvailable == true
                 fprintf('Headmodel: External file provided. \nHeadmodel: Will copy to default protocol directory.\n');
                 % add one copy of headmodel to default directory
-                copyfile(ip.Results.headmodelfile, target_default_headmodel);
+                copyfile(ip.Results.headmodelfile, default_headmodel_target);
             end
         end
     end
