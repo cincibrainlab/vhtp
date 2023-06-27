@@ -275,8 +275,14 @@ end
                 pluginsize = 4.3000;
             case 'iclabel'
                 name = 'ICLabel';
+                zip = 'http://sccn.ucsd.edu/eeglab/plugins/ICLabel1.4.zip';
+                version = '1.4';
+                pluginsize = 38;
             case 'viewprops'
                 name = 'viewprops';
+                zip = 'http://sccn.ucsd.edu/eeglab/plugins/viewprops1.5.4.zip';
+                version = '1.5.4';
+                pluginsize = .19;
             case 'firfilt'
                 zip =  'http://sccn.ucsd.edu/eeglab/plugins/firfilt2.4.zip';
                 name = 'firfilt';
