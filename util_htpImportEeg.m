@@ -132,6 +132,7 @@ results = filelist;
 if ip.Results.listing == false
 
     netverify_filename = fullfile(ip.Results.outputdir, [netInfo.net_name 'verify_topoplot_' timestamp '.png']);
+    filelist_filename = fullfile(ip.Results.outputdir, ['filelist_' netInfo.net_name '_' timestamp '.csv']);
 
     % Summary Message
     fprintf('\n [Visual HTP EEG Import to SET]\n-Input Dir: %s\n-Ext: %s\n-Total Files: %d\n-Preset:%s\n-Output Dir: %s\n\n',...
@@ -362,6 +363,7 @@ if ip.Results.listing == false
         else
             % Outputs:
             results = filelist;
+            writetable(filelist, filelist_filename);
         end
 
     end
