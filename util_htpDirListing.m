@@ -11,6 +11,7 @@ function [results] = util_htpDirListing( filepath, varargin )
 % Function Specific Inputs:
 %     'ext'          - specify file extenstion
 %     'keyword'      - keyword search
+%     'notKeyword'   - negate keyword search
 %     'subdirOn'     - (true/false) search subdirectories
 %     'keepentireext' - keep entire file extension
 %
