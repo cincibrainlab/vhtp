@@ -39,13 +39,14 @@ functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Common across Visual HTP functions
 defaultExt          = '.raw';
-defaultKeyword      = [];
+defaultKeyword      = '';
 defaultChanXml      = 'cfg_htpEegSystems.xml';
 defaultSubDirOn     = false;
 defaultDryrun       = true;
 defaultOutputDir    = tempdir;
 defaultNetType      = 'undefined';
 defaultListing      = false;
+defaultNotKeyword   = false;
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
 validateFileOrFolder = @( filepath ) isfolder(filepath) | exist(filepath, 'file');
@@ -54,6 +55,7 @@ ip = inputParser();
 addRequired(ip, 'filepath', validateFileOrFolder)
 addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
+addParameter(ip,'notKeyword', defaultNotKeyword, @islogical)
 addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
 addParameter(ip,'dryrun', defaultDryrun, @islogical)
 addParameter(ip,'chanxml', defaultChanXml, @ischar);
@@ -97,9 +99,11 @@ changeExtToSet = @( str ) strrep(str, file_ext, '.set'); % convert new filename 
 switch exist(filepath)
     case 7
         if multiFileNetSwitch
-            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, 'keepentireext',true);
+            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, 'keepentireext',true, ...
+                'keyword', ip.Results.keyword, 'notKeyword', ip.Results.notKeyword);
         else
-            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn);
+            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, ...
+                'keyword', ip.Results.keyword, 'notKeyword', ip.Results.notKeyword);
         end
         is_single_file = false;
     case 2
