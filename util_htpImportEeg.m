@@ -276,6 +276,17 @@ if ip.Results.listing == false
                 catch e
                     error('EDF Import Failed.')
                 end
+            
+            case 'SET'
+                try
+                    datafile =  filelist.filename{i};
+                    folder = filelist.filepath{i};
+                    % setFile = fullfile(folder, datafile);
+                    EEG = pop_loadset(datafile, folder);
+                catch e
+                    error('SET Import Failed.')
+                end  
+
             otherwise
                 
         end
