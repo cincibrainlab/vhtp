@@ -23,11 +23,13 @@ if xdatFile
             EEG.chanlocs( i ).urchan = jsonData.sapiens_base.biointerface_map.ntv_chan_idx(i);
         end
         EEG = eeg_checkchanlocs(EEG);
-    catch, error('Check if EEGLAB is installed'); end
+    catch, error('Check if EEGLAB is installed'); 
+    end
 else
     try EEG = pop_biosig( dataFile );
         note('Import EDF.')
-    catch, error('Check if EEGLAB is installed'); end
+    catch, error('Check if EEGLAB is installed'); 
+    end
 end
 
 if EEG.nbchan == 33
