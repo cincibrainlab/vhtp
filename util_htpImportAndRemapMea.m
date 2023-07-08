@@ -3,26 +3,49 @@ function EEG =  util_htpImportAndRemapMea( dataFile )
 % Category: Preprocessing
 % Tags: Import
 
+% 7/6/2023: Revised XDAT import
+
 note = @(msg) fprintf('%s: %s\n', mfilename, msg );
 if ~isempty(regexp(dataFile,'xdat','match')); xdatFile = true; else; xdatFile = false; end
 
 if xdatFile
     try [signalStruct,timeRange,jsonData] = xdatImport(extractBefore(dataFile,'_data'));
         EEG = eeg_emptyset;
-        EEG.data = signalStruct.PriSigs.signals;
-        EEG.pnts = size(EEG.data,2);
-        EEG.nbchan = size(EEG.data,1);
+        EEG.data = signalStruct.PriSigs.signals; % 32 Channels X N samples
+
+        EEG.pnts = jsonData.status.num_smpl;
+        EEG.nbchan = jsonData.status.signals.pri;
         EEG.srate = jsonData.status.samp_freq;
         EEG.x_min = timeRange(1);
         EEG.x_max = timeRange(2);
-        note('Import XDAT.');
-        EEG = eeg_checkset(EEG);
-        for i = 1 : EEG.nbchan       
-            EEG.chanlocs( i ).labels = jsonData.sapiens_base.biointerface_map.ntv_chan_name(i);
-            EEG.chanlocs( i ).type = 'EEG';
-            EEG.chanlocs( i ).urchan = jsonData.sapiens_base.biointerface_map.ntv_chan_idx(i);
+
+        EEG.pnts = size(EEG.data,2);
+        EEG.nbchan = size(EEG.data,1);
+
+        EEG = eeg_checkchanlocs(EEG);
+
+        % start index at one, not zero
+        offset_channel_index = jsonData.sapiens_base.biointerface_map.ntv_chan_idx + 1;
+
+        for i = 1 : numel(jsonData.sapiens_base.biointerface_map.chan_type)
+            current_type = jsonData.sapiens_base.biointerface_map.chan_type(i);
+            if strcmp(current_type{1}, 'ai0')
+                    EEG.chanlocs(i).urchan = jsonData.sapiens_base.biointerface_map.chan_name{i};
+                    EEG.chanlocs(i).labels = sprintf('E%d', offset_channel_index(i));
+                    EEG.chanlocs(i).labels = jsonData.sapiens_base.biointerface_map.chan_name{i};
+
+                    EEG.chanlocs(i).type = "EEG";
+                    EEG.chanlocs(i).ref = 'E31';
+                    EEG.chanlocs(i).X = jsonData.sapiens_base.biointerface_map.site_ctr_x(i);
+                    EEG.chanlocs(i).Y = jsonData.sapiens_base.biointerface_map.site_ctr_y(i);
+                    EEG.chanlocs(i).Z = jsonData.sapiens_base.biointerface_map.site_ctr_z(i);
+            end
         end
         EEG = eeg_checkchanlocs(EEG);
+        EEG = eeg_checkset(EEG);
+
+        EEG = pop_select(EEG, 'nochannel', 32);
+
     catch, error('Check if EEGLAB is installed'); 
     end
 else
@@ -32,50 +55,58 @@ else
     end
 end
 
-if EEG.nbchan == 33
-    EEG = pop_select( EEG, 'nochannel', [2,32,33]);
-elseif EEG.nbchan == 32
-    EEG = pop_select( EEG, 'nochannel', [2,32]);
-end
-
-note('Remove irrelevant channels (reference and Piezo).')
-
-try
-    load('mea3d.mat', 'chanlocs');
-catch
-    error('mea3d.mat file missing');
-end
-
-note('Load unordered chanlocs.')
-
 if xdatFile
-    searchSubstring = 'E%d';
-else
-    searchSubstring = 'Chan %d'; 
+
 end
 
-for i = 1 : EEG.nbchan
-    if xdatFile
 
-        fixed_chanlocs{i} = xdat2meaLookup( num2str( ...
-            sscanf(EEG.chanlocs(i).labels, searchSubstring) ) );
-    else
-        fixed_chanlocs{i} = edf2meaLookup( num2str( ...
-            sscanf(EEG.chanlocs(i).labels, searchSubstring) ) );
+if ~xdatFile  % EDF workflow
+    if EEG.nbchan == 33
+        EEG = pop_select( EEG, 'nochannel', [2,32,33]);
+    elseif EEG.nbchan == 32
+        EEG = pop_select( EEG, 'nochannel', [2,32]);
     end
 
-    new_chanlocs_index(i) = find(strcmp( fixed_chanlocs{i}, {chanlocs.labels} ));
+    note('Remove irrelevant channels (reference and Piezo).')
+
+    try
+        load('mea3d.mat', 'chanlocs');
+    catch
+        error('mea3d.mat file missing');
+    end
+
+    note('Load unordered chanlocs.')
+
+    if xdatFile
+        searchSubstring = 'E%d';
+    else
+        searchSubstring = 'Chan %d'; 
+    end
+
+    for i = 1 : EEG.nbchan
+        if xdatFile
+
+            fixed_chanlocs{i} = xdat2meaLookup( num2str( ...
+                sscanf(EEG.chanlocs(i).labels, searchSubstring) ) );
+        else
+            fixed_chanlocs{i} = edf2meaLookup( num2str( ...
+                sscanf(EEG.chanlocs(i).labels, searchSubstring) ) );
+        end
+
+        new_chanlocs_index(i) = find(strcmp( fixed_chanlocs{i}, {chanlocs.labels} ));
+    end
+
+    note('Look up correct channel order. Create new ordered index.')
+
+    chanlocs = chanlocs(new_chanlocs_index);
+
+    note('Reorder channel map.')
+
+    % chanlocs(31) = [];
+    EEG.chanlocs = chanlocs;
+    EEG = eeg_checkset( EEG );
+
 end
-
-note('Look up correct channel order. Create new ordered index.')
-
-chanlocs = chanlocs(new_chanlocs_index);
-
-note('Reorder channel map.')
-
-% chanlocs(31) = [];
-EEG.chanlocs = chanlocs;
-EEG = eeg_checkset( EEG );
 
 note('Assign chanlocs to imported EDF and check set.')
 
@@ -110,4 +141,5 @@ note('Assign chanlocs to imported EDF and check set.')
 
         meachan = chanMap( xdatchan );
     end
+
 end

@@ -266,7 +266,7 @@ if ip.Results.listing == false
                     % EEG.chaninfo.filename = 'meachanlocs.mat';
     
                 catch e
-                    error('MEA EDF Import Failed.')
+                    error('MEA XDAT Import Failed.')
                 end
     
                % chaninfo.filename = netInfo.net_file;
