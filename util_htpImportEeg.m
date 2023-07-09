@@ -253,21 +253,24 @@ if ip.Results.listing == false
                 % chan 32 EDF is reference
                 % chan 33 EDF is piezo
     
-                try
+      
                     datafile =  filelist.filename{i};
                     folder = filelist.filepath{i};
                     
                     xdatfile = fullfile(folder, datafile);
                       
                     % using remap function for Neuronexus
+                    disp('');
+                    disp(['Trying ' datafile ' ... ']);
+                    try
                     EEG = util_htpImportAndRemapMea( xdatfile );
-    
+                    catch
+                        warning(sprintf("\n%s failed.", datafile));
+                    end
+
                     EEG.filename = datafile;
                     % EEG.chaninfo.filename = 'meachanlocs.mat';
     
-                catch e
-                    error('MEA XDAT Import Failed.')
-                end
     
                % chaninfo.filename = netInfo.net_file;
                % EEG.chaninfo   = chaninfo;

@@ -10,6 +10,10 @@ if ~isempty(regexp(dataFile,'xdat','match')); xdatFile = true; else; xdatFile = 
 
 if xdatFile
     try [signalStruct,timeRange,jsonData] = xdatImport(extractBefore(dataFile,'_data'));
+
+        stage1_map = readtable("MouseEEGv2H32_Import_Stage1.csv");
+        stage2_map = readtable("MouseEEGv2H32_Import_Stage2.csv");
+
         EEG = eeg_emptyset;
         EEG.data = signalStruct.PriSigs.signals; % 32 Channels X N samples
 
@@ -22,31 +26,64 @@ if xdatFile
         EEG.pnts = size(EEG.data,2);
         EEG.nbchan = size(EEG.data,1);
 
-        EEG = eeg_checkchanlocs(EEG);
-
-        % start index at one, not zero
-        offset_channel_index = jsonData.sapiens_base.biointerface_map.ntv_chan_idx + 1;
-
         for i = 1 : numel(jsonData.sapiens_base.biointerface_map.chan_type)
             current_type = jsonData.sapiens_base.biointerface_map.chan_type(i);
             if strcmp(current_type{1}, 'ai0')
-                    EEG.chanlocs(i).urchan = jsonData.sapiens_base.biointerface_map.chan_name{i};
-                    EEG.chanlocs(i).labels = sprintf('E%d', offset_channel_index(i));
-                    EEG.chanlocs(i).labels = jsonData.sapiens_base.biointerface_map.chan_name{i};
-
-                    EEG.chanlocs(i).type = "EEG";
-                    EEG.chanlocs(i).ref = 'E31';
-                    EEG.chanlocs(i).X = jsonData.sapiens_base.biointerface_map.site_ctr_x(i);
-                    EEG.chanlocs(i).Y = jsonData.sapiens_base.biointerface_map.site_ctr_y(i);
-                    EEG.chanlocs(i).Z = jsonData.sapiens_base.biointerface_map.site_ctr_z(i);
+                EEG.chanlocs(i).labels = jsonData.sapiens_base.biointerface_map.chan_name{i};
             end
         end
         EEG = eeg_checkchanlocs(EEG);
         EEG = eeg_checkset(EEG);
 
-        EEG = pop_select(EEG, 'nochannel', 32);
+        EEG = pop_select(EEG, 'nochannel', [2, 32]);
 
-    catch, error('Check if EEGLAB is installed'); 
+
+        % start index at one, not zero
+        getChanName = @(T, og_name) T.mea_formatted_name(strcmp(T.og_amplifier_pin, og_name));
+        getX = @(T, mea_formatted_name) T.site_ctr_x(strcmp(T.mea_formatted_name, mea_formatted_name));
+        getY = @(T, mea_formatted_name) T.site_ctr_y(strcmp(T.mea_formatted_name, mea_formatted_name));
+        getZ = @(T, mea_formatted_name) T.site_ctr_z(strcmp(T.mea_formatted_name, mea_formatted_name));
+
+        % temporary use of old coordinates
+        try
+            load('mea3d.mat', 'chanlocs');
+        catch
+            error('mea3d.mat file missing');
+        end
+            
+        EtoCh = @(E) sprintf('Ch %02d', str2double(E(2:end)));
+        getIdx = @( key ) find(strcmp({chanlocs.labels}, EtoCh(key)));
+
+        note('Load unordered chanlocs.')
+
+        for i = 1 : numel(EEG.chanlocs)
+            EEG.chanlocs(i).urchan = EEG.chanlocs(i).labels;
+            EEG.chanlocs(i).labels = char(getChanName(stage2_map,  EEG.chanlocs(i).urchan));
+            EEG.chanlocs(i).type = "EEG";
+            EEG.chanlocs(i).ref = '';
+
+            j = getIdx(EEG.chanlocs(i).labels);
+
+            %EEG.chanlocs(i).sph_radius = chanlocs(j).sph_radius;
+            %EEG.chanlocs(i).sph_theta = chanlocs(j).sph_theta;
+            %EEG.chanlocs(i).sph_phi = chanlocs(j).sph_phi;
+            %EEG.chanlocs(i).theta = chanlocs(j).theta;
+            %EEG.chanlocs(i).radius = chanlocs(j).radius;
+            EEG.chanlocs(i).X = chanlocs(j).X;
+            EEG.chanlocs(i).Y = chanlocs(j).Y*-1;
+            EEG.chanlocs(i).Z = chanlocs(j).Z;
+%             EEG.chanlocs(i).X = getY(stage2_map, EEG.chanlocs(i).labels);
+%             EEG.chanlocs(i).Y = getX(stage2_map, EEG.chanlocs(i).labels);
+%             EEG.chanlocs(i).Z = getZ(stage2_map, EEG.chanlocs(i).labels);
+            %disp(EEG.chanlocs(i).labels);
+        end
+        EEG = eeg_checkset(EEG);
+        EEG = eeg_checkchanlocs(EEG);
+
+
+    catch
+        disp(EEG.setname);
+        error('Check if EEGLAB is installed'); 
     end
 else
     try EEG = pop_biosig( dataFile );
