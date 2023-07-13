@@ -13,6 +13,13 @@ if xdatFile
         [signalStruct,timeRange,jsonData] = xdatImport(extractBefore(dataFile,'_data'));
         stage1_map = readtable("MouseEEGv2H32_Import_Stage1.csv");
         stage2_map = readtable("MouseEEGv2H32_Import_Stage2.csv");
+        
+        % Please Check
+        [~,name,~] = fileparts(dataFile);
+        EEG.setname = strcat(name,'.set');
+        EEG.subject = strcat(name,'.set');
+        EEG.filename = strcat(name,'.set');
+
 
         EEG = eeg_emptyset;
         EEG.data = signalStruct.PriSigs.signals; % 32 Channels X N samples
@@ -122,11 +129,10 @@ if xdatFile
             correctIdx = mappingDict(currentIdx);
             reorderedArray(correctIdx,:) = EEG.data(currentIdx,:);
         end
-        EEG = eeg_checkset(EEG);
-        EEG = eeg_checkchanlocs(EEG);
         EEG.data = reorderedArray;
 
-
+        EEG = eeg_checkset(EEG);
+        EEG = eeg_checkchanlocs(EEG);
     catch E
         disp(EEG.setname);
         error('Check if EEGLAB is installed'); 
@@ -139,11 +145,6 @@ else
         error('Check if EEGLAB is installed'); 
     end
 end
-
-if xdatFile
-
-end
-
 
 if ~xdatFile  % EDF workflow
     if EEG.nbchan == 33
