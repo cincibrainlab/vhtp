@@ -13,16 +13,15 @@ if xdatFile
         [signalStruct,timeRange,jsonData] = xdatImport(extractBefore(dataFile,'_data'));
         stage1_map = readtable("MouseEEGv2H32_Import_Stage1.csv");
         stage2_map = readtable("MouseEEGv2H32_Import_Stage2.csv");
-        
-        % Please Check
+
+        EEG = eeg_emptyset;
+        EEG.data = signalStruct.PriSigs.signals; % 32 Channels X N samples
+
+        % Please Check TODO
         [~,name,~] = fileparts(dataFile);
         EEG.setname = strcat(name,'.set');
         EEG.subject = strcat(name,'.set');
         EEG.filename = strcat(name,'.set');
-
-
-        EEG = eeg_emptyset;
-        EEG.data = signalStruct.PriSigs.signals; % 32 Channels X N samples
 
         EEG.pnts = jsonData.status.num_smpl;
         EEG.nbchan = jsonData.status.signals.pri;
