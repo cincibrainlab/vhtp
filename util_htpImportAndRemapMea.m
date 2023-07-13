@@ -116,17 +116,15 @@ if xdatFile
         %Remapping the data to correct locations 
         % Create a temporary cell array to hold the reordered values
         reorderedArray = cell(size(EEG.data));
-        
         % Reorder the values based on the mapping
         for currentIdx = 1:numel(EEG.data)
             correctIdx = mappingDict(currentIdx);
             reorderedArray{correctIdx} = EEG.data{currentIdx};
         end
-        EEG = eeg_checkset(EEG);
-        EEG = eeg_checkchanlocs(EEG);
         EEG.data = reorderedArray;
 
-
+        EEG = eeg_checkset(EEG);
+        EEG = eeg_checkchanlocs(EEG);
     catch
         disp(EEG.setname);
         error('Check if EEGLAB is installed'); 
