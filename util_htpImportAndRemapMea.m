@@ -80,7 +80,7 @@ if xdatFile
 
 
         % Dictionary for correct mappings 
-        mappingDict = containers.Map();
+        mappingDict = containers.Map('KeyType', 'int32', 'ValueType', 'int32');
         % Current location : Correct location 
         mappingDict(1)  = 29;
         mappingDict(2)  = 27;
@@ -115,24 +115,28 @@ if xdatFile
 
         %Remapping the data to correct locations 
         % Create a temporary cell array to hold the reordered values
-        reorderedArray = cell(size(EEG.data));
+        reorderedArray = zeros(size(EEG.data), 'single');
+        
         % Reorder the values based on the mapping
-        for currentIdx = 1:numel(EEG.data)
+        for currentIdx = 1:size(EEG.data, 1)
             correctIdx = mappingDict(currentIdx);
-            reorderedArray{correctIdx} = EEG.data{currentIdx};
+            reorderedArray(correctIdx,:) = EEG.data(currentIdx,:);
         end
-        EEG.data = reorderedArray;
-
         EEG = eeg_checkset(EEG);
         EEG = eeg_checkchanlocs(EEG);
-    catch
+        EEG.data = reorderedArray;
+
+
+    catch E
         disp(EEG.setname);
         error('Check if EEGLAB is installed'); 
     end
 else
-    try EEG = pop_biosig( dataFile );
+    try 
+        EEG = pop_biosig( dataFile );
         note('Import EDF.')
-    catch, error('Check if EEGLAB is installed'); 
+    catch E
+        error('Check if EEGLAB is installed'); 
     end
 end
 
