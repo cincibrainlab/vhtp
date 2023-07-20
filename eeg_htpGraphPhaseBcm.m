@@ -71,8 +71,8 @@ note(sprintf('Output Dir: %s', ip.Results.outputdir));
 
 % Create channel combos
 if all(all(ismissing(ip.Results.combos)))
-    combos = combnk({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
-    ncombos = combnk(1:EEG.nbchan, 2); % channel pairs (numerical)
+    combos = nchoosek({EEG.chanlocs(:).labels}', 2); % channel pairs (unique) (30*29/2)
+    ncombos = nchoosek(1:EEG.nbchan, 2); % channel pairs (numerical)
 else
     combos = ip.Results.combos;
     ncombos = zeros(size(combos));
