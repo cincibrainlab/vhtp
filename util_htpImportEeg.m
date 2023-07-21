@@ -291,10 +291,10 @@ if ip.Results.listing == false
                     folder = filelist.filepath{i};
                     % setFile = fullfile(folder, datafile);
                     EEG = pop_loadset(datafile, folder);
-                catch e
-                    error('SET Import Failed.')
-                end  
-
+                catch ME
+                    disp("Error in import SET");
+                    disp(ME.message);
+                end
             otherwise
                 
         end
