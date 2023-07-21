@@ -40,13 +40,23 @@ defaultGpuOn = 1;
 defaultThreshold = missing;
 defaultCombos = missing;
 %defaultThreshold = 'mediansd';
+defaultBandDefs = {
+    'delta', 2 , 3.5;
+    'theta', 3.5, 7.5;
+    'alpha1', 8, 10;
+    'alpha2', 10.5, 12.5;
+    'beta', 13, 30;
+    'gamma1', 30, 55;
+    'gamma2', 65, 90;
+    };
 
 % MATLAB built-in input validation
 ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
-addParameter(ip, 'gpuon', defaultGpuOn, @islogical);
+addParameter(ip, 'gpuon', defaultGpuOn, @mustBeNumericOrLogical);
 addParameter(ip, 'threshold', defaultThreshold, @ischar);
 addParameter(ip, 'combos', defaultCombos, @iscell);
+addParameter(ip, 'bandDefs', defaultBandDefs, @iscell);
 
 
 % Confirm Dependencies for Graph Measures
@@ -98,15 +108,7 @@ combo_right = ncombos(:,2);
 combo_size = size(ncombos,1);
 
 %% Define Band Ranges
-bandDefs = {
-    'delta', 2 , 3.5;
-    'theta', 3.5, 7.5;
-    'alpha1', 8, 10;
-    'alpha2', 10.5, 12.5;
-    'beta', 13, 30;
-    'gamma1', 30, 55;
-    'gamma2', 65, 90;
-    };
+bandDefs = ip.Results.bandDefs;
 
 note(' = Band Definitions =');
 bandDisplay = @(a,b,c) note(sprintf('%s: %1.1f-%1.1f', a,b,c));
