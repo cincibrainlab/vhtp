@@ -27,7 +27,7 @@ note('Loading helper functions (see comments).')
 % end
 %  Paste results from codegen_details() 
 % start:
-	project_name	='DODResting';
+	project_name	='RESTORE_Resting_7.26.23';
 	author_name		='Libby';
 	description		='Runnning pilot data';
 % end
@@ -65,9 +65,9 @@ note('Loaded EEG Toolkits.');
 % if is_interactive(), codegen_pickdir(); end
 
 % Project Directories
-set_dir      = fullfile('/srv/Preprocessing/vpc2/doddata/set');  % *.SET input to process; subfolders OK
-temp_dir     = fullfile('/srv/Preprocessing/vpc2/doddata/temp'); % empty temporary folder for large output
-results_dir  = fullfile('/srv/Preprocessing/vpc2/doddata/output'); % folder for final outputs
+set_dir      = fullfile('/Analysis/Libby_projects/RESTORE_ethan_7.26.23');  % *.SET input to process; subfolders OK
+temp_dir     = fullfile('/Analysis/Libby_projects/RESTORE_ethan_7.26.23/temp'); % empty temporary folder for large output
+results_dir  = fullfile('/Analysis/Libby_projects/RESTORE_ethan_7.26.23/output'); % folder for final outputs
 
 %% 3. VALIDATE AND SCAN DIRECTORY AND GENERATE FILELIST ------------------|
 input_filelist = util_htpDirListing(set_dir, 'ext', '.set', 'subdirOn', true );

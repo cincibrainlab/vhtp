@@ -65,7 +65,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     defaultDeleteTempfiles = false;
     defaultUsePreexisting = false;
     defaultResetProtocol = false;
-    defaultHeadModelFile = 'Empty';
+    defaultHeadModelFile = '';
 
     % MATLAB built-in input validation
     ip = inputParser();
