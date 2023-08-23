@@ -29,7 +29,7 @@ function [EEG, results] = eeg_htpEegHighpassFilterEeglab(EEG,varargin)
 %                 default: 6600
 %
 %   'dynamicfiltorder' - numeric boolean indicating whether to use dynamic filtorder determined via EEGLAB filtering function
-%                        default: 0
+%                        default: 1
 %
 %   'saveoutput' - Boolean representing if output should be saved when executing step from VHTP preprocessing tool
 %                  default: false
@@ -56,7 +56,7 @@ defaultRevFilt = false;
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultFiltOrder = 6600;
-defaultDynamicFiltOrder = 0;
+defaultDynamicFiltOrder = 1;
 defaultSaveOutput = false;
 defaultOutputDir = '';
 

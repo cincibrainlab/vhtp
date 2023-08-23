@@ -41,7 +41,7 @@ function [EEG, results] = eeg_htpEegFilterEeglab(EEG,varargin)
 %                 default: missing
 %
 %   'dynamicfiltorder' - numeric boolean indicating whether to use dynamic filtorder determined via EEGLAB filtering function
-%                        default: 0
+%                        default: 1
 %   
 %
 %   'cleanlinebandwidth' - Number for width of spectral peak  for fixed frequency
@@ -115,7 +115,7 @@ if any(strcmp(varargin,{'method'})) && strcmp(varargin(find(strcmp(varargin,'met
 defaultPlotFreqz   = 0;
 defaultMinPhase    = false;
 defaultFiltOrder = missing;
-defaultDynamicFiltOrder = 0;
+defaultDynamicFiltOrder = 1;
 defaultCleanlineBandwidth = 2;
 defaultCleanlineChanList = [1:EEG.nbchan];
 defaultCleanlineComputePower = 0;
