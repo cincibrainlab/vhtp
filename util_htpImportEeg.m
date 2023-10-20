@@ -19,6 +19,8 @@ function [results] = util_htpImportEeg( filepath, varargin )
 %     'chanxml'      - specify channel catalog xml
 %     'outputdir'    - output path (default: tempdir)
 %     'listing'      - (true/false) file list only
+%     'fullFileNames'- specific list of full filenames to import
+%     'saveTopoplot' - save topoplot image of channel locations
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
@@ -30,7 +32,20 @@ function [results] = util_htpImportEeg( filepath, varargin )
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%  Contact: github.com/cincibrainlab
+
+%
+% Revision Notes: 10/20/2023
+% ----------------
+% 1. Introduced 'fullfilenames' variable:
+%    - Purpose: To store the complete path of each file, enhancing traceability and uniqueness.
+%    - Impact: Allows for better file management and reduces risks of file overwrites or conflicts.
+%  
+% 2. Added 'figure('Visible', 'off')':
+%    - Purpose: To create invisible figures for performance optimization.
+%    - Impact: Reduces graphical rendering load, thereby improving the speed of the code execution.
+
+
 
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
 functionstamp = mfilename; % function name for logging/output
@@ -47,6 +62,8 @@ defaultOutputDir    = tempdir;
 defaultNetType      = 'undefined';
 defaultListing      = false;
 defaultNotKeyword   = false;
+defaultFullFileNames = {};
+defaultSaveTopoplot  = true;
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
 validateFileOrFolder = @( filepath ) isfolder(filepath) | exist(filepath, 'file');
@@ -62,6 +79,9 @@ addParameter(ip,'chanxml', defaultChanXml, @ischar);
 addParameter(ip,'nettype', defaultNetType, @ischar);
 addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 addParameter(ip,'listing', defaultListing, @islogical);
+addParameter(ip, 'fullFileNames', defaultFullFileNames, @iscell); 
+addParameter(ip,'saveTopoplot', defaultSaveTopoplot, @islogical)
+
 
 
 parse(ip,filepath,varargin{:});
@@ -96,22 +116,35 @@ end
 % filenames
 changeExtToSet = @( str ) strrep(str, file_ext, '.set'); % convert new filename to .set
 
-switch exist(filepath)
-    case 7
-        if multiFileNetSwitch
-            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, 'keepentireext',true, ...
-                'keyword', ip.Results.keyword, 'notKeyword', ip.Results.notKeyword);
-        else
-            filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, ...
-                'keyword', ip.Results.keyword, 'notKeyword', ip.Results.notKeyword);
-        end
-        is_single_file = false;
-    case 2
-        [tmppath, tmpfile, tmpext] = fileparts(filepath);
-        filelist.filename = {[tmpfile tmpext]};
-        filelist.filepath = {tmppath};
-        filelist = struct2table(filelist);
-        is_single_file = true;
+if isempty(ip.Results.fullFileNames) % New condition added
+    switch exist(filepath)
+        case 7
+            if multiFileNetSwitch
+                filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, 'keepentireext',true, ...
+                    'keyword', ip.Results.keyword, 'notKeyword', ip.Results.notKeyword);
+            else
+                filelist = util_htpDirListing(filepath, 'ext', file_ext, 'subdirOn', ip.Results.subdirOn, ...
+                    'keyword', ip.Results.keyword, 'notKeyword', ip.Results.notKeyword);
+            end
+            is_single_file = false;
+        case 2
+            [tmppath, tmpfile, tmpext] = fileparts(filepath);
+            filelist.filename = {[tmpfile tmpext]};
+            filelist.filepath = {tmppath};
+            filelist = struct2table(filelist);
+            is_single_file = true;
+    end
+else
+    numFiles = numel(ip.Results.fullFileNames);
+    is_single_file = false;
+    filelist.filename = cell(numFiles, 1);
+    filelist.filepath = cell(numFiles, 1);
+    for k = 1:numFiles
+        [pathstr, name, ext] = fileparts(ip.Results.fullFileNames{k});
+        filelist.filename{k} = [name ext];
+        filelist.filepath{k} = pathstr;
+    end
+    filelist = struct2table(filelist);
 end
 
 if ~isempty(filelist)
@@ -341,10 +374,10 @@ if ip.Results.listing == false
             fprintf('DRYRUN: Expected Save: %s\n', output_file);
         end
 
-        if i == 1
+        if ip.Results.saveTopoplot
             % export figure to verify
-            if EEG.nbchan > 20
-                f = figure;
+            if EEG.nbchan > 20   
+                f = figure('Visible', 'off');  % Invisible figure for performance
                 topoplot([],EEG.chanlocs, 'style', 'blank', 'drawaxis', 'on', 'electrodes', ...
                     'labelpoint', 'plotrad', [], 'chaninfo', EEG.chaninfo, 'whitebk', 'on');
                 saveas(f, netverify_filename);
