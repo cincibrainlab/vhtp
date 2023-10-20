@@ -45,7 +45,7 @@ function [results] = util_htpImportEeg( filepath, varargin )
 %    - Purpose: To create invisible figures for performance optimization.
 %    - Impact: Reduces graphical rendering load, thereby improving the speed of the code execution.
 
-
+  
 
 timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
 functionstamp = mfilename; % function name for logging/output
@@ -64,12 +64,13 @@ defaultListing      = false;
 defaultNotKeyword   = false;
 defaultFullFileNames = {};
 defaultSaveTopoplot  = true;
+defaultFilepath     = tempdir;
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
 validateFileOrFolder = @( filepath ) isfolder(filepath) | exist(filepath, 'file');
 % MATLAB built-in input validation
 ip = inputParser();
-addRequired(ip, 'filepath', validateFileOrFolder)
+addOptional(ip, 'filepath', defaultFilepath, validateFileOrFolder)
 addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
 addParameter(ip,'notKeyword', defaultNotKeyword, @islogical)
@@ -81,7 +82,6 @@ addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 addParameter(ip,'listing', defaultListing, @islogical);
 addParameter(ip, 'fullFileNames', defaultFullFileNames, @iscell); 
 addParameter(ip,'saveTopoplot', defaultSaveTopoplot, @islogical)
-
 
 
 parse(ip,filepath,varargin{:});
