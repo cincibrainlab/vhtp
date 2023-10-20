@@ -1,5 +1,5 @@
 function [EEG, results] = eeg_htpCalcAacGlobal( EEG, varargin )
-% Description: calculates amplitude-amplitude coupling (AAC)
+% Description: calculates  amplitude-amplitude coupling (AAC)
 % ShortTitle: Amplitude-Amplitude Coupling
 % Category: Analysis
 % Tags: Connectivity
