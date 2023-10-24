@@ -1,0 +1,2 @@
+obj = testMaster();
+obj.runTests();
