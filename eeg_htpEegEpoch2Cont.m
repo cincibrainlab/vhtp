@@ -1,4 +1,4 @@
-function EEG = eeg_htpEegEpoch2cont(EEG)
+function EEG = eeg_htpEegEpoch2Cont(EEG)
 % Description: Converts epoched to continous data.
 % Category: Preprocessing
 % ShortTitle: Epoched to continuous data

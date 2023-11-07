@@ -481,7 +481,7 @@ end
 
 EEG = eeg_checkset(EEG);
 
-if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow')
+if isfield(EEG,'vhtp') && isfield(EEG.vhtp,'inforow') && isfield(EEG.vhtp.eeg_htpEegRemoveCompsEeglab,'proc_removeComps')
     EEG.vhtp.inforow.proc_remove_comps_removeComps = EEG.vhtp.eeg_htpEegRemoveCompsEeglab.proc_removeComps;
 end
 
