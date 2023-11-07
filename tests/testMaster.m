@@ -16,7 +16,6 @@ classdef testMaster
             obj.eeglabPath = eeglabPath;
             obj.testFolderPath = testFolderPath;
             obj.setFolderPath = setFolderPath;
-            % obj.TestList = struct('testname','fname','result');
             obj.TestList = struct();
         end
 
@@ -27,7 +26,7 @@ classdef testMaster
             testFileList = dir(fullfile(obj.testFolderPath, '*.m'));
             setFileList = dir(fullfile(obj.setFolderPath, '*.set'));
 
-            testResults = struct('testFileName', {}, 'setFileName', {}, 'Status', {});
+            failedTests = struct('testFileName', {}, 'setFileName', {}, 'FunctionName', {});
 
             for j = 1:numel(setFileList)
                 EEG = pop_loadset(fullfile(setFileList(j).folder, setFileList(j).name));
@@ -37,21 +36,35 @@ classdef testMaster
                     matFileName = ['tests/savedForCompare/testSave_' functionName '_' setName '.mat'];
 
                     if exist(matFileName, 'file')
-                        load(matFileName, 'testDataEEG');
+                        load(matFileName, 'testDataEEG', 'testResults');
                     else
-                        [testDataEEG,testResults] = feval(functionName, EEG);
-                        testResults = rmfield(testResults,"qi_table");
-                        save(matFileName, 'testDataEEG',"testResults");
+                        [testDataEEG, testResults] = feval(functionName, EEG);
+                        testResults = rmfield(testResults, 'qi_table');
+                        save(matFileName, 'testDataEEG', 'testResults');
                     end
 
-                    [outputEEG,outputResults] = feval(functionName, EEG);
-                    outputResults = rmfield(outputResults,"qi_table");
+                    [outputEEG, outputResults] = feval(functionName, EEG);
+                    outputResults = rmfield(outputResults, 'qi_table');
 
-                    assert(isequal(testDataEEG.data, outputEEG.data), ['Test for ', functionName, ' failed']);
-                    assert(isequal(testResults, outputResults), ['Test for ', functionName, ' failed']);
+                    try
+                        assert(isequal(testDataEEG.data, outputEEG.data), ['Test for ', functionName, ' failed']);
+                        assert(isequal(testResults, outputResults), ['Test for ', functionName, ' failed']);
+                    catch
+                        failedTestEntry = struct('testFileName', testFileList(i).name, 'setFileName', setFileList(j).name, 'FunctionName', functionName);
+                        failedTests(end+1) = failedTestEntry;
+                    end
                 end
             end
-            disp('All tests passed!');
+
+            if isempty(failedTests)
+                fprintf('All tests passed!\n');
+            else
+                fprintf('Failed tests:\n');
+                for k = 1:numel(failedTests)
+                    fprintf('Test for %s in file %s failed\n', failedTests(k).FunctionName, failedTests(k).testFileName);
+                end
+            end
         end
     end
 end
+
