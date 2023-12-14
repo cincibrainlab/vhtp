@@ -31,7 +31,7 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
 
     p = inputParser;
     addRequired(p, 'EEG');
-    addParameter(p, 'ThresholdRatio', 25, @isnumeric);
+    addParameter(p, 'ThresholdRatio', 20, @isnumeric);
     addParameter(p, 'VarianceThreshold', 1, @isnumeric);
     addParameter(p, 'PerformComponentRemoval', true, @islogical);
     addParameter(p, 'SaveComponentImages', true, @islogical);
@@ -174,20 +174,22 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
             fh = pop_prop_extended(EEG, 0, componentIndex, NaN, {'limits',[0 80]});
             % Add a title to the figure based on component rejection status
             componentStatus = ictable.remove(componentIndex);
+            componentRatio = ictable.RatioMaxToMeanOthers(componentIndex);
             if componentStatus
-                titleText = 'IC Rejected';
+                titleText = sprintf('IC %d Rejected - Ratio: %.2f', componentIndex, componentRatio);
                 titleColor = 'r'; % Red text for rejected components
                 borderColor = 'r'; % Red border for rejected components
             else
-                titleText = 'IC Retained';
+                titleText = sprintf('IC %d Retained - Ratio: %.2f', componentIndex, componentRatio);
                 titleColor = [0, 0.5, 0]; % Dark green text for retained components
                 borderColor = 'g'; % Green border for retained components
             end
             title(fh.Children(end), titleText, 'Color', titleColor, 'FontSize', 18, 'FontWeight', 'bold');
             % There is no 'EdgeColor' property for the figure in MATLAB. Instead, we can use annotation to create a border effect.
             % Create a rectangle annotation the same size as the figure to simulate a border
-            annotation(fh, 'rectangle', [0, 0, 1, 1], 'EdgeColor', borderColor, 'LineWidth', 20);
-            exportgraphics(fh, filename, 'Resolution', 300); % Save the figure as a PNG with 300 DPI resolution
+            annotation(fh, 'rectangle', [0, 0, 1, 1], 'EdgeColor', borderColor, 'LineWidth', 30);
+            % exportgraphics(fh, filename, 'Resolution', 300); % Save the figure as a PNG with 300 DPI resolution
+            saveas(fh, filename); % Use saveas to save the figure as a PNG
             close(fh); % Close the figure after saving
             fprintf('Component %d image saved.\n', componentIndex);
         end
@@ -198,6 +200,44 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
         fprintf('Component table with image filenames saved to %s\n', csvFilename);
     end
 
+    % Stitch images together into a single image in two columns, skipping missing files
+    imageFiles = ictable.ImageFilenames;
+    validImageFiles = imageFiles(~cellfun('isempty', imageFiles)); % Filter out empty filenames
+    numImages = numel(validImageFiles);
+    if numImages > 0
+        % Read the first valid image to get the dimensions
+        firstImage = imread(validImageFiles{1});
+        [imgHeight, imgWidth, imgDepth] = size(firstImage);
+        % Calculate the number of rows needed for two columns
+        numRows = ceil(numImages / 2);
+        % Initialize a blank canvas
+        stitchedImg = zeros(imgHeight * numRows, imgWidth * 2, imgDepth, 'like', firstImage);
+        % Place each valid image onto the canvas in two columns
+        for i = 1:numImages
+            currentImage = imread(validImageFiles{i});
+            % Calculate row and column for current image
+            row = ceil(i / 2);
+            col = 2 - mod(i, 2);
+            stitchedImg((row-1)*imgHeight+1:row*imgHeight, (col-1)*imgWidth+1:col*imgWidth, :) = currentImage;
+        end
+        % Save the stitched image
+        % Generate a concise filename using the base filename, threshold ratio, and brain only mode
+        brainComponentModeText = 'Full';
+        if brainComponentOnlyMode
+            brainComponentModeText = 'BrainOnly';
+        end
+        specificStitchedFilename = sprintf('%s_stitched_TR%d_%s.png', baseFileName, thresholdRatio, brainComponentModeText);
+        stitchedFilename = fullfile(imageFolderPath, specificStitchedFilename);
+        imwrite(stitchedImg, stitchedFilename);
+        fprintf('Stitched components image saved to %s\n', stitchedFilename);
+        % Remove individual component images after successful stitching
+        for i = 1:numImages
+            delete(validImageFiles{i});
+        end
+        fprintf('Individual component images removed after stitching.\n');
+    else
+        fprintf('No valid images to stitch together.\n');
+    end
     % Remove the marked components from the EEG dataset if enabled
     if performComponentRemoval && any(componentsToRemove)
         EEG_postcomps = pop_subcomp(EEG, find(componentsToRemove), 0);
