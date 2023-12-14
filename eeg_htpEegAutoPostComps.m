@@ -21,6 +21,8 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
     % - 'RerunICLabel': Logical flag to rerun ICLabel classification (default false).
     % - 'RemovalCategories': Cell array of component categories to remove (default {'Eye', 'Heart', 'Muscle', 'Other', 'Line Noise', 'Channel Noise'}).
     % - 'BrainComponentOnlyMode': Logical flag to only consider brain components to retain (default false).
+    % - 'ComponentsToKeep': Array of component numbers to retain regardless of other criteria (default []).
+    % - 'ComponentsToRemove': Array of component numbers to remove regardless of other criteria (default []).
     
     % It relies on the following dependencies:
     % - EEGLAB: https://sccn.ucsd.edu/eeglab/index.php
@@ -36,6 +38,8 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
     addParameter(p, 'RerunICLabel', false, @islogical);
     addParameter(p, 'RemovalCategories', {'Eye', 'Heart', 'Muscle', 'Other', 'Line Noise', 'Channel Noise'}, @iscell);
     addParameter(p, 'BrainComponentOnlyMode', false, @islogical);
+    addParameter(p, 'ComponentsToKeep', [], @isnumeric);
+    addParameter(p, 'ComponentsToRemove', [], @isnumeric);
     parse(p, EEG, varargin{:});
     EEG = p.Results.EEG;
     thresholdRatio = p.Results.ThresholdRatio;
@@ -45,6 +49,8 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
     rerunICLabel = p.Results.RerunICLabel;
     removalCategories = p.Results.RemovalCategories;
     brainComponentOnlyMode = p.Results.BrainComponentOnlyMode;
+    componentsToKeep = p.Results.ComponentsToKeep;
+    manualComponentsToRemove = p.Results.ComponentsToRemove;
     
     if rerunICLabel
         try
@@ -132,6 +138,10 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
             end
         end
     end
+
+    % Apply manual overrides for components to keep or remove
+    ictable.remove(componentsToKeep) = false;
+    ictable.remove(manualComponentsToRemove) = true;
 
     componentsToRemove = ictable.remove;
 
