@@ -128,7 +128,7 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
             category = ictable.MaxComponentLabel{i};
             ratio = ictable.RatioMaxToMeanOthers(i);
             if brainComponentOnlyMode
-                if ~strcmp(category, 'Brain') || ratio >= thresholdRatio
+                if ~strcmp(category, 'Brain') || ~(ratio >= thresholdRatio)
                     ictable.remove(i) = true;
                 end
             else
@@ -172,7 +172,22 @@ function EEG_postcomps = eeg_htpEegAutoPostComps( EEG, varargin )
             ictable.ImageFilenames{componentIndex} = filename; % Store the filename in the table
 
             fh = pop_prop_extended(EEG, 0, componentIndex, NaN, {'limits',[0 80]});
-            print(fh, filename, '-dpng');
+            % Add a title to the figure based on component rejection status
+            componentStatus = ictable.remove(componentIndex);
+            if componentStatus
+                titleText = 'IC Rejected';
+                titleColor = 'r'; % Red text for rejected components
+                borderColor = 'r'; % Red border for rejected components
+            else
+                titleText = 'IC Retained';
+                titleColor = [0, 0.5, 0]; % Dark green text for retained components
+                borderColor = 'g'; % Green border for retained components
+            end
+            title(fh.Children(end), titleText, 'Color', titleColor, 'FontSize', 18, 'FontWeight', 'bold');
+            % There is no 'EdgeColor' property for the figure in MATLAB. Instead, we can use annotation to create a border effect.
+            % Create a rectangle annotation the same size as the figure to simulate a border
+            annotation(fh, 'rectangle', [0, 0, 1, 1], 'EdgeColor', borderColor, 'LineWidth', 20);
+            exportgraphics(fh, filename, 'Resolution', 300); % Save the figure as a PNG with 300 DPI resolution
             close(fh); % Close the figure after saving
             fprintf('Component %d image saved.\n', componentIndex);
         end
