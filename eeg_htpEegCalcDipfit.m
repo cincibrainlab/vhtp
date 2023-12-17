@@ -1,38 +1,38 @@
 function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
-    % This function calculates the dipole fitting for EEG data.
-    % It takes as input an EEG structure and optional parameters.
-    % The optional parameters are:
-    % - 'hdmfile': the head model file (default is 'standard_vol.mat')
-    % - 'mrifile': the MRI file (default is 'standard_mri.mat')
-    % - 'coord_transform': the coordinate transformation (default is [0.05476 -17.3653 -8.1318 0.075502 0.0031836 -1.5696 11.7138 12.7933 12.213])
-    % The function returns the EEG structure with the calculated dipole fitting.
+% This function calculates the dipole fitting for EEG data.
+% It takes as input an EEG structure and optional parameters.
+% The optional parameters are:
+% - 'hdmfile': the head model file (default is 'standard_vol.mat')
+% - 'mrifile': the MRI file (default is 'standard_mri.mat')
+% - 'coord_transform': the coordinate transformation (default is [0.05476 -17.3653 -8.1318 0.075502 0.0031836 -1.5696 11.7138 12.7933 12.213])
+% The function returns the EEG structure with the calculated dipole fitting.
 
-    p = inputParser;
-    addParameter(p, 'hdmfile', missing, @ischar);
-    addParameter(p, 'mrifile', missing, @ischar);
-    addParameter(p, 'plot', false, @islogical);
-    addParameter(p, 'coord_transform', [0.05476 -17.3653 -8.1318 0.075502 0.0031836 -1.5696 11.7138 12.7933 12.213], @isnumeric);
-    addParameter(p, 'dipoles', 2, @isnumeric);
-    addParameter(p, 'threshold', 100, @isnumeric);
-    parse(p, varargin{:});
-    
-    dipfit.hdmfile = p.Results.hdmfile;
-    dipfit.mrifile = p.Results.mrifile;
-    dipfit.plot = p.Results.plot;
-    dipfit.chanfile = missing;
-    dipfit.no_of_components = missing;
-    dipfit.threshold = p.Results.threshold;
-    dipfit.dipoles = p.Results.dipoles;
-    dipfit.coordformat = 'MNI';
-    dipfit.coord_transform = p.Results.coord_transform;
+p = inputParser;
+addParameter(p, 'hdmfile', missing, @ischar);
+addParameter(p, 'mrifile', missing, @ischar);
+addParameter(p, 'plot', false, @islogical);
+addParameter(p, 'coord_transform', [0.05476 -17.3653 -8.1318 0.075502 0.0031836 -1.5696 11.7138 12.7933 12.213], @isnumeric);
+addParameter(p, 'dipoles', 2, @isnumeric);
+addParameter(p, 'threshold', 100, @isnumeric);
+parse(p, varargin{:});
 
-    [EEG, dipfit] = check_requirements(EEG, dipfit);
+dipfit.hdmfile = p.Results.hdmfile;
+dipfit.mrifile = p.Results.mrifile;
+dipfit.plot = p.Results.plot;
+dipfit.chanfile = missing;
+dipfit.no_of_components = missing;
+dipfit.threshold = p.Results.threshold;
+dipfit.dipoles = p.Results.dipoles;
+dipfit.coordformat = 'MNI';
+dipfit.coord_transform = p.Results.coord_transform;
 
-    [EEG, dipfit] = calculate_dipfit(EEG, dipfit);
+[EEG, dipfit] = check_requirements(EEG, dipfit);
 
-    [EEG, dipfit] = calculate_two_dipoles(EEG, dipfit);
+[EEG, dipfit] = calculate_dipfit(EEG, dipfit);
 
-    [EEG, dipfit] = plotDipolePlot(EEG, dipfit);
+[EEG, dipfit] = calculate_two_dipoles(EEG, dipfit);
+
+[EEG, dipfit] = plotDipolePlot(EEG, dipfit);
 
 
     function [EEG, dipfit] = check_requirements(EEG, dipfit)
@@ -54,7 +54,7 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
             if ismissing(dipfit.chanfile)
                 dipfit.chanfile = fullfile(dipfit.dipfit_plugin_dir, 'standard_BEM',  'elec', 'standard_1005.elc');
             end
-            logMessage('info', sprintf('Dipfit plugin directory: %s', dipfit.dipfit_plugin_dir));    
+            logMessage('info', sprintf('Dipfit plugin directory: %s', dipfit.dipfit_plugin_dir));
         end
         if ~exist('fitTwoDipoles', 'file')
             logMessage('error', 'fitTwoDipoles plugin is not available');
@@ -90,7 +90,7 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
             'chanfile',dipfit.chanfile, ...
             'coordformat','MNI', ...
             'coord_transform', dipfit.coord_transform);
-        
+
         EEG = pop_multifit(EEG, 1:dipfit.no_of_components, ...
             'threshold', dipfit.threshold , ...
             'dipoles', 1,...
