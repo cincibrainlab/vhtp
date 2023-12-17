@@ -28,9 +28,12 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
 
     [EEG, dipfit] = check_requirements(EEG, dipfit);
 
-    [EEG, ~] = calculate_dipfit(EEG, dipfit);
+    [EEG, dipfit] = calculate_dipfit(EEG, dipfit);
 
-    [EEG, ~] = calculate_two_dipoles(EEG, dipfit);
+    [EEG, dipfit] = calculate_two_dipoles(EEG, dipfit);
+
+    [EEG, dipfit] = plotDipolePlot(EEG, dipfit);
+
 
     function [EEG, dipfit] = check_requirements(EEG, dipfit)
         default_coord_transform = [0.05476 -17.3653 -8.1318 0.075502 0.0031836 -1.5696 11.7138 12.7933 12.213];
@@ -92,12 +95,6 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
             'threshold', dipfit.threshold , ...
             'dipoles', 1,...
             'plotopt',{'normlen','on'});
-        
-        if dipfit.plot
-            [EEG, dipfit] = plotDipolePlot(EEG, dipfit);
-        end
-        
-
     end
 
     function [EEG, dipfit] = calculate_two_dipoles(EEG, dipfit)
@@ -108,9 +105,9 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
     end
 
     function [EEG, dipfit] = plotDipolePlot(EEG, dipfit)
-
-        pop_dipplot( EEG, 1:dipfit.no_of_components ,'mri',dipfit.mrifile,'normlen','on');
-
+        if dipfit.plot
+            pop_dipplot( EEG, 1:dipfit.no_of_components ,'mri',dipfit.mrifile,'normlen','on');
+        end
     end
 
 
