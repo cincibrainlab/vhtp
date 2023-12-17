@@ -30,6 +30,8 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
 
     [EEG, ~] = calculate_dipfit(EEG, dipfit);
 
+    [EEG, ~] = calculate_two_dipoles(EEG, dipfit);
+
     function [EEG, dipfit] = check_requirements(EEG, dipfit)
         default_coord_transform = [0.05476 -17.3653 -8.1318 0.075502 0.0031836 -1.5696 11.7138 12.7933 12.213];
         if isequal(dipfit.coord_transform, default_coord_transform) && ~contains(EEG.chaninfo.filename, 'HydroCel-129')
@@ -50,6 +52,11 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
                 dipfit.chanfile = fullfile(dipfit.dipfit_plugin_dir, 'standard_BEM',  'elec', 'standard_1005.elc');
             end
             logMessage('info', sprintf('Dipfit plugin directory: %s', dipfit.dipfit_plugin_dir));    
+        end
+        if ~exist('fitTwoDipoles', 'file')
+            logMessage('error', 'fitTwoDipoles plugin is not available');
+        else
+            logMessage('info', 'fitTwoDipoles plugin is available.');
         end
         if ~isfield(EEG, 'icaweights')
             logMessage('error', 'EEG does not contain ICA weights. Please run ICA first.');
@@ -83,7 +90,7 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
         
         EEG = pop_multifit(EEG, 1:dipfit.no_of_components, ...
             'threshold', dipfit.threshold , ...
-            'dipoles', dipfit.dipoles,...
+            'dipoles', 1,...
             'plotopt',{'normlen','on'});
         
         if dipfit.plot
@@ -91,6 +98,13 @@ function EEG = eeg_htpEegCalcDipfit(EEG, varargin)
         end
         
 
+    end
+
+    function [EEG, dipfit] = calculate_two_dipoles(EEG, dipfit)
+        if dipfit.dipoles == 2
+            logMessage('info', 'Calculating two dipoles.');
+            EEG = fitTwoDipoles(EEG, 'LRR', 35);
+        end
     end
 
     function [EEG, dipfit] = plotDipolePlot(EEG, dipfit)
