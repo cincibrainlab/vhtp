@@ -57,11 +57,9 @@ opts.scroll_event = p.Results.scroll_event;
     function [EEG, opt] = handler(EEG, opt)
         if opts.selected_ic == 0
             ic_bitmaps = cell(1, opts.no_of_components);
-
             gen_image = @generate_image;
-            
             parfor ic = 1:opts.no_of_components
-                ic_bitmaps{ic} = feval(gen_image, EEG, opts, ic);
+                ic_bitmaps{ic} = feval(gen_image, EEG, opts, ic); %#ok<FVAL>
             end
             EEG.ic_bitmaps = ic_bitmaps;
         elseif opts.selected_ic > 0 && opts.selected_ic <= opts.no_of_components
@@ -78,6 +76,36 @@ opts.scroll_event = p.Results.scroll_event;
             [EEG, opts] = add_dipole_image(EEG, opts);
             %[EEG, opts] = create_savename(EEG, opts);
         end
+    end
+
+    function bitmap = generate_image(EEG, opts, ic)
+        opts.selected_ic = ic;
+        [EEG, opts] = init_ica_data(EEG, opts);
+        [EEG, opts] = visualize_create_canvas(EEG, opts);
+        [EEG, opts] = add_ic_barplot(EEG, opts);
+        [EEG, opts] = add_time_series(EEG, opts);
+        [EEG, opts] = add_ic_topography(EEG, opts);
+        [EEG, opts] = add_aperiodic_rsquared(EEG, opts);
+        [EEG, opts] = add_pvaf(EEG, opts);
+        [EEG, opts] = add_erp_image(EEG, opts);
+        [EEG, opts] = add_psd_plot(EEG, opts);
+        [EEG, opts] = add_dipole_image(EEG, opts);
+        %[EEG, opts] = create_savename(EEG, opts);
+
+        % Step 1: Save figure to a temporary file
+        tempFileName = [tempname, '.png'];  % Generate temporary filename
+        exportgraphics(opts.fh, tempFileName, 'ContentType', 'image');
+
+        % Step 2: Read the image back into MATLAB
+        bitmap = imread(tempFileName);
+
+        % Step 4: Clean up temporary file
+        delete(tempFileName);
+
+
+        %frame = getframe(opts.fh);
+        %bitmap = frame2im(frame);
+    
     end
 
 
@@ -220,15 +248,30 @@ opts.scroll_event = p.Results.scroll_event;
 
         selected_ic = opts.selected_ic;
 
+        calculate_fooof = false;
         if isfield(EEG.etc, 'ic_fooof')
-            logMessage('info', 'Field ic_fooof exists in EEG.etc');
+            if isempty(EEG.etc.ic_fooof)
+                calculate_fooof = true;
+            else
+                logMessage('info', 'Field ic_fooof exists in EEG.etc');
+            end
+        else
+            calculate_fooof = true;
+        end
+
+        if calculate_fooof
+            logMessage('warning', 'Running eeg_htpCalcFooof().');
+            EEG = eeg_htpCalcFooof(EEG, 'calc_ic_ap_only', true);
+        end
+
+        try
             ic_fooof_table = EEG.etc.ic_fooof;
             selected_ic_row = ic_fooof_table(ic_fooof_table.ICIndex == selected_ic, :);
             opts.aperiodic_fitting = num2str(round(selected_ic_row.AperiodicOscillationFittingR2,2));
             logMessage('info', ['Aperiodic Oscillation Fitting R2 for IC' num2str(selected_ic) ': ' num2str(opts.aperiodic_fitting)]);
-        else
-            logMessage('warning', 'Field ic_fooof does not exist in EEG.etc. Run eeg_htpCalcFooof() to add it.');
-            opts.aperiodic_fitting = 'NA';
+        catch ME
+            logMessage('error', ['Error in calculating Aperiodic Oscillation Fitting R2 for IC' num2str(selected_ic) ': ' ME.message]);
+            opts.aperiodic_fitting = 'N/A';
         end
 
     end
@@ -496,35 +539,7 @@ opts.scroll_event = p.Results.scroll_event;
         end
 
     end
-    function bitmap = generate_image(EEG, opts, ic)
-        opts.selected_ic = ic;
-        [EEG, opts] = init_ica_data(EEG, opts);
-        [EEG, opts] = visualize_create_canvas(EEG, opts);
-        [EEG, opts] = add_ic_barplot(EEG, opts);
-        [EEG, opts] = add_time_series(EEG, opts);
-        [EEG, opts] = add_ic_topography(EEG, opts);
-        [EEG, opts] = add_aperiodic_rsquared(EEG, opts);
-        [EEG, opts] = add_pvaf(EEG, opts);
-        [EEG, opts] = add_erp_image(EEG, opts);
-        [EEG, opts] = add_psd_plot(EEG, opts);
-        [EEG, opts] = add_dipole_image(EEG, opts);
-        %[EEG, opts] = create_savename(EEG, opts);
 
-        % Step 1: Save figure to a temporary file
-        tempFileName = [tempname, '.png'];  % Generate temporary filename
-        exportgraphics(opts.fh, tempFileName, 'ContentType', 'image');
-
-        % Step 2: Read the image back into MATLAB
-        bitmap = imread(tempFileName);
-
-        % Step 4: Clean up temporary file
-        delete(tempFileName);
-
-
-        %frame = getframe(opts.fh);
-        %bitmap = frame2im(frame);
-    
-    end
 end
 
 function era_limits=get_era_limits(era)
