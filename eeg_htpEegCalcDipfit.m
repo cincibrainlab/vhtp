@@ -110,7 +110,6 @@ dipfit.coord_transform = p.Results.coord_transform;
         end
     end
 
-
     function [EEG, dipfit] = computeNumComponents(EEG, dipfit)
 
         logMessage('info', 'Computing component metrics.');
