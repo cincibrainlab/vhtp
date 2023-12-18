@@ -107,8 +107,8 @@ end
 
         % Store PSD in EEG structure
         opts.psd = psd;
-        opts.freq_res  = mean(diff(opts.psdFreqs));
         opts.psdFreqs =  double(freqList);
+        opts.freq_res  = mean(diff(opts.psdFreqs));
         opts.psdTimes = timeList;
 
         % Return updated EEG structure
