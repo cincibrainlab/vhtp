@@ -42,13 +42,18 @@ opts.save_to_csv = p.Results.save_to_csv;
 opts.aperiodic_oscillation_exponent = p.Results.calc_ic_ap_only;
 
 [EEG, opts] = check_requirements(EEG, opts);
+[EEG, opts] = prepare_fooof_parameters(EEG, opts);
+
 
 if opts.aperiodic_oscillation_exponent
+    opts.use_components = true;
+    opts.spect_freqs(1) = 2.5;
+    opts.spect_freqs(2) = 55;
+    [EEG, opts] = select_data(EEG, opts);
     [EEG, opts] = component_assessment(EEG, opts);
 else
     [EEG, opts] = select_data(EEG, opts);
     [EEG, opts] = calc_psd(EEG, opts);
-    [EEG, opts] = prepare_fooof_parameters(EEG, opts);
     [EEG, opts] = run_fooof(EEG, opts);
     [EEG, opts] = save_to_csv(EEG, opts);
 end
@@ -60,7 +65,7 @@ end
             EEG = eeg_epoch2continuous(EEG);
         end
 
-        if ~isfield(EEG, 'icaact') && opts.use_components
+        if (~isfield(EEG, 'icaact') && opts.use_components) || (opts.aperiodic_oscillation_exponent)
             logMessage('warning', 'ICA activations not found or components are required. Calculating...');
             EEG.icaact = eeg_getica(EEG);
         end
@@ -102,7 +107,8 @@ end
 
         % Store PSD in EEG structure
         opts.psd = psd;
-        opts.psdFreqs = freqList;
+        opts.freq_res  = mean(diff(opts.psdFreqs));
+        opts.psdFreqs =  double(freqList);
         opts.psdTimes = timeList;
 
         % Return updated EEG structure
@@ -152,8 +158,8 @@ end
         %       gaussian_params : mx3 array, where m = No. of peaks.
         %           Parameters that define the peak fit(s). Each row is a peak, as [mean, height, st. dev. (gamma)].
 
-        % Prepare optional input structure to run FOOOF.
-        fooof_params.freq_range          = [opts.psdFreqs(1) opts.psdFreqs(end)];
+        % Freq are set individually for each function.
+        fooof_params.freq_range          = missing;
         fooof_params.aperiodic_mode      = 'fixed';  % aperiodic_mode : {'fixed', 'knee'} Defines absence or presence of knee in aperiodic component.
         fooof_params.max_peaks           = 3;        % Maximum number of gaussians to fit within the spectrum.
         fooof_params.peak_threshold      = 2;        % 2 std dev: parameter for interface simplification
@@ -167,12 +173,11 @@ end
 
         opts.fooof_params = fooof_params;
 
-        % Prepare input variables.
-        psdFreqs = double(opts.psdFreqs);
-        opts.freq_res  = mean(diff(psdFreqs));
-
-        % Return updated EEG structure
         return;
+    end
+
+    function [EEG,opts] = set_fooof_params_freqs(EEG, opts, freqs)
+        opts.fooof_params.freq_range = [freqs(1) freqs(end)];
     end
 
     function [EEG, opts] = run_fooof(EEG, opts)
@@ -185,6 +190,7 @@ end
 
 
         psd = squeeze(mean(opts.psd,2));
+        [~,opts] = set_fooof_params_freqs(EEG, opts, [opts.psdFreqs(1) opts.psdFreqs(end)]);
         Freqs = double(opts.psdFreqs);
         hOT = opts.fooof_params.hOT;
         opt = opts.fooof_params;
@@ -348,13 +354,17 @@ end
         % Calculate the PSD of the ICA activations.
         % Code by Makoto Miyakoshi.
         [EEG, opts] = computeNumComponents(EEG, opts);
-        opt = opts.fooof_params;
+
         hOT = opts.fooof_params.hOT;
+        lower_freq_limit = opts.spect_freqs(1);
+        upper_freq_limit = opts.spect_freqs(2);
         no_of_components = opts.no_of_components;
 
 
         [spectra,psdFreqs] = spectopo(EEG.icaact, EEG.pnts, EEG.srate, 'freqfac', 4, 'overlap', EEG.srate/2, 'plot', 'off');
 
+        [~,opts] = set_fooof_params_freqs(EEG, opts, [psdFreqs(1) psdFreqs(end)]);
+        opt = opts.fooof_params;
 
         EEG.etc.PSD.spectra = spectra;
 
@@ -362,7 +372,7 @@ end
 
         % if i == 1
 
-        validFreqIdx = find(EEG.etc.PSD.freqs>=2.5 & EEG.etc.PSD.freqs<=55);
+        validFreqIdx = find(EEG.etc.PSD.freqs>=lower_freq_limit & EEG.etc.PSD.freqs<=upper_freq_limit);
 
         validFreqs   = EEG.etc.PSD.freqs(validFreqIdx);
 
