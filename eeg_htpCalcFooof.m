@@ -10,7 +10,7 @@ function [EEG, opts] = eeg_htpCalcFooof(EEG, varargin)
 %               'spectrogram_freqs' - Frequency range for the spectrogram (default: [1 55])
 %               'use_components' - Boolean flag to indicate whether to use components in the calculation (default: false)
 %               'save_to_csv' - Boolean flag to indicate whether to save the results to a CSV file (default: true)
-            %    'calc_ic_ap_only' - Boolean flag to indicate whether to calculate only the aperiodic oscillation exponent (default: false)
+            %    'ic_assessment' - Boolean flag to indicate whether to calculate only the aperiodic oscillation exponent (default: false)
             %    'freq_resolution' - Frequency resolution for the FOOOF model (default: 0.1)
             %    'save_fooof_img' - Boolean flag to indicate whether to save FOOOF model images (default: true)
             %    'parallel' - Boolean flag to indicate whether to run the calculations in parallel (default: false)
@@ -34,7 +34,7 @@ addParameter(p, 'spect_freqs', [1 55], @isnumeric);
 addParameter(p, 'use_components', false, @islogical);
 addParameter(p, 'freq_resolution', .1, @isnumeric);
 addParameter(p, 'save_to_csv', true, @islogical);
-addParameter(p, 'calc_ic_ap_only', false, @islogical);
+addParameter(p, 'ic_assessment', false, @islogical);
 addParameter(p, 'save_fooof_img', true, @islogical);
 addParameter(p, 'parallel', false, @islogical);
 addParameter(p, 'normalize_psd', false, @islogical);
@@ -46,7 +46,7 @@ opts.spect_freqs = p.Results.spect_freqs;
 opts.use_components = p.Results.use_components;
 opts.freq_resolution = p.Results.freq_resolution;
 opts.save_to_csv = p.Results.save_to_csv;
-opts.aperiodic_oscillation_exponent = p.Results.calc_ic_ap_only;
+opts.aperiodic_oscillation_exponent = p.Results.ic_assessment;
 opts.save_fooof_img = p.Results.save_fooof_img;
 opts.parallel = p.Results.parallel;
 opts.normalize_psd = p.Results.normalize_psd;
