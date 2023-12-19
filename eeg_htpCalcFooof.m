@@ -1,5 +1,6 @@
 function [EEG, opts] = eeg_htpCalcFooof(EEG, varargin)
 % eeg_htpCalcFooof - Function to calculate the FOOOF (Fitting Oscillations & One Over F) model on EEG data.
+%                    Wrapper around Brainstorm implementation of MATLAB FOOOF
 %
 % Syntax:  [EEG, opts] = eeg_htpCalcFooof(EEG, varargin)
 %
@@ -9,7 +10,11 @@ function [EEG, opts] = eeg_htpCalcFooof(EEG, varargin)
 %               'spectrogram_freqs' - Frequency range for the spectrogram (default: [1 55])
 %               'use_components' - Boolean flag to indicate whether to use components in the calculation (default: false)
 %               'save_to_csv' - Boolean flag to indicate whether to save the results to a CSV file (default: true)
-%               'calc_ic_ap_only' - Boolean flag to indicate whether to calculate only the aperiodic oscillation exponent (default: false)
+            %    'calc_ic_ap_only' - Boolean flag to indicate whether to calculate only the aperiodic oscillation exponent (default: false)
+            %    'freq_resolution' - Frequency resolution for the FOOOF model (default: 0.1)
+            %    'save_fooof_img' - Boolean flag to indicate whether to save FOOOF model images (default: true)
+            %    'parallel' - Boolean flag to indicate whether to run the calculations in parallel (default: false)
+            %    'normalize_psd' - Boolean flag to indicate whether to normalize the power spectral density (default: false)
 %
 % Outputs:
 %    EEG - EEGLAB data structure with added FOOOF results
@@ -22,8 +27,6 @@ function [EEG, opts] = eeg_htpCalcFooof(EEG, varargin)
 % Subfunctions: none
 % MAT-files required: none
 %
-% See also: OTHER_FUNCTION_NAME
-%
 % Authors: Ernest Pedapati, Makoto Miyakoshi
 
 p = inputParser;
@@ -34,6 +37,8 @@ addParameter(p, 'save_to_csv', true, @islogical);
 addParameter(p, 'calc_ic_ap_only', false, @islogical);
 addParameter(p, 'save_fooof_img', true, @islogical);
 addParameter(p, 'parallel', false, @islogical);
+addParameter(p, 'normalize_psd', false, @islogical);
+
 
 parse(p, varargin{:});
 
@@ -44,7 +49,7 @@ opts.save_to_csv = p.Results.save_to_csv;
 opts.aperiodic_oscillation_exponent = p.Results.calc_ic_ap_only;
 opts.save_fooof_img = p.Results.save_fooof_img;
 opts.parallel = p.Results.parallel;
-opts.normalize_psd = false;
+opts.normalize_psd = p.Results.normalize_psd;
 
 [EEG, opts] = check_requirements(EEG, opts);
 [EEG, opts] = prepare_fooof_parameters(EEG, opts);
@@ -95,6 +100,7 @@ end
     end
 
     function [EEG, opts] = calc_psd(EEG, opts)
+        % calc_psd - Calculate the power spectral density (PSD) for EEG data
 
         % Initialize variables
         spect_freqs_start = opts.spect_freqs(1);
@@ -138,7 +144,7 @@ end
     end
 
     function [EEG, opts] = prepare_fooof_parameters(EEG, opts)
-
+        % prepare_fooof_parameters - Prepares the parameters for FOOOF analysis
 
         % From original FOOOF documents.
         %
@@ -191,10 +197,18 @@ end
     end
 
     function [EEG,opts] = set_fooof_params_freqs(EEG, opts, freqs)
+        % set_fooof_params_freqs - Sets the frequency range for FOOOF parameters
+        % This function updates the 'freq_range' field in the FOOOF parameters
+        % within the 'opts' structure with the provided frequency range.
+        % Allows for custom use cases (i.e., component assessment).
         opts.fooof_params.freq_range = [freqs(1) freqs(end)];
     end
 
     function [EEG, opts] = run_fooof(EEG, opts)
+        % run_fooof - Executes the FOOOF algorithm on EEG data
+        % This function applies the FOOOF algorithm to the power spectral
+        % density data contained within the EEG structure, using the parameters
+        % specified in opts. Function extracted from Brainstorm.
 
         % Input:
         % TF   : Power spectral density (in microV^2, but could be in 10*log10 dB?)
@@ -245,6 +259,12 @@ end
                 opts.FOOOF_results.channel(idx).(fooof_fields{fn}) = fooof_slice.(fooof_fields{fn});
             end
         end
+
+        % The following code block initializes an empty table to store FOOOF results for each channel.
+        % This table will include the filename, channel number, frequencies, aperiodic fit, raw spectrum the FOOOFed spectrum, and peak fit.
+
+        % The next code block constructs a summary table with rows for each channel and columns for various FOOOF metrics.
+        % This includes aperiodic parameters, peak parameters, peak types, error, r-squared, the FOOOFed spectrum, peak fit, and aperiodic fit.
 
         % Initialize an empty table outside the loop
         fooof_table = table();
@@ -350,6 +370,10 @@ end
     end
 
     function [EEG, opts] = component_assessment(EEG, opts)
+        % component_assessment - Assess the components of EEG data
+        % This function performs an assessment of the EEG data components
+        % based on the options provided in opts. Specifically for artifact removal.
+        % Worked on in consultation with Makoto Miyakoshi.
 
         lower_freq_limit = opts.spect_freqs(1);
         upper_freq_limit = opts.spect_freqs(2);
@@ -388,8 +412,13 @@ end
 
     end
 
-    function [EEG, opts] = save_fooof_img( EEG, opts)
 
+    function [EEG, opts] = save_fooof_img( EEG, opts)
+    % save_fooof_img - Saves FOOOF images for EEG data components or channels
+    % This function checks if the user has opted to save FOOOF images and
+    % proceeds to save the images either in parallel or sequentially based on
+    % the user's settings and system capabilities.
+    
         fg = EEG.etc.FOOOF_results.channel;
         no_of_components = opts.no_of_components;
 
@@ -418,28 +447,32 @@ end
 
     end
      
-     function curfig_matrix = create_fooof_plot( fg, ic)       
-                logMessage('info', sprintf('Saving FOOOF image for IC %d', ic));
-                title(sprintf('IC %d: PSD and FOOOF Estimate', ic))
-                curfig = figure('visible', 'off');
-                lineHandle2 = plot(fg(ic).frequencies, 10*log10(fg(ic).fooofed_spectrum), 'linewidth', 2, 'color', [1 0 0 0.5]);  hold on;
-                lineHandle3 = plot(fg(ic).frequencies, 10*log10(fg(ic).ap_fit),  'linewidth', 1, 'color', [1 0 0], 'LineStyle', '--');
-                lineHandle1 = plot(fg(ic).frequencies, 10*log10(fg(ic).raw_psd_zmv),   'linewidth', 3, 'color', [0 0 0 0.5]);
-                xlabel('Frequency (Hz)', 'fontsize', 14, 'fontweight', 'normal');
-                ylabel('Power 10*log_{10}(uV^2/Hz)', 'fontsize', 14, 'fontweight', 'normal');
-                set(gca, 'fontsize', 14);
-                axis on;
-                box on;
-                grid on;
-                legend([lineHandle1 lineHandle2 lineHandle3], {'Raw' 'Modeled' 'Exponent'})
-                set(curfig, 'PaperPositionMode', 'auto');
-                curfig_matrix = getframe(curfig);
-                curfig_matrix = frame2im(curfig_matrix);
+     function curfig_matrix = create_fooof_plot( fg, ic)
+         % create_fooof_plot - Generates a FOOOF plot for a given independent component or channel.
+         % This function creates a figure of the FOOOF model fit for the power
+         % spectral density of a specified independent component or channel.
+
+         logMessage('info', sprintf('Saving FOOOF image for IC %d', ic));
+        curfig = figure('visible', 'off');
+        lineHandle2 = plot(fg(ic).frequencies, 10*log10(fg(ic).fooofed_spectrum), 'linewidth', 2, 'color', [1 0 0 0.5]);  hold on;
+        lineHandle3 = plot(fg(ic).frequencies, 10*log10(fg(ic).ap_fit),  'linewidth', 1, 'color', [1 0 0], 'LineStyle', '--');
+        lineHandle1 = plot(fg(ic).frequencies, 10*log10(fg(ic).raw_psd_zmv),   'linewidth', 3, 'color', [0 0 0 0.5]);
+        title(sprintf('IC %d: PSD and FOOOF Estimate', ic))
+        xlabel('Frequency (Hz)', 'fontsize', 14, 'fontweight', 'normal');
+        ylabel('Power 10*log_{10}(uV^2/Hz)', 'fontsize', 14, 'fontweight', 'normal');
+        set(gca, 'fontsize', 14);
+        axis on;
+        box on;
+        grid on;
+        legend([lineHandle1 lineHandle2 lineHandle3], {'Raw' 'Modeled' 'Exponent'})
+        set(curfig, 'PaperPositionMode', 'auto');
+        curfig_matrix = getframe(curfig);
+        curfig_matrix = frame2im(curfig_matrix);
               
     end
 
     function [EEG, opts] = save_to_csv(EEG, opts)
-
+        % save_to_csv - Saves FOOOF results and summary to CSV files.
         if opts.save_to_csv
             % Save FOOOF results to CSV file.
             subdir = fullfile(EEG.filepath, mfilename);
