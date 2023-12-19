@@ -44,6 +44,7 @@ opts.save_to_csv = p.Results.save_to_csv;
 opts.aperiodic_oscillation_exponent = p.Results.calc_ic_ap_only;
 opts.save_fooof_img = p.Results.save_fooof_img;
 opts.parallel = p.Results.parallel;
+opts.normalize_psd = false;
 
 [EEG, opts] = check_requirements(EEG, opts);
 [EEG, opts] = prepare_fooof_parameters(EEG, opts);
@@ -55,12 +56,13 @@ if opts.aperiodic_oscillation_exponent   % specifically for IC classification
     opts.spect_freqs(1) = 2.5;
     opts.spect_freqs(2) = 55;
     [EEG, opts] = select_data(EEG, opts);
+    [EEG, opts] = computeNumComponentsOrChannels(EEG, opts);
     [EEG, opts] = calc_psd(EEG, opts);
-    [EEG, opts] = computeNumComponents(EEG, opts);
     [EEG, opts] = component_assessment(EEG, opts);
     [EEG, opts] = save_fooof_img( EEG, opts);
 else
     [EEG, opts] = select_data(EEG, opts);
+    [EEG, opts] = computeNumComponentsOrChannels(EEG, opts);
     [EEG, opts] = calc_psd(EEG, opts);
     [EEG, opts] = run_fooof(EEG, opts);
     [EEG, opts] = save_to_csv(EEG, opts);
@@ -123,10 +125,15 @@ end
         return;
     end
 
-    function [EEG, opts] = computeNumComponents(EEG, opts)
+    function [EEG, opts] = computeNumComponentsOrChannels(EEG, opts)
 
-        logMessage('info', 'Computing component metrics.');
-        opts.no_of_components = size(EEG.icawinv, 2);
+        if opts.use_components
+            logMessage('info', 'Computing component number.');
+            opts.no_of_components = size(EEG.icawinv, 2);
+        else
+            logMessage('info', 'Computing channel number.');
+            opts.no_of_components = size(EEG.data, 1);
+        end
 
     end
 
