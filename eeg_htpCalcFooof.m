@@ -32,6 +32,8 @@ addParameter(p, 'use_components', false, @islogical);
 addParameter(p, 'freq_resolution', .1, @isnumeric);
 addParameter(p, 'save_to_csv', true, @islogical);
 addParameter(p, 'calc_ic_ap_only', false, @islogical);
+addParameter(p, 'save_fooof_img', true, @islogical);
+addParameter(p, 'parallel', false, @islogical);
 
 parse(p, varargin{:});
 
@@ -40,22 +42,29 @@ opts.use_components = p.Results.use_components;
 opts.freq_resolution = p.Results.freq_resolution;
 opts.save_to_csv = p.Results.save_to_csv;
 opts.aperiodic_oscillation_exponent = p.Results.calc_ic_ap_only;
+opts.save_fooof_img = p.Results.save_fooof_img;
+opts.parallel = p.Results.parallel;
 
 [EEG, opts] = check_requirements(EEG, opts);
 [EEG, opts] = prepare_fooof_parameters(EEG, opts);
 
 
-if opts.aperiodic_oscillation_exponent
+if opts.aperiodic_oscillation_exponent   % specifically for IC classification
     opts.use_components = true;
+    opts.normalize_psd = true;    % specifically for IC classification
     opts.spect_freqs(1) = 2.5;
     opts.spect_freqs(2) = 55;
     [EEG, opts] = select_data(EEG, opts);
+    [EEG, opts] = calc_psd(EEG, opts);
+    [EEG, opts] = computeNumComponents(EEG, opts);
     [EEG, opts] = component_assessment(EEG, opts);
+    [EEG, opts] = save_fooof_img( EEG, opts);
 else
     [EEG, opts] = select_data(EEG, opts);
     [EEG, opts] = calc_psd(EEG, opts);
     [EEG, opts] = run_fooof(EEG, opts);
     [EEG, opts] = save_to_csv(EEG, opts);
+    [EEG, opts] = save_fooof_img( EEG, opts);
 end
 
     function [EEG, opts] = check_requirements(EEG, opts)
@@ -84,7 +93,6 @@ end
     end
 
     function [EEG, opts] = calc_psd(EEG, opts)
-
 
         % Initialize variables
         spect_freqs_start = opts.spect_freqs(1);
@@ -170,7 +178,6 @@ end
         fooof_params.guess_weight        = 'weak';   % Parameter to weigh initial estimates during optimization (None, Weak, or Strong)
         fooof_params.hOT                              = 1;        % Defines whether to use constrained optimization, fmincon, or basic simplex, fminsearch.
         fooof_params.thresh_after        = true;     % Threshold after fitting always selected for Matlab (mirrors the Python FOOOF closest by removing peaks that do not satisfy a user's predetermined conditions)
-
         opts.fooof_params = fooof_params;
 
         return;
@@ -201,22 +208,35 @@ end
 
         opts.FOOOF_results = struct();
         opts.FOOOF_results.FOOOF_dimensions      = {'mean', 'height', 'std (gamma)'};
-        opts.FOOOF_results.channel(1).fooof = [];
 
         for idx = 1:size(psd,2)
 
             % Extract current PSD slice.
-            TF = double(squeeze(psd(:,idx))); % TF MUST be a row vector.
+            TF_raw = double(squeeze(psd(:,idx))); % TF MUST be a row vector.
+
+            % Normalize PSD if required
+            if opts.normalize_psd
+                TF_z = zscore(TF_raw);
+                TF = 10.^(TF_z/10);
+            end
+            
+            TF = TF_raw;
+            
             if size(TF,1)>size(TF,2)
                 TF = TF';
             end
 
             [fooofFreqs, fooof_slice] = matlab_FOOOF(TF, Freqs, opt, hOT);
-
+            fooof_slice.raw_psd = TF_raw';
+            fooof_slice.raw_psd_zmv = TF';
             % Store FOOOF results in EEG structure.
             fooof_slice.frequencies = fooofFreqs;
-            opts.FOOOF_results.channel(idx).fooof = fooof_slice;
-
+            
+            fooof_fields = fieldnames(fooof_slice);
+            
+            for fn = 1 : numel(fooof_fields)
+                opts.FOOOF_results.channel(idx).(fooof_fields{fn}) = fooof_slice.(fooof_fields{fn});
+            end
         end
 
         % Initialize an empty table outside the loop
@@ -225,7 +245,7 @@ end
         % Loop through each channel
         for ch = 1:length(opts.FOOOF_results.channel)
             % Extract data from the current channel's fooof struct
-            fooofData = opts.FOOOF_results.channel(ch).fooof;
+            fooofData = opts.FOOOF_results.channel(ch);
 
             % Create a table for the current channel's data
             curr_table = table(repmat({EEG.filename}, numel(fooofData.frequencies), 1), ...
@@ -247,7 +267,7 @@ end
 
         for ch = 1:length(opts.FOOOF_results.channel)
             % Extract data from the current channel's fooof struct
-            fooofData = opts.FOOOF_results.channel(ch).fooof;
+            fooofData = opts.FOOOF_results.channel(ch);
 
             summary_fields = {'aperiodic_params','peak_params','peak_types','error','r_squared', 'fooofed_spectrum', 'peak_fit', 'ap_fit'};
 
@@ -322,6 +342,95 @@ end
         return;
     end
 
+    function [EEG, opts] = component_assessment(EEG, opts)
+
+        lower_freq_limit = opts.spect_freqs(1);
+        upper_freq_limit = opts.spect_freqs(2);
+        no_of_components = opts.no_of_components;
+
+        [~,opts] = set_fooof_params_freqs(EEG, opts, [lower_freq_limit upper_freq_limit]);
+ 
+        [EEG, opts] = run_fooof(EEG, opts);
+
+
+        [maxProb, classIdx] = max(EEG.etc.ic_classification.ICLabel.classifications, [], 2);
+
+
+        % Loop through each channel
+        new_rows = {};
+        
+        summary_table = EEG.etc.FOOOF_results.summary_table;
+
+        for ch = 1:no_of_components
+
+            key = sprintf('iclabel_max');
+            value = sprintf('%1.3f', maxProb(ch));
+            key2 = sprintf('iclabel_class');
+            value2 = sprintf('%d', classIdx(ch));
+            key3 = sprintf('iclabel_label');
+            value3 = sprintf('%s', EEG.etc.ic_classification.ICLabel.classes{classIdx(ch)});
+            row = {EEG.filename, ch,key,value; ...
+                EEG.filename, ch, key2, value2;
+                EEG.filename, ch, key3, value3};
+            new_rows = [new_rows;row];
+
+        end
+
+        EEG.etc.FOOOF_results.summary_table = [summary_table; 
+            cell2table(new_rows, 'VariableNames', summary_table.Properties.VariableNames)];
+
+    end
+
+    function [EEG, opts] = save_fooof_img( EEG, opts)
+
+        fg = EEG.etc.FOOOF_results.channel;
+        no_of_components = opts.no_of_components;
+
+        handle_create_fooof_plot = @create_fooof_plot;
+        
+        if(opts.save_fooof_img)
+            % Check if parallel computing toolbox is available and opts.parallel is true
+            if license('test', 'Distrib_Computing_Toolbox') && opts.parallel
+                logMessage('info', sprintf('Saving FOOOF image for IC in parallel'));
+                fooof_images = cell(no_of_components, 1);
+                parfor ic = 1 : no_of_components
+                    fooof_images{ic} = feval(handle_create_fooof_plot, fg, ic); %#ok<FVAL>          
+                end
+                for ic = 1:no_of_components
+                    EEG.etc.FOOOF_results.channel(ic).fooof_img = fooof_images{ic};
+                end
+            else
+                logMessage('info', sprintf('Saving FOOOF image for IC sequentially'));
+                for ic = 1 : no_of_components
+                    EEG.etc.FOOOF_results.channel(ic).fooof_img = feval(handle_create_fooof_plot,fg, ic); %#ok<FVAL>
+                end
+            end
+        else
+            [fg(1:no_of_components).fooof_img] = deal(missing);
+        end
+
+    end
+     
+     function curfig_matrix = create_fooof_plot( fg, ic)       
+                logMessage('info', sprintf('Saving FOOOF image for IC %d', ic));
+                title(sprintf('IC %d: PSD and FOOOF Estimate', ic))
+                curfig = figure('visible', 'off');
+                lineHandle2 = plot(fg(ic).frequencies, 10*log10(fg(ic).fooofed_spectrum), 'linewidth', 2, 'color', [1 0 0 0.5]);  hold on;
+                lineHandle3 = plot(fg(ic).frequencies, 10*log10(fg(ic).ap_fit),  'linewidth', 1, 'color', [1 0 0], 'LineStyle', '--');
+                lineHandle1 = plot(fg(ic).frequencies, 10*log10(fg(ic).raw_psd_zmv),   'linewidth', 3, 'color', [0 0 0 0.5]);
+                xlabel('Frequency (Hz)', 'fontsize', 14, 'fontweight', 'normal');
+                ylabel('Power 10*log_{10}(uV^2/Hz)', 'fontsize', 14, 'fontweight', 'normal');
+                set(gca, 'fontsize', 14);
+                axis on;
+                box on;
+                grid on;
+                legend([lineHandle1 lineHandle2 lineHandle3], {'Raw' 'Modeled' 'Exponent'})
+                set(curfig, 'PaperPositionMode', 'auto');
+                curfig_matrix = getframe(curfig);
+                curfig_matrix = frame2im(curfig_matrix);
+              
+    end
+
     function [EEG, opts] = save_to_csv(EEG, opts)
 
         if opts.save_to_csv
@@ -341,132 +450,7 @@ end
         % Return updated EEG structure
         return;
     end
-
-    function [EEG, opts] = component_assessment(EEG, opts)
-
-        % Interpretation for Bad Component Removal:
-        % High R-squared Indicates Reliable Aperiodic Component: A high R-squared value suggests that the aperiodic component is a dominant and reliable feature in that particular IC's power spectrum. This could indicate that the IC is more likely to represent true neural activity rather than noise or artifacts.
-
-        % Use in Conjunction with Other Measures: The aperiodic oscillation fitting should be used in conjunction with other measures (like IC classification probabilities) to make informed decisions about which components to remove. For instance, an IC with a high R-squared for the aperiodic fit but classified as an artifact (like eye movement) with high probability might still be considered for removal.
-
-        % Thresholding for Decision Making: The script uses a threshold (e.g., R-squared > 0.8) to help decide which components are 'good' or 'bad'. Components with an R-squared value below the threshold might be considered less representative of true brain activity and thus candidates for removal.
-
-        % Calculate the PSD of the ICA activations.
-        % Code by Makoto Miyakoshi.
-        [EEG, opts] = computeNumComponents(EEG, opts);
-
-        hOT = opts.fooof_params.hOT;
-        lower_freq_limit = opts.spect_freqs(1);
-        upper_freq_limit = opts.spect_freqs(2);
-        no_of_components = opts.no_of_components;
-
-
-        [spectra,psdFreqs] = spectopo(EEG.icaact, EEG.pnts, EEG.srate, 'freqfac', 4, 'overlap', EEG.srate/2, 'plot', 'off');
-
-        [~,opts] = set_fooof_params_freqs(EEG, opts, [psdFreqs(1) psdFreqs(end)]);
-        opt = opts.fooof_params;
-
-        EEG.etc.PSD.spectra = spectra;
-
-        EEG.etc.PSD.freqs   = psdFreqs;
-
-        % if i == 1
-
-        validFreqIdx = find(EEG.etc.PSD.freqs>=lower_freq_limit & EEG.etc.PSD.freqs<=upper_freq_limit);
-
-        validFreqs   = EEG.etc.PSD.freqs(validFreqIdx);
-
-        %end
-
-        fooof_nonnormalized = cell(no_of_components,1);
-
-        fooof_normalized    = cell(no_of_components,1);
-
-        for icIdx = 1:no_of_components
-
-            % Obtain the current IC PSD.
-
-            currentPsd           = EEG.etc.PSD.spectra(icIdx,validFreqIdx);
-
-            currentPsdNormalized = zscore(currentPsd')';
-
-            % Run FOOOF.
-
-            currentPsd_microVoltSquare           = 10.^(currentPsd/10);
-
-            currentPsdNormalized_microVoltSquare = 10.^(currentPsdNormalized/10);
-
-            [fs1, fg1] = matlab_FOOOF(currentPsd_microVoltSquare,           validFreqs', opt, hOT); % Input must be row vectors.
-
-            [fs2, fg2] = matlab_FOOOF(currentPsdNormalized_microVoltSquare, validFreqs', opt, hOT); % Input must be row vectors.
-
-            % Calculate the correlation between the fitted aperiodic and the PSD.
-
-            ap_rsq1 = corrcoef(currentPsd_microVoltSquare,           fg1.ap_fit).^2;
-
-            fg1.apfit_rsquared = ap_rsq1(2);
-
-            ap_rsq2 = corrcoef(currentPsdNormalized_microVoltSquare, fg2.ap_fit).^2;
-
-            fg2.apfit_rsquared = ap_rsq2(2);
-
-            % Store the results
-
-            fooof_nonnormalized{icIdx,1} = fg1;
-
-            fooof_normalized{icIdx,1} = fg2;
-
-        end
-
-        % Store the results.
-
-        EEG.etc.PSD.FOOOF_nonnormalized = fooof_nonnormalized;
-
-        EEG.etc.PSD.FOOOF_normalized    = fooof_normalized;
-
-        apfit_rsquaredVec = zeros(no_of_components,1);
-        for icIdx = 1:no_of_components
-            apfit_rsquaredVec(icIdx) = EEG.etc.PSD.FOOOF_normalized{icIdx}.apfit_rsquared;
-        end
-
-        [maxProb, classIdx] = max(EEG.etc.ic_classification.ICLabel.classifications, [], 2);
-
-        % Initialize cell array
-        icPsdMatrix = cell(no_of_components, 5+numel(validFreqIdx)); % Adjust the number of columns as needed
-
-        for currentSubjIcIdx = 1:no_of_components
-            icPsdMatrix{currentSubjIcIdx,1} = EEG.filename; % 1. subjectID.
-            icPsdMatrix{currentSubjIcIdx,2} = currentSubjIcIdx; % 2. icIdx.
-            icPsdMatrix{currentSubjIcIdx,3} = maxProb(currentSubjIcIdx); % 3. ICLabel max class prob.
-            icPsdMatrix{currentSubjIcIdx,4} = classIdx(currentSubjIcIdx); % 4. ICLabel class index.
-
-            % Assuming apfit_rsquaredVec is a vector with a value for each component
-            icPsdMatrix{currentSubjIcIdx,5} = apfit_rsquaredVec(currentSubjIcIdx); % 5. aperiodic oscillation fitting R^2
-
-            % Assuming EEG.etc.PSD.spectra is a matrix with each row corresponding to a component's spectra
-            % Here, since PSD.spectra is likely a numeric array, it's directly assigned to the cell.
-            icPsdMatrix(currentSubjIcIdx,6:5+numel(validFreqIdx)) = num2cell(EEG.etc.PSD.spectra(currentSubjIcIdx, validFreqIdx)); % 6:end PSD.
-        end
-
-        psdFreqs = EEG.etc.PSD.freqs;
-
-        % Define column names
-        columnNames = {'filename', 'ICIndex', 'MaxClassProbability', 'ICLabelClassIndex', 'AperiodicOscillationFittingR2'};
-        for i = 1:numel(validFreqIdx)
-            columnNames{5 + i} = sprintf('PSD_%2.3f', psdFreqs(validFreqIdx(i))); % PSD columns
-        end
-
-        icPsdMatrixTable = cell2table(icPsdMatrix, 'VariableNames', columnNames);
-
-        bICLabel = intersect(find(cell2mat(icPsdMatrix(:,4)) == 1), find(cell2mat(icPsdMatrix(:,3)) > .50));
-        bPsd = find(cell2mat(icPsdMatrix(:,5)) > .8);
-        comps=intersect(bICLabel, bPsd);
-        % Return updated EEG structure
-
-        EEG.etc.ic_fooof = icPsdMatrixTable;
-        return;
-    end
-
+  
     function logMessage(type, message)
         switch type
             case 'info'
