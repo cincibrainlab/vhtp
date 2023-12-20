@@ -65,7 +65,7 @@ catch
     return;
 end
 if ~isempty(ip.Results.ext)
-    filelist = filelist(contains(filelist.filename,ip.Results.ext),:);
+    filelist = filelist(contains(lower(filelist.filename), lower(ip.Results.ext)),:);
 end
 
 if ~isempty(ip.Results.keyword)
