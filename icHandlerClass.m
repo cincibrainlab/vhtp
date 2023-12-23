@@ -78,6 +78,7 @@ classdef icHandlerClass < handle
                     o.EegSetFileCurrent           = missing;
                     o.EegSetFileLast              = missing;
                     o.AppFlags.ValidWorkingDirectory = false;
+
                 case 'setWorkingDirectory'
                     p.addOptional('directory', pwd, @ischar);
                     p.parse(action, varargin{:});                    
@@ -87,6 +88,7 @@ classdef icHandlerClass < handle
                     o.Controller('createEegSetFileListFromWorkingDirectory');
                     o.Controller('createIcFileObjectsFromWorkingDirectory');
                     o.Controller('updateFileBrowserEegSetFileTable');
+
                 case 'createEegSetFileListFromWorkingDirectory'
                     working_dir = o.WorkingDirectory;
                     p.addOptional('file_ext', "SET", @isstring);
@@ -95,6 +97,7 @@ classdef icHandlerClass < handle
                     file_ext = p.Results.file_ext;
                     subdirOn = p.Results.subdirOn;
                     o.EegSetFileList = util_htpDirListing(working_dir, 'ext', file_ext, 'subdirOn', subdirOn, 'keepentireext', true);    
+                
                 case 'createIcFileObjectsFromWorkingDirectory'
                     filelist = o.EegSetFileList;
                     try
@@ -104,20 +107,43 @@ classdef icHandlerClass < handle
                         end
                         o.logMessage('info', ['Number of EEGLAB SET files loaded: ' num2str(height(filelist))]);
                     catch ME
-                        o.logMessage('error', ['Error loading files: ' ME.message]);
+                        o.logMessage('error', sprintf('Error loading file: %s', fullfilename));
                     end
+                
                 case 'updateFileBrowserEegSetFileTable'
                     icFileObjects = o.EegSetFileIcObjectArray;
-                    fileRows = cell(numel(icFileObjects), 3);
+                    numColumns = numel(icFileObjects{1}.Controller('generateFileBrowserTableRow'));
+                    fileRows = cell(numel(icFileObjects), numColumns);
                     for i = 1:numel(icFileObjects)
                         fileRows(i, :) = icFileObjects{i}.Controller('generateFileBrowserTableRow');
                     end
-                    o.FileBrowserTable = cell2table(fileRows, 'VariableNames', {'FileName', 'Status', 'Flag'});
+                    o.FileBrowserTable = cell2table(fileRows, 'VariableNames', {'Color','FileName', 'Status', 'Flag','UUID'});
                     disp(o.FileBrowserTable);
                     o.logMessage('info', 'File table created successfully');
+                
                 case 'getFileBrowserTableData'
                    o.Controller('updateFileBrowserEegSetFileTable');
                    output = o.FileBrowserTable;
+                   
+                case 'getEegSetFileObjectByUuid'
+                    p.addOptional('uuid', missing, @ischar);
+                    p.parse(action, varargin{:});
+                    uuid = p.Results.uuid;
+                    if ismissing(uuid)
+                        o.logMessage('error', 'Missing UUID value');
+                    else
+                        for i = 1:numel(o.EegSetFileIcObjectArray)
+                            if strcmp(o.EegSetFileIcObjectArray{i}.EegSetFileUuid, uuid)
+                                output = o.EegSetFileIcObjectArray{i};
+                                break;
+                            end
+                        end
+                        if ismissing(output)
+                            o.logMessage('error', 'No matching UUID found');
+                        end
+                    end
+
+                
             end
         end
 
@@ -134,11 +160,12 @@ classdef icHandlerClass < handle
 
         % Create a table from icFileClass objects using getFileRow
         function output = refreshFileTable(o)
-            fileRows = cell(numel(o.Files), 4);
+            numColumns = size(o.FileBrowserTable, 2);
+            fileRows = cell(numel(o.Files), numColumns);
             for i = 1:numel(o.Files)
                 fileRows(i, :) = o.Files{i}.getFileRow();
             end
-            app.FileBrowserTable = cell2table(fileRows, 'VariableNames', {'FileName', 'FilePath', 'Status', 'Flag'});
+            app.FileBrowserTable = cell2table(fileRows, 'VariableNames', {'FileName', 'FilePath', 'Status', 'Flag','UUID'});
             disp(app.FileBrowserTable);
             output = app.FileBrowserTable;
             o.logMessage('info', 'File table created successfully');
@@ -147,7 +174,7 @@ classdef icHandlerClass < handle
         % Method to create a view for the File Browser with specific columns
         function fileBrowserTable = FileBrowserView(o)
             fileTable = o.refreshFileTable();
-            fileBrowserTable = fileTable(:, {'FileName', 'Status', 'Flag'});
+            fileBrowserTable = fileTable(:, {'','FileName', 'Status', 'Flag'});
             o.logMessage('info', 'File browser view created successfully');
         end
 
