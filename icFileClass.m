@@ -11,18 +11,39 @@ classdef icFileClass < handle
         EEGINFO
         ICTABLE
 
+        appsettings;
+
         validateEegSetFileChecks = struct();
     end
     methods
-        function o = icFileClass( full_filename )
+        function o = icFileClass( full_filename, appsettings, varargin )
 
-            validateEegSetFile(o, full_filename);
+            p = inputParser;
+            p.KeepUnmatched = true;
+            p.addRequired('full_filename', @ischar);
+            p.addRequired('appsettings', @isstruct);
 
-            if o.EegProperties.validEegSetFile
-                updateEegSetFile(o);
+            addParameter(p, 'loadEEGDirectly', false, @mustBeNumericOrLogical);
+            parse(p, full_filename, appsettings, varargin{:});
+
+            o.appsettings = appsettings;
+
+            if p.Results.loadEEGDirectly
+                o.EEGINFO = pop_loadset('filename', full_filename, 'loadmode', 'info');
+                
+                %reset the status of the file
+                o.Controller('resetSpeedIcStatus');
+                o.resaveEegSetFile();
+                
             else
-                warning('File input (%s) failed validation checks. Please check the log for more information.', full_filename);
-                return;
+                validateEegSetFile(o, full_filename);
+
+                if o.EegProperties.validEegSetFile
+                    updateEegSetFile(o);
+                else
+                    warning('File input (%s) failed validation checks. Please check the log for more information.', full_filename);
+                    return;
+                end
             end
 
         end
@@ -73,8 +94,6 @@ classdef icFileClass < handle
             [o.EegSetFilePath, basefilename, ext] = fileparts(filename);
             o.EegSetFileName = [basefilename ext];
             o.EegSetFileUuid = o.generateUUID();
-        
-            
         end
         function o = loadEegSetFileInfo(o)
             % Load EEG set file info
@@ -127,6 +146,9 @@ classdef icFileClass < handle
         end
 
         function o = prepareEegSetFileRequirements(o)
+            
+            newStatusCode = 'FILESTATUS_NEW';
+
             % Prepare EEG set file requirements
             if o.EegProperties.validIcaAct
                 o.logMessage('info', 'ICA activations found. Skipping calculation.');
@@ -140,93 +162,178 @@ classdef icFileClass < handle
             end
 
             % Use the new speedic handlers
-            if ~o.manageSpeedic('hasField')
+            if ~isfield(o.EEGINFO.etc.vhtp, 'speedic')
                 o.manageSpeedic('create')
                 o.manageSpeedic('update', 'flag', false);
-                o.manageSpeedic('update', 'status', o.Controller('getStatusByCode', 'FILESTATUS_NEW'))
+
+                o.manageSpeedic('update', 'status', newStatusCode);
+                o.manageSpeedic('update', 'statuscode', newStatusCode);
             else
                 % Confirm or reset the child fields of 'speedic'
                 if ~o.manageSpeedic('hasField','status')
-                    o.manageSpeedic('update', 'status', o.Controller('getStatusByCode', 'FILESTATUS_NEW'))
+                    o.EEGINFO.etc.vhtp.speedic.status = struct();
                 end
+                o.manageSpeedic('update', 'status',  newStatusCode)
+
+                if ~o.manageSpeedic('hasField','statuscode')
+                    o.EEGINFO.etc.vhtp.speedic.statuscode = missing;
+                end
+                o.manageSpeedic('update', 'statuscode', newStatusCode);
+
                 if ~o.manageSpeedic('hasField','flag')
-                    o.manageSpeedic('update', 'flag', false);
+                    o.EEGINFO.etc.vhtp.speedic.flag = missing;
                 end
+                o.manageSpeedic('update', 'flag', false);
             end
         end
+
         function result = manageSpeedic(o, action, fieldName, value)
             % Unified method for various operations on 'speedic' structure
-            
+        
+            % Check if 'speedic' structure exists
+            if ~isfield(o.EEGINFO.etc.vhtp, 'speedic')
+                o.EEGINFO.etc.vhtp.speedic = struct();
+                o.EEGINFO.etc.vhtp.speedic.status = struct();
+                o.EEGINFO.etc.vhtp.speedic.statuscode = missing;
+                o.EEGINFO.etc.vhtp.speedic.flag = false;
+                o.EEGINFO.etc.vhtp.speedic.comments = '';
+                o.EEGINFO.etc.vhtp.speedic.history = {};
+            end
+        
             switch action
-                case 'create'
-                    % Create 'speedic' field if it doesn't exist
-                    if ~isfield(o.EEGINFO.etc.vhtp, 'speedic')
-                        o.EEGINFO.etc.vhtp.speedic = struct();
-                        o.EEGINFO.etc.vhtp.speedic.status = struct();
-                        o.EEGINFO.etc.vhtp.speedic.flag = false;
-                        o.EEGINFO.etc.vhtp.speedic.comments = '';
-                        o.EEGINFO.etc.vhtp.speedic.history = {};
-                    end
-
                 case 'hasField'
-                    % Check if 'speedic' structure or a field in 'speedic' exists
-                    if nargin < 3
-                        % Check if 'speedic' structure exists
-                        if isfield(o.EEGINFO.etc.vhtp, 'speedic')
-                            % Return true if 'speedic' exists
-                            result = true;
-                        else
-                            % Return false if 'speedic' does not exist
-                            result = false;
-                        end
-                    else
-                        % Check if the field exists in 'speedic'
-                        if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
-                            % Return true if the field exists
-                            result = true;
-                        else
-                            % Return false if the field does not exist
-                            result = false;
-                        end
-                    end
-
+                    % Check if the field exists in 'speedic'
+                    result = isfield(o.EEGINFO.etc.vhtp.speedic, fieldName);
+        
                 case 'update'
                     % Update the 'speedic' structure
                     if nargin < 4
                         error('Field name and value are required for "update" action.');
                     end
-                    if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
-                        o.EEGINFO.etc.vhtp.speedic.(fieldName) = value;
+                    if strcmp(fieldName, 'status')
+                        o.EEGINFO.etc.vhtp.speedic.(fieldName) = o.Controller('getStatusByCode', value);
                     else
-                        error('Field "%s" does not exist in speedic structure.', fieldName);
+                        o.EEGINFO.etc.vhtp.speedic.(fieldName) = value;
                     end
-
+        
                 case 'get'
                     % Get the value of a field in 'speedic' structure
                     if nargin < 3
                         error('Field name is required for "get" action.');
                     end
-                    if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
-                        result = o.EEGINFO.etc.vhtp.speedic.(fieldName);
-                    else
-                        error('Field "%s" does not exist in speedic structure.', fieldName);
+                    result = o.EEGINFO.etc.vhtp.speedic.(fieldName);
+        
+                case 'remove'
+                    if nargin < 3
+                        error('Field name is required for "remove" action.');
                     end
-
+                    if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
+                        o.EEGINFO.etc.vhtp.speedic = rmfield(o.EEGINFO.etc.vhtp.speedic, fieldName);
+                        o.EEGINFO.etc.vhtp.speedic.(fieldName) = missing;
+                    else
+                        warning('Field "%s" does not exist in speedic structure, creating ...', fieldName);
+                        o.EEGINFO.etc.vhtp.speedic.(fieldName) = missing;
+                    end
                 otherwise
                     error('Unknown action "%s".', action);
             end
         end
+
+        % function result = manageSpeedic(o, action, fieldName, value)
+        %     % Unified method for various operations on 'speedic' structure
+            
+        %     switch action
+        %         case 'create'
+        %             % Create 'speedic' field if it doesn't exist
+        %             if ~isfield(o.EEGINFO.etc.vhtp, 'speedic')
+        %                 o.EEGINFO.etc.vhtp.speedic = struct();
+        %                 o.EEGINFO.etc.vhtp.speedic.status = struct();
+        %                 o.EEGINFO.etc.vhtp.speedic.statuscode = missing;
+        %                 o.EEGINFO.etc.vhtp.speedic.flag = false;
+        %                 o.EEGINFO.etc.vhtp.speedic.comments = '';
+        %                 o.EEGINFO.etc.vhtp.speedic.history = {};
+        %             end
+
+        %         case 'hasField'
+        %             % Check if 'speedic' structure or a field in 'speedic' exists
+        %             if nargin < 3
+        %                 % Check if 'speedic' structure exists
+        %                 if isfield(o.EEGINFO.etc.vhtp, 'speedic')
+        %                     % Return true if 'speedic' exists
+        %                     result = true;
+        %                 else
+        %                     % Return false if 'speedic' does not exist
+        %                     result = false;
+        %                 end
+        %             else
+        %                 % Check if the field exists in 'speedic'
+        %                 if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
+        %                     % Return true if the field exists
+        %                     result = true;
+        %                 else
+        %                     % Return false if the field does not exist
+        %                     result = false;
+        %                 end
+        %             end
+
+        %         case 'update'
+        %             % Update the 'speedic' structure
+        %             if nargin < 4
+        %                 error('Field name and value are required for "update" action.');
+        %             end
+        %             if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
+        %                 % Special case for updating status
+        %                 if strcmp(fieldName, 'status')
+        %                     o.EEGINFO.etc.vhtp.speedic.(fieldName) = o.Controller('getStatusByCode', value);
+        %                 else
+        %                     o.EEGINFO.etc.vhtp.speedic.(fieldName) = value;
+        %                 end
+        %             else
+        %                 error('Field "%s" does not exist in speedic structure.', fieldName);
+        %             end
+
+        %         case 'get'
+        %             % Get the value of a field in 'speedic' structure
+        %             if nargin < 3
+        %                 error('Field name is required for "get" action.');
+        %             end
+        %             if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
+        %                 result = o.EEGINFO.etc.vhtp.speedic.(fieldName);
+        %             else
+        %                 error('Field "%s" does not exist in speedic structure.', fieldName);
+        %             end
+        %         case 'remove'
+        %             if nargin < 3
+        %                 error('Field name is required for "remove" action.');
+        %             end
+        %             if isfield(o.EEGINFO.etc.vhtp.speedic, fieldName)
+        %                 o.EEGINFO.etc.vhtp.speedic = rmfield(o.EEGINFO.etc.vhtp.speedic, fieldName);
+        %                 o.EEGINFO.etc.vhtp.speedic.(fieldName) = missing;
+        %             else
+        %                 warning('Field "%s" does not exist in speedic structure, creating ...', fieldName);
+        %                 o.EEGINFO.etc.vhtp.speedic.(fieldName) = missing;
+        %             end
+        %         otherwise
+        %             error('Unknown action "%s".', action);
+        %     end
+        % end
         function status = getEegSetFileStatusLabel(o)
             % Method to get the EEG set file status
             if o.manageSpeedic('hasField') && o.manageSpeedic('hasField','status') 
                 status_tmp = o.manageSpeedic('get','status');
-                status = status_tmp.name;
+                status = status_tmp.label;
             else
                 status = []; % Return empty or a default value if status is not set
             end
         end
-
-
+        function status = getEegSetFileStatusCode(o)
+            % Method to get the EEG set file status
+            if o.manageSpeedic('hasField') && o.manageSpeedic('hasField','status') 
+                status = o.manageSpeedic('get','statuscode');
+            else
+                status = []; % Return empty or a default value if status is not set
+            end
+        end
         function status = getEegSetFileStatusColor(o)
             % Method to get the EEG set file status
             if o.manageSpeedic('hasField') && o.manageSpeedic('hasField','status')
@@ -251,11 +358,11 @@ classdef icFileClass < handle
             % For testing, override the output to give a random status
             % Maintain the original code to switch back too after testing
             FileStatusMap = containers.Map;
-            FileStatusMap('FILESTATUS_NEW') = struct('name', 'New', 'color', '[0 0 1]'); % Blue in RGB
-            FileStatusMap('FILESTATUS_DRAFT') = struct('name', 'Draft', 'color', '[1 1 0]'); % Yellow in RGB
-            FileStatusMap('FILESTATUS_FINAL') = struct('name', 'Final', 'color', '[0 1 0]'); % Green in RGB
-            FileStatusMap('FILESTATUS_REDO') = struct('name', 'Redo', 'color', '[0.5 0 0.5]'); % Purple in RGB
-            FileStatusMap('FILESTATUS_EXCLUDE') = struct('name', 'Exclude', 'color', '[1 0 0]'); % Red in RGB
+            FileStatusMap('FILESTATUS_NEW') = o.appsettings.file_statuses.('new');
+            FileStatusMap('FILESTATUS_DRAFT') = o.appsettings.file_statuses.('draft');
+            FileStatusMap('FILESTATUS_FINAL') = o.appsettings.file_statuses.('final');
+            FileStatusMap('FILESTATUS_REDO') = o.appsettings.file_statuses.('redo');
+            FileStatusMap('FILESTATUS_EXCLUDE') = o.appsettings.file_statuses.('exclude');
 
             % Generate a random index to select a status
             randomIndex = randi([1 FileStatusMap.Count]);
@@ -263,14 +370,20 @@ classdef icFileClass < handle
             randomStatusKey = statusKeys{randomIndex};
 
             % if isKey(FileStatusMap, statusCode)
-            %     statusDetails = FileStatusMap(statusCode);
+            %     statusDetails = FileStatusMap(statusCode)
+            %     statusDetails.label = char(statusDetails.label);
+
 
             if isKey(FileStatusMap, randomStatusKey)
                 statusDetails = FileStatusMap(randomStatusKey);
+                statusDetails.label = char(statusDetails.label);
+
             else
                 statusDetails = struct('name', 'Unknown', 'color', 'Gray');
             end
         end
+
+
 
         function output = Controller( o, action, varargin )
             p = inputParser;
@@ -279,18 +392,25 @@ classdef icFileClass < handle
             output = missing;
 
             switch action
+                case 'resetSpeedIcStatus'
+                    o.manageSpeedic('remove', 'status');
+                    o.manageSpeedic('remove', 'statuscode');
+                    o.manageSpeedic('update', 'status', o.Controller('getStatusByCode', 'FILESTATUS_NEW'));
+                    o.manageSpeedic('update', 'statuscode', 'FILESTATUS_NEW');
                 case 'generateFileBrowserTableRow'
                     output = {o.getEegSetFileStatusColor, o.EegSetFileName, o.getEegSetFileStatusLabel, o.getEegSetFileFlag o.EegSetFileUuid};
                 case 'getStatusByCode'
                     p.addOptional('statusCode', missing, @ischar);
                     p.parse(action, varargin{:});
-                    switch p.Results.statusCode
-                        case 'FILESTATUS_NEW'
-                            output = o.getFileStatusByCode('FILESTATUS_NEW');  
-                        case missing
-                            o.logMessage('error', 'Missing Status Code');
-                        otherwise
-                            o.logMessage('error', 'Invalid Status Code');
+                    if ismissing(p.Results.statusCode)
+                        output = o.getFileStatusByCode('FILESTATUS_NEW');
+                    else
+                        switch p.Results.statusCode
+                            case 'FILESTATUS_NEW'
+                                output = o.getFileStatusByCode('FILESTATUS_NEW');  
+                            otherwise
+                                o.logMessage('error', 'Invalid Status Code');
+                        end
                     end
 
                 case 'generateFileBrowserDetailModel'
@@ -305,7 +425,8 @@ classdef icFileClass < handle
                     fbDetailModel.COMMENTS = o.EEGINFO.etc.vhtp.speedic.comments;
                     fbDetailModel.HISTORY = o.EEGINFO.etc.vhtp.speedic.history;
                     fbDetailModel.FLAGGED = o.EEGINFO.etc.vhtp.speedic.flag;
-                    fbDetailModel.STATUS = o.EEGINFO.etc.vhtp.speedic.status.name;
+                    fbDetailModel.STATUS = o.EEGINFO.etc.vhtp.speedic.status.label;
+                    fbDetailModel.STATUS_CODE = o.EEGINFO.etc.vhtp.speedic.statuscode;
 
                     if isfield(o.EEGINFO, 'event')
                         fbDetailModel.NO_EVENTS = numel(o.EEGINFO.event);

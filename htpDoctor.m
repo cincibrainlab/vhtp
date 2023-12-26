@@ -176,7 +176,7 @@ end
 
     function results = addMatlabPathWithSubfolders( action )
 
-         ToolIsAvailable = checkRequirements( action );
+        ToolIsAvailable = checkRequirements( action );
         try_matlab_path = missing;
         while ToolIsAvailable == false
             try

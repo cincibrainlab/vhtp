@@ -23,6 +23,10 @@ classdef SpeedIC2 < matlab.apps.AppBase
         fileDetailsTextArea     matlab.ui.control.TextArea
         fileDetailsSaveComments  matlab.ui.control.Hyperlink
         fileDetailsStatusDropdown matlab.ui.control.DropDown
+        fileBrowserResetStatus  matlab.ui.control.CheckBox
+
+        L % Logging Object
+        appsettings
         
         currentSelectedFileBrowserDetail
     end
@@ -59,34 +63,47 @@ classdef SpeedIC2 < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app)
+            
+            % Log that currently this is unused
+            app.L.trace('Currently this is unused');
 
-            app.ih = icHandlerClass();
 
-            Controller(app, 'postStartupViewTasks');
-            Controller(app, 'setupFileBrowserView');
-
-            app.currentSelectedFileBrowserRow = missing;
-            app.fileDetailsPanel.Visible = 'off';
 
         end
 
-        function result = checkIfEegLabAvailable( app )
-           result = htpDoctor('check_eeglab');
-        end
-
-        function Controller(app, action)
+        function Controller(app, action, varargin)
+            
+            p = inputParser;
+            % Allows for unmatched name-value pairs
+            p.KeepUnmatched = true;
+            p.addRequired('app', @isobject);
+            p.addRequired('action', @ischar);
 
             switch action
-                case 'preStartupViewTasks'
-
-                    % check if EEGLAB is available
-                    if ~app.checkIfEegLabAvailable()
-                        try
-                            htpDoctor('fix_eeglab')
-                        catch
-                            error('EEGLAB is not available. Please install EEGLAB and try again.');
-                        end
+                case 'loadAppSettings'
+                    % Setup input parser with optional
+                    p.addOptional('SETTINGS_FILE', '', @ischar);
+                    p.parse(app, action, varargin{:});
+                    SETTINGS_FILE = p.Results.SETTINGS_FILE;
+                    app.L.trace('Loading external app settings ... ');
+                    try 
+                        app.appsettings = yaml.loadFile(SETTINGS_FILE);
+                        numKeys = length(fieldnames(app.appsettings));
+                        app.L.trace(sprintf('YAML file loaded: %s', SETTINGS_FILE));
+                        app.L.trace(sprintf('Number of keys loaded from app settings: %d', numKeys));
+                        app.validateAppSettings();
+                    catch ME
+                        app.L.error(sprintf('Error loading or validating settings: %s', ME.message));
                     end
+
+                    app.appsettings.ui.FileStatusLabels = cellfun(@(x) char(app.appsettings.file_statuses.(x).label), fieldnames(app.appsettings.file_statuses), 'UniformOutput', false);
+                    app.appsettings.ui.IcStatusLabels = cellfun(@(x) char(app.appsettings.ic_statuses.(x).label), fieldnames(app.appsettings.ic_statuses), 'UniformOutput', false);
+
+                
+                case 'preLaunchTasks'
+
+                    app.checkIfEegLabAvailable();
+                    app.checkMatlabVersion();
 
                 case 'postStartupViewTasks'
                     
@@ -100,6 +117,9 @@ classdef SpeedIC2 < matlab.apps.AppBase
                     ypos = ceil((screensize(4)-resolution(2))/2); % center the figure in regards to height
                     app.UIFigure.Position = [xpos ypos resolution(1) resolution(2)];
 
+                    app.currentSelectedFileBrowserRow = missing;
+                    app.fileDetailsPanel.Visible = 'off';
+        
                 case 'setupFileBrowserView'
                 % setup File Browser Pane
                     % set up labels
@@ -147,6 +167,35 @@ classdef SpeedIC2 < matlab.apps.AppBase
                     error('Unhandled App action: %s', action);
             end
 
+        end
+        function result = checkIfEegLabAvailable( app )
+            result = ~isempty(which('eeglab'));
+            if ~result
+                app.L.critical('EEGLAB is not available. Please add EEGLAB to the path and try again.');
+            else
+                app.L.trace('EEGLAB is available. Attempting to start without GUI...');
+                system('eeglab(''nogui'') &');
+                app.L.trace(sprintf('EEGLAB started without GUI as a background process. EEGLAB path: %s', which('eeglab')));
+            end
+        end
+
+        function result = checkMatlabVersion( app )
+            result = verLessThan('matlab', '9.7');
+            if result
+                app.L.error('MATLAB version 9.7 (R2019b) or higher is required. Please upgrade MATLAB and try again.');
+            else
+                app.L.info('MATLAB version is 9.7 (R2019b) or higher.');
+            end
+        end
+
+        function validateAppSettings(app)
+            % Check if the required fields exist in the appsettings
+            requiredFields = {'application_settings', 'paths', 'default_output_folders', 'file_statuses','ic_statuses'};
+            for i = 1:length(requiredFields)
+                if ~isfield(app.appsettings, requiredFields{i})
+                    error('App settings YAML file is missing the required field: %s', requiredFields{i});
+                end
+            end
         end
 
         function selectDirectory(app)
@@ -226,8 +275,13 @@ classdef SpeedIC2 < matlab.apps.AppBase
             app.fileBrowserOpenButton = createUIComponent(app, @uibutton, app.select_folder_layout, struct('row', 2, 'column', 3), ...
                 struct('Text', 'Open', 'Tag','FileBrowserOpenButton'));
 
-            app.fileBrowserSubfolderCheckbox =  createUIComponent(app, @uicheckbox, app.select_folder_layout, struct('row', 3, 'column', [1 3]), ...
+            app.fileBrowserSubfolderCheckbox =  createUIComponent(app, @uicheckbox, app.select_folder_layout, struct('row', 3, 'column', 1), ...
                 struct('Text', 'Include Subfolders', 'Value', 1, 'Tag','FileBrowserSubfolderCheckbox'));
+            app.fileBrowserSubfolderCheckbox.ValueChangedFcn = createCallbackFcn(app, @fileBrowserSubfolderCheckboxValueChanged, true);
+
+            app.fileBrowserResetStatus =  createUIComponent(app, @uicheckbox, app.select_folder_layout, struct('row', 3, 'column', 2), ...
+                struct('Text', 'Reset Status', 'Value', 0, 'Tag','fileBrowserResetStatus'));
+            app.fileBrowserResetStatus.ValueChangedFcn = createCallbackFcn(app, @fileBrowserResetStatusValueChanged, true);
 
             app.fileBrowserTable = createUIComponent(app, @uitable, app.select_folder_layout, struct('row', 4, 'column', [1 3]), ...
                 struct('Data', [], 'Tag','FileBrowserTable'));
@@ -262,7 +316,8 @@ classdef SpeedIC2 < matlab.apps.AppBase
             app.fileDetailsSaveComments.HyperlinkClickedFcn = createCallbackFcn(app, @fileDetailsSaveCommentsHyperlinkClicked, true);
 
             app.fileDetailsStatusDropdown = createUIComponent(app, @uidropdown, app.details_file_layout, struct('row', 1, 'column', 3), ...
-                struct('Items',{{'New', 'Draft', 'Final', 'Redo', 'Exclude'}}, 'Tag','fileDetailsStatusDropdown'));
+                struct('Items',{app.appsettings.ui.FileStatusLabels}, 'Tag','fileDetailsStatusDropdown'));
+            app.fileDetailsStatusDropdown.ValueChangedFcn = createCallbackFcn(app, @fileDetailsStatusDropdownValueChanged, true);
 
     
             % Add a dropdown box for file status
@@ -364,7 +419,21 @@ classdef SpeedIC2 < matlab.apps.AppBase
         % Construct app
         function app = SpeedIC2
 
-            Controller(app, 'preStartupViewTasks');
+            SETTINGS_FILE = 'SpeedIC2.yaml';
+            LOGGING_LEVEL = 'trace';
+            MAT_FILE = 'speedic_database.mat';
+
+            % Setup logging
+            app.L = log4vhtp(LOGGING_LEVEL);
+
+            % Load external app settings from YAML file
+            Controller(app,'loadAppSettings', SETTINGS_FILE);
+
+            % Check requirements
+            Controller(app, 'preLaunchTasks');
+
+            % Start background task
+            app.ih = icHandlerClass(app.L,app.appsettings);
 
             % Create UIFigure and components
             createComponents(app)
@@ -373,14 +442,60 @@ classdef SpeedIC2 < matlab.apps.AppBase
             registerApp(app, app.UIFigure)
 
             % Execute the startup function
-            runStartupFcn(app, @startupFcn)
+            Controller(app, 'postStartupViewTasks');
+            Controller(app, 'setupFileBrowserView');
 
-
+            runStartupFcn(app, @startupFcn);
 
             if nargout == 0
                 clear app
             end
         end
+
+        function updateFileDetails(app, uuid, field, value)
+            % Get the file object using the UUID
+            icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', uuid);
+    
+            % Update the field with the new value
+            icFileObject.manageSpeedic('update', field, value);
+    
+            % Resave the file
+            icFileObject.Controller('resaveEegSetFile');
+        end
+
+        function fileDetailsFlaggedCheckboxValueChanged(app, event)
+            value = app.fileDetailsFlaggedCheckbox.Value;
+            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
+            app.updateFileDetails(selectedUuid, 'flag', value);
+        end
+    
+        function fileDetailsSaveCommentsHyperlinkClicked(app, event)
+            comments = app.fileDetailsTextArea.Value;
+            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
+            app.updateFileDetails(selectedUuid, 'comments', comments);
+        end
+    
+        function fileDetailsStatusDropdownValueChanged(app, event)
+            status = app.fileDetailsStatusDropdown.Value;
+            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
+            app.updateFileDetails(selectedUuid, 'status', status);
+            app.updateFileDetails(selectedUuid, 'statuscode', status);
+        end
+
+        % Callback for fileBrowserSubfolderCheckbox
+        function fileBrowserSubfolderCheckboxValueChanged(app, event)
+            value = app.fileBrowserSubfolderCheckbox.Value;
+            app.ih.AppFlagHandler('setIncludeSubfoldersCheckbox', value);
+            app.L.debug(sprintf('fileBrowserSubfolderCheckbox value changed to: %s', mat2str(value)));
+        end
+
+        % Callback for fileBrowserResetStatus
+        function fileBrowserResetStatusValueChanged(app, event)
+            value = app.fileBrowserResetStatus.Value;
+            app.ih.AppFlagHandler('setResetStatusCheckbox', value);
+            app.L.debug(sprintf('fileBrowserResetStatus value changed to: %s', mat2str(value)));
+        end
+
 
         function updateFileBrowserDetailsByRowSelection(app, event)
             % Get the row and column indices of the cell that was clicked
@@ -420,23 +535,33 @@ classdef SpeedIC2 < matlab.apps.AppBase
 
         % Callback for fileDetailsFlaggedCheckbox
         
-        function fileDetailsFlaggedCheckboxValueChanged(app, event)
-            value = app.fileDetailsFlaggedCheckbox.Value;
-            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-            %selectedUuid = model.
-            % Save the value back to the data model
-            icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
-            icFileObject.manageSpeedic('update', 'flag', value);
-            icFileObject.Controller('resaveEegSetFile');
-        end
+        % function fileDetailsFlaggedCheckboxValueChanged(app, event)
+        %     value = app.fileDetailsFlaggedCheckbox.Value;
+        %     selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
+        %     %selectedUuid = model.
+        %     % Save the value back to the data model
+        %     icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
+        %     icFileObject.manageSpeedic('update', 'flag', value);
+        %     icFileObject.Controller('resaveEegSetFile');
+        % end
 
-        function fileDetailsSaveCommentsHyperlinkClicked(app, event)
-            comments = app.fileDetailsTextArea.Value;
-            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-            icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
-            icFileObject.manageSpeedic('update', 'comments', comments);
-            icFileObject.Controller('resaveEegSetFile');
-        end
+        % function fileDetailsSaveCommentsHyperlinkClicked(app, event)
+        %     comments = app.fileDetailsTextArea.Value;
+        %     selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
+        %     icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
+        %     icFileObject.manageSpeedic('update', 'comments', comments);
+        %     icFileObject.Controller('resaveEegSetFile');
+        % end
+
+        % function fileDetailsStatusDropdownValueChanged(app, event)
+        %     status = app.fileDetailsStatusDropdown.Value;
+        %     selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
+        %     icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
+        %     icFileObject.manageSpeedic('update', 'status', status);
+        %     icFileObject.manageSpeedic('update', 'statuscode', status);
+        %     icFileObject.Controller('resaveEegSetFile');
+        % end
+
 
     
         % Code that executes before app deletion

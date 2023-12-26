@@ -73,6 +73,7 @@ opts.scroll_event = p.Results.scroll_event;
             [EEG, opts] = add_pvaf(EEG, opts);
             [EEG, opts] = add_erp_image(EEG, opts);
             [EEG, opts] = add_psd_plot(EEG, opts);
+            % add PSD + FOOOF Plot
             [EEG, opts] = add_dipole_image(EEG, opts);
             %[EEG, opts] = create_savename(EEG, opts);
         end

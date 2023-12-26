@@ -1,0 +1,53 @@
+application_settings:
+  title: speedic
+  version: pre-release
+  author:
+    email: ernest.pedapati@cchmc.org
+    organization: 'Cincinnati Children''s Hospital Medical Center'
+  repository: https://github.com/cincibrainlab
+  resolution:
+    width: 1280
+    height: 720
+  database_file: 'speedic_database.mat'
+
+paths:
+  last_working_directory: '/default/path'
+  eeglab_path: '/path/to/eeglab'
+  favorite_directories:
+    - '/path/to/favorite/dir1'
+    - '/path/to/favorite/dir2'
+    - '/path/to/favorite/dir3'
+
+default_output_folders:
+  screenshots: '/path/to/screenshots'
+  log_files: '/path/to/logfiles'
+  exports: '/path/to/exports'
+
+file_statuses:
+  new:
+    label: New
+    color: [0, 0, 1]  # Blue
+  draft:
+    label: Draft
+    color: [1, 1, 0]  # Yellow
+  final:
+    label: Final
+    color: [0, 1, 0]  # Green
+  redo:
+    label: Redo
+    color: [0.5, 0, 0.5]  # Purple
+  exclude:
+    label: Exclude
+    color: [1, 0, 0]  # Red
+
+ic_statuses:
+  retain:
+    label: Retain
+    color: [0, 1, 0]  # Green
+  reject:
+    label: Reject
+    color: [1, 0, 0]  # Red
+  review:
+    label: Review
+    color: [1, 1, 0]  # Yellow
+
