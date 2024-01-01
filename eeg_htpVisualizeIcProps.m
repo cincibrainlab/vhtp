@@ -1,15 +1,44 @@
-    function [EEG, opts] = eeg_htpVisualizeIcProps( EEG, varargin )
+function [EEG, opts] = eeg_htpVisualizeIcProps( EEG, varargin )
+% eeg_htpVisualizeIcProps() - Visualize IC properties
+%
+% Usage:
+%   >> [EEG, opts] = eeg_htpVisualizeIcProps( EEG, varargin )
+%
+% Inputs:
+%   EEG - EEGLAB EEG structure
+%
+% Optional Inputs:
+%   'ic' - Integer value to indicate the IC to visualize (default: 0)
+%   'ic_classifier' - String value to indicate the IC classifier to use (default: 'ICLabel')
+%   'scroll_event' - Boolean flag to indicate whether to display the scroll event (default: 1)
+%   'display_image' - Boolean flag to indicate whether to display the image (default: 1)
+%    'parallel' - Boolean flag to indicate whether to run the calculations in parallel (default: false)
+%    'recalculate_fooof' - Boolean flag to indicate whether to recalculate fooof (default: false)
+
+% Outputs:
+%   EEG - EEGLAB EEG structure
+%   opts - Options structure
+
+% Authors: Ernest Pedapati
 
 p = inputParser;
 addRequired(p, 'EEG');
 addOptional(p, 'ic', 0, @isnumeric);
 addParameter(p, 'ic_classifer', 'ICLabel', @ischar);
 addParameter(p, 'scroll_event', 1, @isnumeric);
+addParameter(p, 'display_image', 1, @mustBeNumericOrLogical);
+addParameter(p, 'parallel', false, @islogical);
+addParameter(p, 'recalculate_fooof', false, @islogical);
+
+
 parse(p, EEG, varargin{:});
 
 opts.selected_ic = p.Results.ic;
 opts.ic_classifer = p.Results.ic_classifer;
 opts.scroll_event = p.Results.scroll_event;
+opts.display_image = p.Results.display_image;
+opts.parallel = p.Results.parallel;
+opts.recalculate_fooof = p.Results.recalculate_fooof;
 
 [EEG, opts] = check_requirements(EEG, opts);
 [EEG, opts] = init_opts(EEG, opts);
@@ -50,7 +79,26 @@ opts.scroll_event = p.Results.scroll_event;
             opts.display_image = true;
         else
             opts.display_image = false;
-        end        
+        end
+        if isfield(EEG.etc, 'FOOOF_results')
+            if isempty(EEG.etc.FOOOF_results)
+                calculate_fooof = true;
+            else
+                calculate_fooof = false;
+                logMessage('info', 'Field FOOOF_results exists in EEG.etc');
+            end
+        else
+            calculate_fooof = true;
+        end
+
+        if calculate_fooof || opts.recalculate_fooof
+            logMessage('warning', 'Running eeg_htpCalcFooof().');
+            if license('test', 'Distrib_Computing_Toolbox') && opts.parallel
+                EEG = eeg_htpCalcFooof(EEG, 'ic_assessment', true, 'parallel', true);
+            else
+                EEG = eeg_htpCalcFooof(EEG, 'ic_assessment', true);
+            end
+        end
 
     end
 
@@ -58,10 +106,20 @@ opts.scroll_event = p.Results.scroll_event;
         if opts.selected_ic == 0
             ic_bitmaps = cell(1, opts.no_of_components);
             gen_image = @generate_image;
-            parfor ic = 1:opts.no_of_components
-                ic_bitmaps{ic} = feval(gen_image, EEG, opts, ic); %#ok<FVAL>
+
+            % Check if parallel computing toolbox is available and opts.parallel is true
+            if license('test', 'Distrib_Computing_Toolbox') && opts.parallel
+                parfor ic = 1:10 %opts.no_of_components
+                    ic_bitmaps{ic} = feval(gen_image, EEG, opts, ic); %#ok<FVAL>
+                end
+            else
+                for ic = 1:opts.no_of_components
+                    ic_bitmaps{ic} = feval(gen_image, EEG, opts, ic); %#ok<FVAL>
+                end
             end
+
             EEG.ic_bitmaps = ic_bitmaps;
+
         elseif opts.selected_ic > 0 && opts.selected_ic <= opts.no_of_components
             opts.display_image = true;
             [EEG, opts] = init_ica_data(EEG, opts);
@@ -72,9 +130,9 @@ opts.scroll_event = p.Results.scroll_event;
             [EEG, opts] = add_aperiodic_rsquared(EEG, opts);
             [EEG, opts] = add_pvaf(EEG, opts);
             [EEG, opts] = add_erp_image(EEG, opts);
-            [EEG, opts] = add_psd_plot(EEG, opts);
-            % add PSD + FOOOF Plot
+            %[EEG, opts] = add_psd_plot(EEG, opts);
             [EEG, opts] = add_dipole_image(EEG, opts);
+            [EEG, opts] = add_fooof_psd_plot(EEG, opts);
             %[EEG, opts] = create_savename(EEG, opts);
         end
     end
@@ -89,13 +147,17 @@ opts.scroll_event = p.Results.scroll_event;
         [EEG, opts] = add_aperiodic_rsquared(EEG, opts);
         [EEG, opts] = add_pvaf(EEG, opts);
         [EEG, opts] = add_erp_image(EEG, opts);
-        [EEG, opts] = add_psd_plot(EEG, opts);
+        %[EEG, opts] = add_psd_plot(EEG, opts);
         [EEG, opts] = add_dipole_image(EEG, opts);
+        [EEG, opts] = add_fooof_psd_plot(EEG, opts);
         %[EEG, opts] = create_savename(EEG, opts);
 
         % Step 1: Save figure to a temporary file
-        tempFileName = [tempname, '.png'];  % Generate temporary filename
-        exportgraphics(opts.fh, tempFileName, 'ContentType', 'image');
+        tempFileName = [tempname, '.tif'];  % Generate temporary filename
+        exportgraphics(opts.fh, tempFileName, 'ContentType', 'image','Resolution',200,'BackgroundColor',[0.9300 0.9600 1.0000]);
+
+        % tempFileName = [tempname, '.gif'];  % Generate temporary filename
+        % exportgraphics(opts.fh, tempFileName, 'ContentType', 'vector');
 
         % Step 2: Read the image back into MATLAB
         bitmap = imread(tempFileName);
@@ -106,7 +168,7 @@ opts.scroll_event = p.Results.scroll_event;
 
         %frame = getframe(opts.fh);
         %bitmap = frame2im(frame);
-    
+
     end
 
 
@@ -214,10 +276,10 @@ opts.scroll_event = p.Results.scroll_event;
         if ~scroll_event
             EEG.event = []; end
 
-                % % Show only 2 epochs in terms of length
-                % epoch_length = size(EEG.data, 2);
-                % two_epochs_length = 2 * epoch_length;
-                % icaacttmp = icaacttmp(:, 1:2);
+        % % Show only 2 epochs in terms of length
+        % epoch_length = size(EEG.data, 2);
+        % two_epochs_length = 2 * epoch_length;
+        % icaacttmp = icaacttmp(:, 1:2);
 
         scrollplot(EEG.times, single(icaacttmp), 5, EEG.event, fh, datax, scrollax);
         tstitle_h = title(['Scrolling IC' int2str(selected_ic) ' Activity'], 'fontsize', 14, 'FontWeight', 'Normal');
@@ -249,26 +311,11 @@ opts.scroll_event = p.Results.scroll_event;
 
         selected_ic = opts.selected_ic;
 
-        calculate_fooof = false;
-        if isfield(EEG.etc, 'ic_fooof')
-            if isempty(EEG.etc.ic_fooof)
-                calculate_fooof = true;
-            else
-                logMessage('info', 'Field ic_fooof exists in EEG.etc');
-            end
-        else
-            calculate_fooof = true;
-        end
-
-        if calculate_fooof
-            logMessage('warning', 'Running eeg_htpCalcFooof().');
-            EEG = eeg_htpCalcFooof(EEG, 'calc_ic_ap_only', true);
-        end
-
         try
-            ic_fooof_table = EEG.etc.ic_fooof;
-            selected_ic_row = ic_fooof_table(ic_fooof_table.ICIndex == selected_ic, :);
-            opts.aperiodic_fitting = num2str(round(selected_ic_row.AperiodicOscillationFittingR2,2));
+            FOOOF_results_table = EEG.etc.FOOOF_results.channel(selected_ic);
+            opts.aperiodic_fitting = num2str(round(FOOOF_results_table.r_squared,2));
+            %FOOOF_results_table = EEG.etc.FOOOF_results.summary_table;
+            %selected_ic_row = FOOOF_results_table(FOOOF_results_table.chan == selected_ic, :);
             logMessage('info', ['Aperiodic Oscillation Fitting R2 for IC' num2str(selected_ic) ': ' num2str(opts.aperiodic_fitting)]);
         catch ME
             logMessage('error', ['Error in calculating Aperiodic Oscillation Fitting R2 for IC' num2str(selected_ic) ': ' ME.message]);
@@ -433,6 +480,23 @@ opts.scroll_event = p.Results.scroll_event;
     end
 
 
+    function [EEG, opts] = add_fooof_psd_plot(EEG, opts)
+        fh = opts.fh;
+        selected_ic = opts.selected_ic;
+        icaacttmp = opts.icaacttmp;
+        spec_opt = {};
+
+        try
+            hfreq = axes('Parent', fh, 'position', [0.50 0.053 0.4842 0.5854], 'units', 'normalized');
+            imshow(EEG.etc.FOOOF_results.channel(selected_ic).fooof_img)
+        catch e
+            cla(hfreq);
+            disp(e)
+            text(0.1, 0.3, [ 'Error: no spectrum plotted' 10 ' make sure you have the ' 10 'signal processing toolbox']);
+        end
+        opts.fh = fh;
+    end
+
     function [EEG, opts] = add_dipole_image(EEG, opts)
         % Uses modified erpplot that can generate image in the background
 
@@ -452,91 +516,91 @@ opts.scroll_event = p.Results.scroll_event;
             meshdatapath = fullfile(dipfit_folder, 'standard_BEM', 'standard_vol.mat');
             mripath = fullfile(dipfit_folder, 'standard_BEM', 'standard_mri.mat');
 
-                % dipplot
-                if isfield(EEG, 'dipfit') && ~isempty(EEG.dipfit)
-                    try
-                        rv = num2str(EEG.dipfit.model(selected_ic).rv*100, '%.1f');
-                    catch
-                        rv = 'N/A';
-                    end
-                    dip_background = axes('Parent', fh, 'position', [0.41 0.1 0.1 0.1557*3+0.0109], ...
-                        'units', 'normalized', 'XLim', [0 1], 'Ylim', [0 1]);
-                    patch([0 0 1 1], [0 1 1 0], 'k', 'parent', dip_background)
-                    axis(dip_background, 'off')
-                    colors = {'g', 'm', 'y'};
-
-                    % axial
-                    ax(1) = axes('Parent', fh, 'position', [0.41 0.1109 0.1 0.1557], 'units', 'normalized');
-                    axis equal off
-                    dipplot(EEG.dipfit.model(selected_ic), ...
-                        'meshdata', meshdatapath, ...
-                        'mri', mripath, ...
-                        'normlen', 'on', 'coordformat', 'MNI', 'axistight', 'on', 'gui', 'off', 'view', [0 0 1], 'pointout', 'on');
-                    temp = axes('Parent', fh, 'position', [0.41 0.1109 0.1 0.1557], 'units', 'normalized');
-                    copyobj(allchild(ax(1)),temp);
-                    delete(ax(1))
-                    ax(1) = temp;
-                    axis equal off
-                    temp = get(ax(1),'children');
-                    ind = find(strcmp('line', get(temp, 'type')));
-                    for it = 1:length(ind)
-                        if mod(it, 2)
-                            set(temp(ind(it)), 'markersize', 15, 'color', colors{ceil(it / 2)})
-                        else
-                            set(temp(ind(it)), 'linewidth', 2, 'color', colors{ceil(it / 2)})
-                        end
-                    end
-
-                    % coronal
-                    ax(2) = axes('Parent', fh, 'position', [0.41 0.2666 0.1 0.1557], 'units', 'normalized');
-                    axis equal off
-                    copyobj(allchild(ax(1)),ax(2));
-                    view([0 -1 0])
-                    axis equal off
-                    temp = get(ax(2),'children');
-                    ind = find(strcmp('line', get(temp, 'type')));
-                    for it = 1:length(ind)
-                        if mod(it, 2)
-                            set(temp(ind(it)), 'markersize', 15, 'color', colors{ceil(it / 2)})
-                        else
-                            set(temp(ind(it)), 'linewidth', 2, 'color', colors{ceil(it / 2)})
-                        end
-                    end
-
-                    % sagital
-                    ax(3) = axes('Parent', fh, 'position', [0.41 0.4223 0.1 0.1557], 'units', 'normalized');
-                    axis equal off
-                    copyobj(allchild(ax(1)),ax(3));
-                    view([1 0 0])
-                    axis equal off
-                    temp = get(ax(3),'children');
-                    ind = find(strcmp('line', get(temp, 'type')));
-                    for it = 1:length(ind)
-                        if mod(it, 2)
-                            set(temp(ind(it)), 'markersize', 15, 'color', colors{ceil(it / 2)})
-                        else
-                            set(temp(ind(it)), 'linewidth', 2, 'color', colors{ceil(it / 2)})
-                        end
-                    end
-
-                    % dipole text
-                    dip_title = title(dip_background, 'Dipole Position', 'FontWeight', 'Normal');
-                    set(dip_title,'FontSize',14);
-                    set(fh, 'CurrentAxes', ax(1))
-                    if size(EEG.dipfit.model(selected_ic).momxyz, 1) == 2
-                        dmr = norm(EEG.dipfit.model(selected_ic).momxyz(1,:)) ...
-                            / norm(EEG.dipfit.model(selected_ic).momxyz(2,:));
-                        if dmr<1
-                            dmr = 1/dmr; end
-                        text(-50,-173,{['RV: ' rv '%']; ['DMR:' num2str(dmr,'%.1f')]})
-                    else
-                        text(-50,-163,['RV: ' rv '%'])
-                    end
-                    set(fh, 'color', [0.9300 0.9600 1.0000]);
-                    opts.fh = fh;
-
+            % dipplot
+            if isfield(EEG, 'dipfit') && ~isempty(EEG.dipfit)
+                try
+                    rv = num2str(EEG.dipfit.model(selected_ic).rv*100, '%.1f');
+                catch
+                    rv = 'N/A';
                 end
-            
+                dip_background = axes('Parent', fh, 'position', [0.41 0.1 0.1 0.1557*3+0.0109], ...
+                    'units', 'normalized', 'XLim', [0 1], 'Ylim', [0 1]);
+                patch([0 0 1 1], [0 1 1 0], 'k', 'parent', dip_background)
+                axis(dip_background, 'off')
+                colors = {'g', 'm', 'y'};
+
+                % axial
+                ax(1) = axes('Parent', fh, 'position', [0.41 0.1109 0.1 0.1557], 'units', 'normalized');
+                axis equal off
+                dipplot(EEG.dipfit.model(selected_ic), ...
+                    'meshdata', meshdatapath, ...
+                    'mri', mripath, ...
+                    'normlen', 'on', 'coordformat', 'MNI', 'axistight', 'on', 'gui', 'off', 'view', [0 0 1], 'pointout', 'on');
+                temp = axes('Parent', fh, 'position', [0.41 0.1109 0.1 0.1557], 'units', 'normalized');
+                copyobj(allchild(ax(1)),temp);
+                delete(ax(1))
+                ax(1) = temp;
+                axis equal off
+                temp = get(ax(1),'children');
+                ind = find(strcmp('line', get(temp, 'type')));
+                for it = 1:length(ind)
+                    if mod(it, 2)
+                        set(temp(ind(it)), 'markersize', 15, 'color', colors{ceil(it / 2)})
+                    else
+                        set(temp(ind(it)), 'linewidth', 2, 'color', colors{ceil(it / 2)})
+                    end
+                end
+
+                % coronal
+                ax(2) = axes('Parent', fh, 'position', [0.41 0.2666 0.1 0.1557], 'units', 'normalized');
+                axis equal off
+                copyobj(allchild(ax(1)),ax(2));
+                view([0 -1 0])
+                axis equal off
+                temp = get(ax(2),'children');
+                ind = find(strcmp('line', get(temp, 'type')));
+                for it = 1:length(ind)
+                    if mod(it, 2)
+                        set(temp(ind(it)), 'markersize', 15, 'color', colors{ceil(it / 2)})
+                    else
+                        set(temp(ind(it)), 'linewidth', 2, 'color', colors{ceil(it / 2)})
+                    end
+                end
+
+                % sagital
+                ax(3) = axes('Parent', fh, 'position', [0.41 0.4223 0.1 0.1557], 'units', 'normalized');
+                axis equal off
+                copyobj(allchild(ax(1)),ax(3));
+                view([1 0 0])
+                axis equal off
+                temp = get(ax(3),'children');
+                ind = find(strcmp('line', get(temp, 'type')));
+                for it = 1:length(ind)
+                    if mod(it, 2)
+                        set(temp(ind(it)), 'markersize', 15, 'color', colors{ceil(it / 2)})
+                    else
+                        set(temp(ind(it)), 'linewidth', 2, 'color', colors{ceil(it / 2)})
+                    end
+                end
+
+                % dipole text
+                dip_title = title(dip_background, 'Dipole Position', 'FontWeight', 'Normal');
+                set(dip_title,'FontSize',14);
+                set(fh, 'CurrentAxes', ax(1))
+                if size(EEG.dipfit.model(selected_ic).momxyz, 1) == 2
+                    dmr = norm(EEG.dipfit.model(selected_ic).momxyz(1,:)) ...
+                        / norm(EEG.dipfit.model(selected_ic).momxyz(2,:));
+                    if dmr<1
+                        dmr = 1/dmr; end
+                    text(-50,-173,{['RV: ' rv '%']; ['DMR:' num2str(dmr,'%.1f')]})
+                else
+                    text(-50,-163,['RV: ' rv '%'])
+                end
+                set(fh, 'color', [0.9300 0.9600 1.0000]);
+                opts.fh = fh;
+
+            end
+
         end
 
     end
