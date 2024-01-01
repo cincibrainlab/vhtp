@@ -1,0 +1,63 @@
+application_settings:
+  title: speedic
+  version: pre-release
+  author:
+    email: ernest.pedapati@cchmc.org
+    organization: 'Cincinnati Children''s Hospital Medical Center'
+  repository: https://github.com/cincibrainlab
+  resolution:
+    width: 1280
+    height: 900
+  database_file: 'speedicSavedState.mat'
+  csv_file: 'speedicSavedState.csv'
+
+paths:
+  last_working_directory: '/default/path'
+  eeglab_path: '/path/to/eeglab'
+  favorite_directories:
+    - '/path/to/favorite/dir1'
+    - '/path/to/favorite/dir2'
+    - '/path/to/favorite/dir3'
+
+default_output_folders:
+  screenshots: '/path/to/screenshots'
+  log_files: '/path/to/logfiles'
+  exports: '/path/to/exports'
+
+file_statuses:
+  FILESTATUS_NEW:
+    label: New
+    color: [0, 0, 1]  # Blue
+  FILESTATUS_DRAFT:
+    label: Draft
+    color: [1, 1, 0]  # Yellow
+  FILESTATUS_FINAL:
+    label: Final
+    color: [0, 1, 0]  # Green
+  FILESTATUS_REDO:
+    label: Redo
+    color: [0.5, 0, 0.5]  # Purple
+  FILESTATUS_EXCLUDE:
+    label: Exclude
+    color: [1, 0, 0]  # Red
+  FILESTATUS_ERROR:
+    label: Error
+    color: [1, 0, 0]  # Red
+  FILESTATUS_MISSING:
+    label: Missing
+    color: [1, 0.5, 0]  # Orange
+  FILESTATUS_PREP:
+    label: RunPrep
+    color: [0, 1, 1]  # Cyan
+
+ic_statuses:
+  ICSTATUS_RETAIN:
+    label: Retain
+    color: [0, 1, 0]  # Green
+  ICSTATUS_REJECT:
+    label: Reject
+    color: [1, 0, 0]  # Red
+  ICSTATUS_REVIEW:
+    label: Review
+    color: [1, 1, 0]  # Yellow
+

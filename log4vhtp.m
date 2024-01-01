@@ -1,12 +1,19 @@
-classdef log4vhtp
+classdef log4vhtp < handle
     properties (Access = private)
         logLevelNumeric % Numeric representation of the current logging level
         logLevels % Map of log levels to numeric values
+        logFile % File to write logs to
+        lastLogLine % Last log line written
+        lastHtmlLogLine
+    end
+
+    events
+        LogLineWritten
     end
 
     methods
         % Constructor
-        function obj = log4vhtp(initialLogLevel)
+        function obj = log4vhtp(initialLogLevel, logFileName)
             % Define log levels
             obj.logLevels = containers.Map(...
                 {'trace', 'debug', 'info', 'warn', 'error', 'critical'}, ...
@@ -17,13 +24,20 @@ classdef log4vhtp
             else
                 error('Invalid initial log level: %s', initialLogLevel);
             end
-            
+
             % Set initial log level
             if nargin < 1
                 initialLogLevel = 'info';
             end
             obj.setLogLevel(initialLogLevel);
+
+            % Open log file
+            obj.logFile = fopen(logFileName, 'a');
+            if obj.logFile == -1
+                error('Could not open log file: %s', logFileName);
+            end
             obj.info(sprintf('Logging level: %s', initialLogLevel));
+
         end
 
         % Set log level
@@ -36,7 +50,7 @@ classdef log4vhtp
         end
 
         % Generic log method
-        function log(obj, level, message)
+        function log(obj, level, varargin)
             % Get the name of the calling function
             [ST,~] = dbstack('-completenames');
             if length(ST) > 2
@@ -44,21 +58,55 @@ classdef log4vhtp
             else
                 callingFunction = '';
             end
-            
+
             if obj.logLevels(level) >= obj.logLevelNumeric
-                fprintf('[%s][%s]: %s\n', upper(level), callingFunction, message);
-                if strcmp(level, 'critical')
-                    error('[%s][%s]: %s\n', upper(level), callingFunction, message);
+                message = sprintf(varargin{:});
+                message = strrep(message, '\n', ''); % Remove newline characters
+
+                timestamp = datetime('now', 'Format', 'yy/MM/dd HH:mm:ss');                
+                obj.lastLogLine = sprintf('[%s][%s][%s]: %s\n', timestamp, upper(level), callingFunction, message);
+                fprintf(obj.logFile, obj.lastLogLine);
+                fprintf(obj.lastLogLine);
+                % Create last HTML line with color coding for different levels
+                switch level
+                    case 'trace'
+                        color = '#808080'; % gray
+                    case 'debug'
+                        color = '#0000FF'; % blue
+                    case 'info'
+                        color = '#008000'; % green
+                    case 'warn'
+                        color = '#FFA500'; % orange
+                    case 'error'
+                        color = '#FF0000'; % red
+                    case 'critical'
+                        color = '#8B0000'; % dark red
+                    otherwise
+                        color = '#000000'; % default to black
                 end
+                obj.lastHtmlLogLine = sprintf('<p style="color: %s;">[%s][%s][%s]: %s</p>', color, timestamp, upper(level), callingFunction, message);
+                notify(obj, 'LogLineWritten');
+             end
+            if strcmp(level, 'critical')
+                error('[%s][%s]: %s\n', upper(level), callingFunction, message);
             end
         end
-    
+
+        function lastLogLine = getLastLogLine(obj)
+            lastLogLine = obj.lastLogLine;
+        end
+
+        function lastHtmlLogLine = getLastHtmlLogLine(obj)
+            lastHtmlLogLine = obj.lastHtmlLogLine;
+        end
+
+
         % Convenience methods for each log level
-        function trace(obj, message), obj.log('trace', message); end
-        function debug(obj, message), obj.log('debug', message); end
-        function info(obj, message), obj.log('info', message); end
-        function warn(obj, message), obj.log('warn', message); end
-        function error(obj, message), obj.log('error', message); end
-        function critical(obj, message), obj.log('critical', message); end
+        function trace(obj, varargin), obj.log('trace', varargin{:}); end
+        function debug(obj, varargin), obj.log('debug', varargin{:}); end
+        function info(obj, varargin), obj.log('info', varargin{:}); end
+        function warn(obj, varargin), obj.log('warn', varargin{:}); end
+        function error(obj, varargin), obj.log('error', varargin{:}); end
+        function critical(obj, varargin), obj.log('critical', varargin{:}); end
     end
 end

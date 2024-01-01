@@ -25,54 +25,54 @@ classdef SpeedIC2 < matlab.apps.AppBase
         fileDetailsStatusDropdown matlab.ui.control.DropDown
         fileBrowserResetStatus  matlab.ui.control.CheckBox
 
+        icViewPanel             matlab.ui.container.Panel
+        icViewPanel_layout      matlab.ui.container.GridLayout
+        icViewLabel            matlab.ui.control.Label
+
+        toolboxPanel            matlab.ui.container.Panel
+
+        icBrowserPanel           matlab.ui.container.Panel
+        icDetailPanel          matlab.ui.container.Panel
+        statusBarPanel          matlab.ui.container.Panel
+
+        logTextArea            matlab.ui.control.HTML
+        statusBarPanelLayout    matlab.ui.container.GridLayout
+        fileDetailsMissingLabel matlab.ui.control.Label
+        fileDetailsMissingButton matlab.ui.control.Hyperlink
+
+        firstRun
+
         L % Logging Object
         appsettings
-        
+
         currentSelectedFileBrowserDetail
     end
 
-    
+    events
+        userSelectsFile     % User selects a row
+        userModifiesFile     % User selects a row
+    end
+
+
     properties (Access = private)
         ih % icHandlerClass
+        % currentSelectedFileBrowserRow
+    end
 
-        currentSelectedFileBrowserRow
-
-    end
-    
-    properties (Access = public)
-        Property2 % Description
-    end
-    
-    methods (Access = private)
-        
-        function results = func(app)
-            
-        end
-    end
-    
-    methods (Access = public)
-        
-        function results = func2(app)
-            
-        end
-    end
-    
 
     % Callbacks that handle component events
     methods (Access = private)
 
         % Code that executes after component creation
         function startupFcn(app)
-            
             % Log that currently this is unused
-            app.L.trace('Currently this is unused');
+            %app.L.trace('Currently this is unused');
 
-
-
+            fileBrowserSelectWorkingDirectory(app, '/Users/ernie/Documents/APDinASD');
         end
 
         function Controller(app, action, varargin)
-            
+
             p = inputParser;
             % Allows for unmatched name-value pairs
             p.KeepUnmatched = true;
@@ -80,156 +80,104 @@ classdef SpeedIC2 < matlab.apps.AppBase
             p.addRequired('action', @ischar);
 
             switch action
-                case 'loadAppSettings'
-                    % Setup input parser with optional
-                    p.addOptional('SETTINGS_FILE', '', @ischar);
-                    p.parse(app, action, varargin{:});
-                    SETTINGS_FILE = p.Results.SETTINGS_FILE;
-                    app.L.trace('Loading external app settings ... ');
-                    try 
-                        app.appsettings = yaml.loadFile(SETTINGS_FILE);
-                        numKeys = length(fieldnames(app.appsettings));
-                        app.L.trace(sprintf('YAML file loaded: %s', SETTINGS_FILE));
-                        app.L.trace(sprintf('Number of keys loaded from app settings: %d', numKeys));
-                        app.validateAppSettings();
-                    catch ME
-                        app.L.error(sprintf('Error loading or validating settings: %s', ME.message));
-                    end
 
-                    app.appsettings.ui.FileStatusLabels = cellfun(@(x) char(app.appsettings.file_statuses.(x).label), fieldnames(app.appsettings.file_statuses), 'UniformOutput', false);
-                    app.appsettings.ui.IcStatusLabels = cellfun(@(x) char(app.appsettings.ic_statuses.(x).label), fieldnames(app.appsettings.ic_statuses), 'UniformOutput', false);
-
-                
                 case 'preLaunchTasks'
 
-                    app.checkIfEegLabAvailable();
-                    app.checkMatlabVersion();
+                    app.L.info("Not used currently")
 
                 case 'postStartupViewTasks'
-                    
-                %  application title
+
+                    %  application title
                     app.UIFigure.Name = sprintf('%s (%s)', app.ih.getAppConstants('APPTITLE'), app.ih.getAppConstants('APPVERSION'));
-                
-                %  center application window
+
+                    %  center application window
                     resolution = app.ih.getAppConstants('LAYOUT_RES');
                     screensize = get(0,'ScreenSize');
                     xpos = ceil((screensize(3)-resolution(1))/2); % center the figure in regards to width
                     ypos = ceil((screensize(4)-resolution(2))/2); % center the figure in regards to height
                     app.UIFigure.Position = [xpos ypos resolution(1) resolution(2)];
 
-                    app.currentSelectedFileBrowserRow = missing;
-                    app.fileDetailsPanel.Visible = 'off';
-        
+                    %                    app.currentSelectedFileBrowserRow = missing;
+                    app.fileDetailsPanel.Visible = 'on';
+
                 case 'setupFileBrowserView'
-                % setup File Browser Pane
+                    % setup File Browser Pane
                     % set up labels
                     app.fileBrowserLabel.Text               = 'File Browser';
                     app.fileBrowserFolderBox.Placeholder    = 'Set working folder.';
                     app.fileBrowserOpenButton.Text          = 'Open';
 
-                    % set up table
-                    app.fileBrowserTable.ColumnName = {'','File', 'Status', 'Flag',''}; % Updated column names
-                    app.fileBrowserTable.RowName = "";
-                    app.fileBrowserTable.ColumnEditable = [false false false true false]; % Make only the 'Flag' column editable
-                    app.fileBrowserTable.ColumnWidth = {'fit','auto', 'fit', 'fit', 0}; % Set the width of all columns to 'auto'
-                    app.fileBrowserTable.BackgroundColor = [1 1 1; 0.94 0.94 0.94]; % Turn off uitable striping
-
                     % set up callbacks
-                    app.fileBrowserOpenButton.ButtonPushedFcn = @(btn,event) app.selectDirectory();
-                
+                    app.fileBrowserOpenButton.ButtonPushedFcn = @(btn,event) app.fileBrowserSelectWorkingDirectory();
+
                 case 'updateFileBrowserTableView'
-                    % get data
+
                     data = app.ih.Controller('getFileBrowserTableData');
-                    % update table
-                    % Set the data for the table
-                    app.fileBrowserTable.Data = data;
-                    
+
+                    fb_colnames = {'FULLFILE', 'FILENAME', 'FILESTATUSLABEL', 'FILEFLAG','FILEUUID'};
+                    fb_table = table(data.FULLFILE, data.FILENAME, data.FILESTATUSLABEL, data.FILEFLAG, data.FILEUUID, ...
+                        'VariableNames', fb_colnames);
+                    fb_cell = table2cell(fb_table);
+
+                    getColumnIndex = @(x) strcmp(fb_colnames, x);
+
+                    FULLFILE_IDX = getColumnIndex('FULLFILE');
+
+                    app.fileBrowserTable.Data = fb_cell; %table2cell(view_data);
+                    app.fileBrowserTable.UserData.fb_colnames = fb_colnames;
+                    app.fileBrowserTable.UserData.getColumnIndex = getColumnIndex;
+                    app.fileBrowserTable.RowName = "";
+                    app.fileBrowserTable.ColumnSortable = [false false true false false]; % Turn off sorting
+                    app.fileBrowserTable.ColumnEditable = [false false true true false]; % Make only the 'Flag' column editable
+                    app.fileBrowserTable.ColumnFormat = {[] [] app.ih.appsettings.ui.FileStatusLabels' [] []};
+                    app.fileBrowserTable.ColumnWidth = {25,200,65,50, 0}; % Set the width of all columns to 'auto'
+                    app.fileBrowserTable.BackgroundColor = [1 1 1; 0.94 0.94 0.94]; % Turn off uitable striping
+                    app.fileBrowserTable.ColumnName = {'','File', 'Status', 'Flag',''}'; % Updated column names
+                    app.fileBrowserTable.CellEditCallback = createCallbackFcn(app, @fileTableCellEditValueChanged, true);
+
                     % Iterate over each row and apply the color style to the first cell
                     for i = 1:size(data, 1)
-                        colorStr = data{i, 'Color'}{1}; % Extract the color string
-                        colorRGB = eval(colorStr); % Convert string to RGB value using eval
+                        colorRow = hex2rgb(data{i,'FILESTATUSCOLOR'});
+                        colorStyle = colorRow;
 
                         % Create a uistyle object for this color
                         cellStyle = uistyle;
-                        cellStyle.BackgroundColor = colorRGB; % Set the background color
+                        cellStyle.BackgroundColor =  colorStyle; % Set the background color
 
                         % Apply the style to the first cell of the row
                         addStyle(app.fileBrowserTable, cellStyle, 'cell', [i, 1]);
 
                         % Replace the cell contents with two spaces
-                        app.fileBrowserTable.Data{i, 'Color'} = {'  '};
+                        app.fileBrowserTable.Data(i,FULLFILE_IDX) = {'  '};
                     end
-            
-                    app.updateFileBrowserDetailsByRowSelection(app);
-                    
+
+                    app.updateFileBrowserDetailsByEventSelection(app);
+
 
                 otherwise
                     error('Unhandled App action: %s', action);
             end
 
         end
-        function result = checkIfEegLabAvailable( app )
-            result = ~isempty(which('eeglab'));
-            if ~result
-                app.L.critical('EEGLAB is not available. Please add EEGLAB to the path and try again.');
-            else
-                app.L.trace('EEGLAB is available. Attempting to start without GUI...');
-                system('eeglab(''nogui'') &');
-                app.L.trace(sprintf('EEGLAB started without GUI as a background process. EEGLAB path: %s', which('eeglab')));
-            end
-        end
 
-        function result = checkMatlabVersion( app )
-            result = verLessThan('matlab', '9.7');
-            if result
-                app.L.error('MATLAB version 9.7 (R2019b) or higher is required. Please upgrade MATLAB and try again.');
-            else
-                app.L.info('MATLAB version is 9.7 (R2019b) or higher.');
-            end
-        end
-
-        function validateAppSettings(app)
-            % Check if the required fields exist in the appsettings
-            requiredFields = {'application_settings', 'paths', 'default_output_folders', 'file_statuses','ic_statuses'};
-            for i = 1:length(requiredFields)
-                if ~isfield(app.appsettings, requiredFields{i})
-                    error('App settings YAML file is missing the required field: %s', requiredFields{i});
-                end
-            end
-        end
-
-        function selectDirectory(app)
-            %app.UIFigure.Visible = 'off'; % Hide the main window to prevent the dialog box from going behind it
-            f = figure('Renderer', 'painters', 'Position', [-100 -100 0 0], 'CloseRequestFcn',''); %create a dummy figure so that uigetfile doesn't minimize our GUI
-            folderName = uigetdir(); % Open dialog box for directory selection
-            delete(f); %delete the dummy figure
-            figure(app.UIFigure)
-            if folderName ~= 0
-                app.fileBrowserFolderBox.Value = folderName; % Update the fileBrowserFolderBox with the selected directory
-                app.ih.Controller('setWorkingDirectory', folderName);
-                app.Controller('updateFileBrowserTableView');
-            end
-        end
 
         % Close request function: UIFigure
         function UIFigureCloseRequest(app, event)
             delete(app)
-            
+
         end
     end
 
     % Component initialization
     methods (Access = private)
-
-
         function component = createUIComponent(app, componentType, parent, layout, properties)
             % Create UI component of the specified type
             component = feval(componentType, parent);
-            
+
             % Set layout properties
             component.Layout.Row    = layout.row;
             component.Layout.Column = layout.column;
-            
+
             % Set additional properties passed in the 'properties' struct
             fieldNames = fieldnames(properties);
             for i = 1:length(fieldNames)
@@ -237,7 +185,7 @@ classdef SpeedIC2 < matlab.apps.AppBase
                 component.(fieldName) = properties.(fieldName);
             end
         end
-        
+
         % Create UIFigure and components
         function createComponents(app)
 
@@ -247,11 +195,11 @@ classdef SpeedIC2 < matlab.apps.AppBase
 
             % Assuming a layout of 4 rows and 3 columns
             app.app_grid = uigridlayout(app.UIFigure, [3, 3]);
-            
+
             % Define the width of the columns and the height of the rows
             % The first column for the file browser, the second for the image, and the third for the component table
-            app.app_grid.ColumnWidth                        = {'1.5x','3x','1x'};
-            app.app_grid.RowHeight                          = {'.75x','2x','1x'};
+            app.app_grid.ColumnWidth                        = {'1.5x','2.5x','1.5x'};
+            app.app_grid.RowHeight                          = {'.75x','2x','1.25x','1x'};
             app.app_grid.Padding                            = [2 2 2 2]; % [top right bottom left]
             app.app_grid.BackgroundColor                    = [1 1 1]; % white background color
 
@@ -259,7 +207,8 @@ classdef SpeedIC2 < matlab.apps.AppBase
             app.selectFolderPanel = uipanel('Parent', app.app_grid);
             app.selectFolderPanel.Layout.Row = [1 2];
             app.selectFolderPanel.Layout.Column = 1;
-            app.selectFolderPanel.Tag = 'SelectFolderPanel';  
+            app.selectFolderPanel.Tag = 'SelectFolderPanel';
+            app.selectFolderPanel.BackgroundColor = [1 1 1]; % white background color
 
             app.select_folder_layout = uigridlayout(app.selectFolderPanel, [4, 3]);
             app.select_folder_layout.ColumnWidth            = {'2x','2x','1x'};
@@ -267,7 +216,7 @@ classdef SpeedIC2 < matlab.apps.AppBase
             app.select_folder_layout.Padding                = [2 2 2 2];
 
             app.fileBrowserLabel = createUIComponent(app, @uilabel, app.select_folder_layout, struct('row', 1, 'column', [1 3]), ...
-                struct('Text', '', 'Tag','FileBrowserLabel', 'FontWeight', 'bold', 'FontSize', 16, 'FontColor', [0 0 1]));
+                struct('Text', '', 'Tag','FileBrowserLabel', 'FontWeight', 'bold', 'FontSize', 16, 'FontColor', [0 0 0]));
 
             app.fileBrowserFolderBox = createUIComponent(app, @uieditfield, app.select_folder_layout, struct('row', 2, 'column', [1 2]), ...
                 struct('Placeholder', 'Set working folder.', 'Tag','FileBrowserFolderBox'));
@@ -285,17 +234,18 @@ classdef SpeedIC2 < matlab.apps.AppBase
 
             app.fileBrowserTable = createUIComponent(app, @uitable, app.select_folder_layout, struct('row', 4, 'column', [1 3]), ...
                 struct('Data', [], 'Tag','FileBrowserTable'));
-            app.fileBrowserTable.CellSelectionCallback = createCallbackFcn(app, @updateFileBrowserDetailsByRowSelection, true);
+            app.fileBrowserTable.CellSelectionCallback = createCallbackFcn(app, @updateFileBrowserDetailsByEventSelection, true);
 
 
             app.fileDetailsPanel = uipanel('Parent', app.app_grid);
             app.fileDetailsPanel.Layout.Row = 3;
             app.fileDetailsPanel.Layout.Column = 1;
-            app.fileDetailsPanel.Tag = 'FileDetailsPanel'; 
+            app.fileDetailsPanel.Tag = 'FileDetailsPanel';
+            app.fileDetailsPanel.BackgroundColor = [1 1 1]; % white background color
 
 
-            app.details_file_layout = uigridlayout(app.fileDetailsPanel, [6, 3]);
-            app.details_file_layout.RowHeight              = {'1x','1x','1x','1x','1x','1x'};
+            app.details_file_layout = uigridlayout(app.fileDetailsPanel, [7, 3]);
+            app.details_file_layout.RowHeight              = {'1x','1x','1x','1x','1x','1x','1x'};
             app.details_file_layout.ColumnWidth            = {'1x','1x','1x'};
 
             app.fileDetailsNameLabel = createUIComponent(app, @uilabel, app.details_file_layout, struct('row', 1, 'column', [1 2]), ...
@@ -316,78 +266,95 @@ classdef SpeedIC2 < matlab.apps.AppBase
             app.fileDetailsSaveComments.HyperlinkClickedFcn = createCallbackFcn(app, @fileDetailsSaveCommentsHyperlinkClicked, true);
 
             app.fileDetailsStatusDropdown = createUIComponent(app, @uidropdown, app.details_file_layout, struct('row', 1, 'column', 3), ...
-                struct('Items',{app.appsettings.ui.FileStatusLabels}, 'Tag','fileDetailsStatusDropdown'));
+                struct('Items',{app.ih.appsettings.ui.FileStatusLabels}, 'ItemsData', {app.ih.appsettings.ui.FileStatusCodes} ,'Tag','fileDetailsStatusDropdown'));
             app.fileDetailsStatusDropdown.ValueChangedFcn = createCallbackFcn(app, @fileDetailsStatusDropdownValueChanged, true);
 
-    
-            % Add a dropdown box for file status
-            % app.fileStatusDropdown = uidropdown(glPanel);
-            % app.fileStatusDropdown.Layout.Row = 2;
-            % app.fileStatusDropdown.Layout.Column = 1;
-            % app.fileStatusDropdown.Items = {'New', 'Draft', 'Final', 'Redo', 'Exclude'};
-            % 
-            %newPanel = uipanel(app.app_grid);
-            % newPanel.Layout.Row = 4;
-            % newPanel.Layout.Column = 1;
+            app.fileDetailsMissingLabel = createUIComponent(app, @uilabel, app.details_file_layout, struct('row', 7, 'column', [1 2]), ...
+                struct('Text', 'Missing', 'Tag','fileDetailsMissingLabel', 'FontWeight', 'bold', 'FontSize', 12));
+            app.fileDetailsMissingButton = createUIComponent(app, @uihyperlink, app.details_file_layout, struct('row', 7, 'column', 3), ...
+                struct('Text', 'Process', 'Tag','fileDetailsMissingButton', 'HorizontalAlignment', 'right'));
+            app.fileDetailsMissingButton.HyperlinkClickedFcn = createCallbackFcn(app, @prepareEegSetFileForVisualizations, true);
 
-            % Add a grid layout manager within the panel
-            % % Assuming a layout of 4 rows and 1 column
-            % glPanel = uigridlayout(app.app_grid, [4, 1]);
-            % glPanel.RowHeight = {'1x', '1x', '1x', '2x'};
-            % glPanel.Padding = [2 2 2 2]; % [top right bottom left]
-            % 
-            % fileLabelAndFlaggedLayout = uigridlayout(glPanel, [1, 2]);
-            % fileLabelAndFlaggedLayout.ColumnWidth = {'1x', '1x'};
-            % fileLabelAndFlaggedLayout.RowHeight = {'1x'};
-            % fileLabelAndFlaggedLayout.Layout.Row = 1;
-            % fileLabelAndFlaggedLayout.Layout.Column = 1;
-            % 
-            % app.fileNameLabel = uilabel(fileLabelAndFlaggedLayout);
-            % app.fileNameLabel.Layout.Row = 1;
-            % app.fileNameLabel.Layout.Column = 1;
-            % app.fileNameLabel.Text = 'File Name';
-            % 
-            % % Add a checkbox for flagged
-            % app.flaggedCheckbox = uicheckbox(fileLabelAndFlaggedLayout, 'Text', 'Flagged');
-            % app.flaggedCheckbox.Layout.Row = 1;
-            % app.flaggedCheckbox.Layout.Column = 2;
-            % 
 
-            % % Add a dropdown box for file status
-            % app.fileStatusDropdown = uidropdown(glPanel);
-            % app.fileStatusDropdown.Layout.Row = 2;
-            % app.fileStatusDropdown.Layout.Column = 1;
-            % app.fileStatusDropdown.Items = {'New', 'Draft', 'Final', 'Redo', 'Exclude'};
-            % 
-            % % Add a text area box for comments
-            % app.commentsTextArea = uitextarea(glPanel);
-            % app.commentsTextArea.Layout.Row = 4;
-            % app.commentsTextArea.Layout.Column = 1;
-            % app.commentsTextArea.Value = 'Enter comments here...';
-            % 
+            % Add a panel for the ICView in the first row and second column
+            app.icViewPanel = uipanel('Parent', app.app_grid);
+            app.icViewPanel.Layout.Row = [1 2];
+            app.icViewPanel.Layout.Column = 2;
+            app.icViewPanel.Tag = 'icViewPanel';
+
+            app.icViewPanel_layout = uigridlayout(app.icViewPanel, [2, 1]);
+            app.icViewPanel_layout.ColumnWidth            = {'1x'};
+            app.icViewPanel_layout.RowHeight              = {'1x','15x'};
+            app.icViewPanel_layout.Padding                = [2 2 2 2];
+
+            app.icViewLabel = createUIComponent(app, @uilabel, app.icViewPanel_layout, struct('row', 1, 'column', 1), ...
+                struct('Text', 'IC Properties', 'Tag','icViewLabel', 'FontWeight', 'bold', 'FontSize', 16, 'FontColor', [0 0 0]));
+
+            % Add a panel for the Toolbox in the first row and second column
+            app.toolboxPanel = uipanel('Parent', app.app_grid);
+            app.toolboxPanel.Layout.Row = 3;
+            app.toolboxPanel.Layout.Column = 2;
+            app.toolboxPanel.Tag = 'toolboxPanel';
+            app.toolboxPanel.BackgroundColor = [1 1 1]; % white background color
+
+            % Add a panel for the ICSelect in the first row and second column
+            app.icBrowserPanel = uipanel('Parent', app.app_grid);
+            app.icBrowserPanel.Layout.Row = [1 2];
+            app.icBrowserPanel.Layout.Column = 3;
+            app.icBrowserPanel.Tag = 'icBrowserPanel';
+            app.icBrowserPanel.BackgroundColor = [1 1 1]; % white background color
+
+            % Add a panel for the ICDetail in the first row and second column
+            app.icDetailPanel = uipanel('Parent', app.app_grid);
+            app.icDetailPanel.Layout.Row = 3;
+            app.icDetailPanel.Layout.Column = 3;
+            app.icDetailPanel.Tag = 'icDetailPanel';
+            app.icDetailPanel.BackgroundColor = [1 1 1]; % white background color
+
+            % Add a panel for the statusBarPanel in the first row and second column
+            app.statusBarPanel = uipanel('Parent', app.app_grid);
+            app.statusBarPanel.Layout.Row = 4;
+            app.statusBarPanel.Layout.Column = [1 3];
+            app.statusBarPanel.Tag = 'statusBarPanel';
+            app.statusBarPanel.BackgroundColor = [1 1 1]; % white background color
+
+            app.statusBarPanelLayout = uigridlayout(app.statusBarPanel, [2, 1]);
+            app.statusBarPanelLayout.ColumnWidth            = {'1x'};
+            app.statusBarPanelLayout.RowHeight              = {'1x'};
+            app.statusBarPanelLayout.Padding                = [2 2 2 2];
+            app.statusBarPanelLayout.BackgroundColor        = [1 1 1]; % white background color
+
+
+            % Add a HTML area for the log in the statusBarPanel
+            app.logTextArea = createUIComponent(app, @uihtml, app.statusBarPanelLayout, ...
+                struct('row', 1, 'column', 1), ...
+                struct('Tag','logTextArea'));
+                % Change the entire component background color to white
+
+
             % app.img_open_layout = uigridlayout(app.app_grid, [2, 4]);
             % app.img_open_layout.ColumnWidth = {'1x', '1x', '1x', '1x'};
             % app.img_open_layout.RowHeight = {'1x','1x'};
-            % app.img_open_layout.Layout.Column = 2;  
+            % app.img_open_layout.Layout.Column = 2;
             % app.img_open_layout.Layout.Row = 2;
-            % 
-            % 
+            %
+            %
             % % Add an axes for displaying the image in the first row and second column
             % imgAxes = uiaxes(app.img_open_layout);
             % imgAxes.Layout.Row = [1 2];
             % imgAxes.Layout.Column = [1 4];
-            % 
+            %
             % % Add a panel for the buttons in the second row and second column
             % buttonPanel = uipanel(app.app_grid);
             % buttonPanel.Layout.Row = 3;
             % buttonPanel.Layout.Column = 2;
-            % 
+            %
             % % Inside the panel, you can add buttons for quick tagging
             % % Here's an example of adding a button
             % tagButton = uibutton(buttonPanel, 'Text', 'Quick Tag');
             % % You can set the button's position within the panel using its 'Position' property
             % tagButton.Position = [20 20 100 30]; % [left bottom width height]
-            % 
+            %
             % % Add a table for displaying the components in the first and second row of the third column
             % componentTable = uitable(app.app_grid);
             % componentTable.Layout.Row = [2, 3]; % Span both rows
@@ -411,32 +378,31 @@ classdef SpeedIC2 < matlab.apps.AppBase
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
         end
+
+        function prepareEegSetFileForVisualizations(app, source, event)
+            app.ih.Controller('runVisualizationPrep');
+        end
     end
 
     % App creation and deletion
     methods (Access = public)
-
         % Construct app
         function app = SpeedIC2
 
-            SETTINGS_FILE = 'SpeedIC2.yaml';
-            LOGGING_LEVEL = 'trace';
-            MAT_FILE = 'speedic_database.mat';
+            app.firstRun = true;
 
-            % Setup logging
-            app.L = log4vhtp(LOGGING_LEVEL);
+            app.ih = icHandlerClass();
+            app.L = app.ih.getLogger();
 
-            % Load external app settings from YAML file
-            Controller(app,'loadAppSettings', SETTINGS_FILE);
 
-            % Check requirements
-            Controller(app, 'preLaunchTasks');
-
-            % Start background task
-            app.ih = icHandlerClass(app.L,app.appsettings);
 
             % Create UIFigure and components
             createComponents(app)
+
+            % Setup listener to log to show log messages to the new textbox
+            addlistener(app.L, 'LogLineWritten', @(src, event) updateLogTextArea(app, app.L.getLastHtmlLogLine()));
+            addlistener(app, 'userModifiesFile', @(src, event) userModifiesFileCallback(app,src,event));
+            addlistener(app, 'userSelectsFile', @(src, event)  userSelectsFileCallback(app,src,event));
 
             % Register the app with App Designer
             registerApp(app, app.UIFigure)
@@ -445,43 +411,180 @@ classdef SpeedIC2 < matlab.apps.AppBase
             Controller(app, 'postStartupViewTasks');
             Controller(app, 'setupFileBrowserView');
 
+
             runStartupFcn(app, @startupFcn);
+
+
 
             if nargout == 0
                 clear app
             end
         end
+        function userModifiesFileCallback(app, src, event)
+            disp('User Has Modified a File')
+        end
+        function userSelectsFileCallback(app, src, event)
+            disp('User Has Selects a File')
+        end
 
-        function updateFileDetails(app, uuid, field, value)
-            % Get the file object using the UUID
-            icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', uuid);
-    
-            % Update the field with the new value
-            icFileObject.manageSpeedic('update', field, value);
-    
-            % Resave the file
-            icFileObject.Controller('resaveEegSetFile');
+        % Method to update the text box with cumulating text like a log
+        function updateLogTextArea(app, logString)
+            % Add the new log string to the existing text in the log text area
+            % The HTML text area requires the text to be formatted in HTML, so we use sprintf to add HTML tags
+            % The 'Value' property is not recognized for the class 'matlab.ui.control.HTML', so it has been removed
+            % The font is set to monospace for better readability, the font size is reduced, and line height is decreased for less spacing between lines
+            % The background color is set to white
+            % The pre settings are set only once with the log text injected inside not repeated over and over
+            % The data field contains the loglines and the html source only adds format lines once
+            app.logTextArea.Data = sprintf('%s%s', logString, app.logTextArea.Data);
+            app.logTextArea.HTMLSource = sprintf('<div style="padding: 10px;"><pre style="font-family:sans-serif; font-size: 1em; line-height: 0.6em; background-color: white;">%s</pre></div>', app.logTextArea.Data);
+        end
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+
+    end
+
+    % Look Up functions
+    methods (Access = private)
+        function icFileObject = getEegSetFileObjectByUuid( app, selected_uuid )
+            icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selected_uuid);
+        end
+        function uuid = getFileUuidByFbTableIndex(app, row_index)
+            % Get the selected hash from the table
+            fb_colnames = app.fileBrowserTable.UserData.fb_colnames;
+            uuid = char(app.fileBrowserTable.Data(row_index, app.fileBrowserTable.UserData.getColumnIndex('FILEUUID')));
+        end
+    end
+
+
+    % Callback / Data functions
+    methods (Access = private)
+
+        function updateEegSetFileStatus(app, selected_uuid, FILESTATUSCODE)
+            icFileObject = getEegSetFileObjectByUuid( app, selected_uuid );
+            icFileObject.setFileStatusProperties(FILESTATUSCODE);
+        end
+
+        function updateEegSetFileFlag(app, selected_uuid, FILEFLAG)
+            icFileObject = getEegSetFileObjectByUuid( app, selected_uuid );
+            icFileObject.setFileFlagProperties(FILEFLAG);
+        end
+
+        function updateEegSetFileComments(app, selected_uuid, FILECOMMENTS)
+            icFileObject = getEegSetFileObjectByUuid( app, selected_uuid );
+            icFileObject.setFileCommentsProperties(FILECOMMENTS);
+        end
+
+        function fileDetailsStatusDropdownValueChanged(app, event)
+            FILESTATUSCODE = app.fileDetailsStatusDropdown.Value;
+            FILEUUID = char(app.currentSelectedFileBrowserDetail.FILEUUID);
+            updateEegSetFileStatus(app, FILEUUID, FILESTATUSCODE);
+            cleanupFollowingDataModification(app, FILEUUID);
         end
 
         function fileDetailsFlaggedCheckboxValueChanged(app, event)
-            value = app.fileDetailsFlaggedCheckbox.Value;
-            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-            app.updateFileDetails(selectedUuid, 'flag', value);
-        end
-    
-        function fileDetailsSaveCommentsHyperlinkClicked(app, event)
-            comments = app.fileDetailsTextArea.Value;
-            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-            app.updateFileDetails(selectedUuid, 'comments', comments);
-        end
-    
-        function fileDetailsStatusDropdownValueChanged(app, event)
-            status = app.fileDetailsStatusDropdown.Value;
-            selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-            app.updateFileDetails(selectedUuid, 'status', status);
-            app.updateFileDetails(selectedUuid, 'statuscode', status);
+            FILEFLAG = app.fileDetailsFlaggedCheckbox.Value;
+            FILEUUID = char(app.currentSelectedFileBrowserDetail.FILEUUID);
+            updateEegSetFileFlag(app, FILEUUID, FILEFLAG);
+            cleanupFollowingDataModification(app, FILEUUID);
         end
 
+        function fileDetailsSaveCommentsHyperlinkClicked(app, event)
+            comments = app.fileDetailsTextArea.Value;
+            FILEUUID = char(app.currentSelectedFileBrowserDetail.FILEUUID);
+            updateEegSetFileComments(app, FILEUUID, comments);
+            cleanupFollowingDataModification(app, FILEUUID);
+        end
+
+        function fileTableCellEditValueChanged(app, event)
+            column_index = event.Indices(2);
+            column_name = app.fileBrowserTable.ColumnName{column_index};
+            row_index = event.Indices(1);
+            FILEUUID = app.getFileUuidByFbTableIndex(row_index);
+
+            switch column_name
+                case 'Status'
+                    FILESTATUSLABEL = event.NewData;
+                    FILESTATUSCODE = char(app.fileDetailsStatusDropdown.ItemsData(strcmp(app.fileDetailsStatusDropdown.Items, FILESTATUSLABEL)));
+                    updateEegSetFileStatus(app, FILEUUID, FILESTATUSCODE);
+                    app.Controller('updateFileBrowserTableView');
+                    cleanupFollowingDataModification(app, FILEUUID);
+
+                case 'Flag'
+                    FILEFLAG = event.NewData;
+                    updateEegSetFileFlag(app, FILEUUID, FILEFLAG);
+                    app.Controller('updateFileBrowserTableView');
+                    cleanupFollowingDataModification(app, FILEUUID);
+                otherwise
+                    return
+            end
+
+        end
+
+        function updateFileBrowserDetailsByEventSelection(app, event)
+
+            %Get the row and column indices of the cell that was clicked
+            if ~isprop(event,'Indices') && ~isfield(event, 'Indices')
+                row_index = 1;
+                app.L.warn('This should only be called at the first run');
+                selected_uuid = app.getFileUuidByFbTableIndex(row_index);
+                updateFileBrowserDetailsByUuid(app, selected_uuid);
+                return
+            end
+            if isprop(event,'Indices') || isfield(event, 'Indices')
+                if isempty(event.Indices)
+                    return
+                else
+                    row_index = event.Indices(1);
+                    selected_uuid = app.getFileUuidByFbTableIndex(row_index);
+                    updateFileBrowserDetailsByUuid(app, selected_uuid);
+                end
+            end
+
+        end
+
+        function updateFileBrowserDetailsByUuid(app, selected_uuid)
+
+            app.fileDetailsPanel.Visible = 'on';
+
+
+            icFileObject = getEegSetFileObjectByUuid( app, selected_uuid );
+
+            fileBrowserDetailModel = icFileObject.Controller('getDetailedRow');
+
+            app.fileDetailsNameLabel.Text = fileBrowserDetailModel.FILENAME;
+            app.fileDetailsInfoLabel.Text = sprintf('FS: %d | PT: %d | T: %d | EP: %2.1fs | ICs: %d | EV: %d', ...
+                fileBrowserDetailModel.SRATE{1}, ...
+                fileBrowserDetailModel.NO_SAMPLES{1}, ...
+                fileBrowserDetailModel.TRIALS{1}, ...
+                fileBrowserDetailModel.EPOCH_DURATION{1}, ...
+                fileBrowserDetailModel.NO_ICS{1}, ...
+                fileBrowserDetailModel.NO_EVENTS);
+
+            app.fileDetailsTextArea.Value = fileBrowserDetailModel.FILECOMMENTS;
+            app.fileDetailsStatusDropdown.Value = fileBrowserDetailModel.FILESTATUSCODE;
+            app.fileDetailsFlaggedCheckbox.Value = fileBrowserDetailModel.FILEFLAG;
+
+            app.currentSelectedFileBrowserDetail = fileBrowserDetailModel;
+
+            notify(app, 'userSelectsFile', icEventData(icFileObject));
+
+        end
+
+        function cleanupFollowingDataModification( app, selected_uuid )
+            app.Controller('updateFileBrowserTableView');
+            updateFileBrowserDetailsByUuid(app, selected_uuid);
+            app.ih.updateDatabase();
+            notify(app, 'userModifiesFile');
+        end
+    end
+
+    % Working Folder Methods
+    methods (Access = public)
         % Callback for fileBrowserSubfolderCheckbox
         function fileBrowserSubfolderCheckboxValueChanged(app, event)
             value = app.fileBrowserSubfolderCheckbox.Value;
@@ -496,79 +599,29 @@ classdef SpeedIC2 < matlab.apps.AppBase
             app.L.debug(sprintf('fileBrowserResetStatus value changed to: %s', mat2str(value)));
         end
 
+        function fileBrowserSelectWorkingDirectory(app, varargin)
+            % Use input parser for best practices
+            p = inputParser;
+            addOptional(p, 'folderName', '', @ischar);
+            parse(p, varargin{:});
 
-        function updateFileBrowserDetailsByRowSelection(app, event)
-            % Get the row and column indices of the cell that was clicked
+            if isempty(p.Results.folderName)
+                % This insanity is because matlab doesn't order window layers properly without tricks
+                f = figure('Renderer', 'painters', 'Position', [-100 -100 0 0], 'CloseRequestFcn',''); %create a dummy figure so that uigetfile doesn't minimize our GUI
+                folderName = uigetdir(); % Open dialog box for directory selection
+                delete(f); %delete the dummy figure
+                figure(app.UIFigure)
+            else
+                folderName = p.Results.folderName;
+            end
 
-           if ismissing(app.currentSelectedFileBrowserRow)
-                app.currentSelectedFileBrowserRow = 1;
-                indices(1) = 1;
-                app.fileDetailsPanel.Visible = 'on';
-           else
-                indices = event.Indices;
-                app.currentSelectedFileBrowserRow = indices(1);
-           end
-            % Get the selected hash from the table
-            selectedUuid = app.fileBrowserTable.Data.UUID{indices(1)};
-
-            % Use hash to get ic_file object
-            icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
-
-            fileBrowserDetailModel = icFileObject.Controller('generateFileBrowserDetailModel');
-
-            app.fileDetailsNameLabel.Text = fileBrowserDetailModel.FILENAME;
-            app.fileDetailsInfoLabel.Text = sprintf('FS: %d | PT: %d | T: %d | EP: %2.1fs | ICs: %d | EV: %d', ...
-                fileBrowserDetailModel.SRATE, ...
-                fileBrowserDetailModel.NO_SAMPLES, ...
-                fileBrowserDetailModel.TRIALS, ...
-                fileBrowserDetailModel.EPOCH_DURATION, ...
-                fileBrowserDetailModel.NO_ICS, ...
-                fileBrowserDetailModel.NO_EVENTS);
-
-            app.fileDetailsTextArea.Value = fileBrowserDetailModel.COMMENTS;
-            app.fileDetailsStatusDropdown.Value = fileBrowserDetailModel.STATUS;
-            app.fileDetailsFlaggedCheckbox.Value = fileBrowserDetailModel.FLAGGED;
-
-            app.currentSelectedFileBrowserDetail = fileBrowserDetailModel;
-            
+            if folderName ~= 0
+                app.fileBrowserFolderBox.Value = folderName; % Update the fileBrowserFolderBox with the selected directory
+                app.ih.initialize(folderName);
+                app.Controller('updateFileBrowserTableView');
+            end
         end
 
-        % Callback for fileDetailsFlaggedCheckbox
-        
-        % function fileDetailsFlaggedCheckboxValueChanged(app, event)
-        %     value = app.fileDetailsFlaggedCheckbox.Value;
-        %     selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-        %     %selectedUuid = model.
-        %     % Save the value back to the data model
-        %     icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
-        %     icFileObject.manageSpeedic('update', 'flag', value);
-        %     icFileObject.Controller('resaveEegSetFile');
-        % end
 
-        % function fileDetailsSaveCommentsHyperlinkClicked(app, event)
-        %     comments = app.fileDetailsTextArea.Value;
-        %     selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-        %     icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
-        %     icFileObject.manageSpeedic('update', 'comments', comments);
-        %     icFileObject.Controller('resaveEegSetFile');
-        % end
-
-        % function fileDetailsStatusDropdownValueChanged(app, event)
-        %     status = app.fileDetailsStatusDropdown.Value;
-        %     selectedUuid = app.currentSelectedFileBrowserDetail.UUID;
-        %     icFileObject = app.ih.Controller('getEegSetFileObjectByUuid', selectedUuid);
-        %     icFileObject.manageSpeedic('update', 'status', status);
-        %     icFileObject.manageSpeedic('update', 'statuscode', status);
-        %     icFileObject.Controller('resaveEegSetFile');
-        % end
-
-
-    
-        % Code that executes before app deletion
-        function delete(app)
-
-            % Delete UIFigure when app is deleted
-            delete(app.UIFigure)
-        end
     end
 end
