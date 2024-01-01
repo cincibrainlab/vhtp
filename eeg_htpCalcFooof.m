@@ -454,6 +454,9 @@ end
 
          logMessage('info', sprintf('Saving FOOOF image for IC %d', ic));
         curfig = figure('visible', 'off');
+        %curfig = figure('visible', 'on');
+        set(gcf,'color', [0.9300 0.9600 1.0000]);
+
         lineHandle2 = plot(fg(ic).frequencies, 10*log10(fg(ic).fooofed_spectrum), 'linewidth', 2, 'color', [1 0 0 0.5]);  hold on;
         lineHandle3 = plot(fg(ic).frequencies, 10*log10(fg(ic).ap_fit),  'linewidth', 1, 'color', [1 0 0], 'LineStyle', '--');
         lineHandle1 = plot(fg(ic).frequencies, 10*log10(fg(ic).raw_psd_zmv),   'linewidth', 3, 'color', [0 0 0 0.5]);
