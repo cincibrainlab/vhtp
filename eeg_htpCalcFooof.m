@@ -36,7 +36,7 @@ addParameter(p, 'freq_resolution', .1, @isnumeric);
 addParameter(p, 'save_to_csv', true, @islogical);
 addParameter(p, 'ic_assessment', false, @islogical);
 addParameter(p, 'save_fooof_img', true, @islogical);
-addParameter(p, 'parallel', false, @islogical);
+addParameter(p, 'parallel', true, @islogical);
 addParameter(p, 'normalize_psd', false, @islogical);
 
 
@@ -181,15 +181,17 @@ end
 
         % Freq are set individually for each function.
         fooof_params.freq_range          = missing;
-        fooof_params.aperiodic_mode      = 'fixed';  % aperiodic_mode : {'fixed', 'knee'} Defines absence or presence of knee in aperiodic component.
-        fooof_params.max_peaks           = 3;        % Maximum number of gaussians to fit within the spectrum.
-        fooof_params.peak_threshold      = 2;        % 2 std dev: parameter for interface simplification
+        fooof_params.aperiodic_mode      = 'knee';  % aperiodic_mode : {'fixed', 'knee'} Defines absence or presence of knee in aperiodic component.
+
+        %fooof_params.aperiodic_mode      = 'fixed';  % aperiodic_mode : {'fixed', 'knee'} Defines absence or presence of knee in aperiodic component.
+        fooof_params.max_peaks           = 5;        % Maximum number of gaussians to fit within the spectrum.
+        fooof_params.peak_threshold      = 1;        % 2 std dev: parameter for interface simplification
         fooof_params.min_peak_height     = 0;        % Minimum height of a peak (in log10).
         fooof_params.peak_width_limits   = [0.5 12]; % Values were taken from https://neuroimage.usc.edu/brainstorm/Tutorials/Fooof
         fooof_params.proximity_threshold = 0;        % Minimum distance between two peaks, in st. dev. (gamma) of peaks.
-        fooof_params.peak_type           = 'gaussian'; % {'gaussian', 'cauchy', 'best'}
+        fooof_params.peak_type           = 'best'; % {'gaussian', 'cauchy', 'best'}
         fooof_params.guess_weight        = 'weak';   % Parameter to weigh initial estimates during optimization (None, Weak, or Strong)
-        fooof_params.hOT                              = 1;        % Defines whether to use constrained optimization, fmincon, or basic simplex, fminsearch.
+        fooof_params.hOT                 = 1;        % Defines whether to use constrained optimization, fmincon, or basic simplex, fminsearch.
         fooof_params.thresh_after        = true;     % Threshold after fitting always selected for Matlab (mirrors the Python FOOOF closest by removing peaks that do not satisfy a user's predetermined conditions)
         opts.fooof_params = fooof_params;
 
@@ -453,22 +455,34 @@ end
          % spectral density of a specified independent component or channel.
 
          logMessage('info', sprintf('Saving FOOOF image for IC %d', ic));
-        curfig = figure('visible', 'off');
-        %curfig = figure('visible', 'on');
+         % Set the size of the figure
+         figWidth = 800; % Width in pixels
+         figHeight = 700; % Height in pixels
+         curfig = figure('visible', 'off', 'Position', [100, 100, figWidth, figHeight]);
+%                 curfig = figure('visible', 'off');
+
+         %curfig = figure('visible', 'on');
         set(gcf,'color', [0.9300 0.9600 1.0000]);
 
         lineHandle2 = plot(fg(ic).frequencies, 10*log10(fg(ic).fooofed_spectrum), 'linewidth', 2, 'color', [1 0 0 0.5]);  hold on;
-        lineHandle3 = plot(fg(ic).frequencies, 10*log10(fg(ic).ap_fit),  'linewidth', 1, 'color', [1 0 0], 'LineStyle', '--');
-        lineHandle1 = plot(fg(ic).frequencies, 10*log10(fg(ic).raw_psd_zmv),   'linewidth', 3, 'color', [0 0 0 0.5]);
+        lineHandle3 = plot(fg(ic).frequencies, 10*log10(fg(ic).ap_fit),  'linewidth', 2, 'color', [1 0 0], 'LineStyle', '--');
+        lineHandle1 = plot(fg(ic).frequencies, 10*log10(fg(ic).raw_psd_zmv),   'linewidth', 6, 'color', [0 0 0 0.5]);
         title(sprintf('IC %d: PSD and FOOOF Estimate', ic))
-        xlabel('Frequency (Hz)', 'fontsize', 14, 'fontweight', 'normal');
-        ylabel('Power 10*log_{10}(uV^2/Hz)', 'fontsize', 14, 'fontweight', 'normal');
-        set(gca, 'fontsize', 14);
+        xlabel('Frequency (Hz)', 'fontsize', 32, 'fontweight', 'normal');
+        ylabel('Power 10*log_{10}(uV^2/Hz)', 'fontsize', 32, 'fontweight', 'normal');
+        set(gca, 'fontsize', 32);
         axis on;
         box on;
         grid on;
         legend([lineHandle1 lineHandle2 lineHandle3], {'Raw' 'Modeled' 'Exponent'})
+
+        % Set the figure resolution
         set(curfig, 'PaperPositionMode', 'auto');
+        set(curfig, 'PaperUnits', 'inches');
+        set(curfig, 'PaperPosition', [0, 0, figWidth/100, figHeight/100]); % Convert pixels to inches for PaperPosition
+
+%        set(curfig, 'PaperPositionMode', 'auto');
+
         curfig_matrix = getframe(curfig);
         curfig_matrix = frame2im(curfig_matrix);
               
