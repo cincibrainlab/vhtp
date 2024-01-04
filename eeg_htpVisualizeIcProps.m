@@ -109,7 +109,7 @@ opts.recalculate_fooof = p.Results.recalculate_fooof;
 
             % Check if parallel computing toolbox is available and opts.parallel is true
             if license('test', 'Distrib_Computing_Toolbox') && opts.parallel
-                parfor ic = 1:10 %opts.no_of_components
+                parfor ic = 1:opts.no_of_components
                     ic_bitmaps{ic} = feval(gen_image, EEG, opts, ic); %#ok<FVAL>
                 end
             else
@@ -367,8 +367,142 @@ opts.recalculate_fooof = p.Results.recalculate_fooof;
         icaacttmp = opts.icaacttmp;
         erp_opt = {};
 
+        % start custom code for erp plot
+% 
+%             % Determine symmetric data range about 0
+%         maxdat = max(abs(data(:))); 
+%         mindat = -maxdat;
+% %! Where does caxfraction come from
+%         % Adjust range based on caxfraction if it's not empty
+%         if ~isempty(caxfraction)
+%             adjmax = (1 - caxfraction) / 2 * (maxdat - mindat);
+%             mindat = mindat + adjmax;
+%             maxdat = maxdat - adjmax;
+%             fractionStr = sprintf('%g times the ', caxfraction);
+%         else
+%             fractionStr = '';
+%         end
+% 
+%         % Print the range
+%         fprintf('The caxis range will be %sthe sym. abs. data range -> [%g,%g].\n', fractionStr, mindat, maxdat);
+% 
+% 
+%         mindat = min(min(data));
+%         maxdat = max(max(data));
+%         maxdat =  max(abs([mindat maxdat])); % make symmetrical about 0
+%         mindat = -maxdat;
+%         if ~isempty(caxfraction)
+%             adjmax = (1-caxfraction)/2*(maxdat-mindat);
+%             mindat = mindat+adjmax;
+%             maxdat = maxdat-adjmax;
+%             fprintf(...
+%                 'The caxis range will be %g times the sym. abs. data range -> [%g,%g].\n',...
+%                 caxfraction,mindat,maxdat);
+%         else
+%             fprintf(...
+%                 'The caxis range will be the sym. abs. data range -> [%g,%g].\n',...
+%                 mindat,maxdat);
+%         end
+% 
+%         timelimits = [min(times) max(times)];
+% 
+%         h_eim=imagesc(times,outtrials,data',[mindat,maxdat]);% plot time on x-axis
+%         set(gca,'Ydir','normal', 'tag', 'erpimage');
+%         axis([timelimits(1) timelimits(2) ...
+%             min(outtrials) max(outtrials)]);
+%         try colormap(DEFAULT_COLORMAP); catch, end
+% 
+%             if times(1) <= 0 && times(frames) >= 0
+%                 plot([0 0],[min(outtrials) max(outtrials)],...
+%                     'k','Linewidth',ZEROWIDTH); % plot smoothed sortwvar
+%             end
+% 
+
+
         herp = axes('Parent', fh, 'position',[0.0643 0.1102 0.2421 0.3850],'units','normalized');
         %eeglab_options;
+eeg_htpVisualizeIcErpImage(EEG);
+        % Rewrite
+        EEG2 = eeg_regepochs(eeg_checkset(EEG), 'recurrence', 2, 'extractepochs','on');
+
+        isEpoched = ndims(EEG2.data) > 2; %#ok<*ISMAT>
+        
+                isEpoched = ndims(EEG.data) > 2; %#ok<*ISMAT>
+
+        % Set the initial target for the number of lines in the erpimage.
+        ERPIMAGELINES = 200;
+        
+        % Ensure ERPIMAGELINES does not exceed the total available data points divided by the sample rate.
+        while size(EEG.data, 2) < ERPIMAGELINES * EEG.srate
+            ERPIMAGELINES = floor(0.9 * ERPIMAGELINES);  % Reduce ERPIMAGELINES if there's not enough data
+        end
+        
+        % Determine smoothing factor based on the final number of ERP image lines.
+        ei_smooth = 1 + 2 * (ERPIMAGELINES >= 6);
+
+                
+        % Calculate the number of frames for each line of the ERP image.
+        erpimageframes = floor(size(EEG.data, 2) / ERPIMAGELINES);
+        
+        % Calculate the total number of frames to use.
+        erpimageframestot = erpimageframes * ERPIMAGELINES;
+        
+        % Generate a time vector for the ERP image.
+        eegtimes = linspace(0, (erpimageframes - 1) / EEG.srate, erpimageframes);
+        
+        % Calculate the mean offset if needed.
+        offset = mean(icaacttmp(:), 'omitnan');
+        
+ 
+        % Calculate the mean offset if needed.
+        offset = mean(icaacttmp(:), 'omitnan');
+
+        data = icaacttmp - offset; 
+
+        reshaped_data = reshape(icaacttmp(:,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset;
+times=EEG.times;
+decfactor = 1
+ wt_wind=ones(1,ei_smooth)/ei_smooth;
+
+            [smooth_data,outtrials] = movav(reshaped_data,1:ERPIMAGELINES,ei_smooth,decfactor,[],[],wt_wind);
+
+        maxdat = 2/3* max(max(abs(smooth_data)));
+        mindat = -maxdat;
+            figure; imagesc(EEG.times,outtrials,smooth_data',[mindat,maxdat])
+set(gca,'Ydir','normal', 'tag', 'erpimage');
+             title('Continuous Data', 'fontsize', 14, 'FontWeight', 'Normal');
+                lab = text(1.27, .85,'RMS uV per scalp channel');
+colormap(jet);
+
+figure; imagesc(reshaped_data')
+set(gca,'Ydir','normal', 'tag', 'erpimage');
+             title('Continuous Data', 'fontsize', 14, 'FontWeight', 'Normal');
+                lab = text(1.27, .85,'RMS uV per scalp channel');
+
+colormap(jet);
+caxfraction  = 2/3;
+        mindat = min(min(data));
+        maxdat = max(max(data));
+        maxdat =  max(abs([mindat maxdat])); % make symmetrical about 0
+        mindat = -maxdat;
+        if ~isempty(caxfraction)
+            adjmax = (1-caxfraction)/2*(maxdat-mindat);
+            mindat = mindat+adjmax;
+            maxdat = maxdat-adjmax;
+            fprintf(...
+                'The caxis range will be %g times the sym. abs. data range -> [%g,%g].\n',...
+                caxfraction,mindat,maxdat);
+        end
+
+        %%%%%%%%%%%%%%%%
+
+           h_eim=imagesc(EEG.times,outtrials,reshaped_data',[mindat,maxdat]);% plot time on x-axis
+            set(gca,'Ydir','normal', 'tag', 'erpimage');
+            axis([timelimits(1) timelimits(2) ...
+                min(outtrials) max(outtrials)]);
+
+        % Rewrite
+
         if EEG.trials > 1 % epoched data
             axis(herp, 'off')
             EEG.times = linspace(EEG.xmin, EEG.xmax, EEG.pnts);
@@ -448,6 +582,25 @@ opts.recalculate_fooof = p.Results.recalculate_fooof;
         opts.fh = fh;
     end
 
+% Plot color bar
+%%%%%%%%%%%%%%%%
+function plotcolbar(g)
+	cb=cbar;
+	pos = get(cb,'position');
+	set(cb,'position',[pos(1) pos(2) 0.03 pos(4)]);
+	set(cb,'fontsize',12);
+	try
+		if isnan(g.limits(5))
+			ticks = get(cb,'ytick');
+			[tmp zi] = find(ticks == 0);
+			ticks = [ticks(1) ticks(zi) ticks(end)];
+			set(cb,'ytick',ticks);
+			set(cb,'yticklabel',strvcat('-',' ','+'));
+		end
+	catch, 
+end; % in a single channel is plotted
+
+end
     function [EEG, opts] = add_psd_plot(EEG, opts)
         fh = opts.fh;
         selected_ic = opts.selected_ic;
