@@ -20,6 +20,8 @@ function [EEG, opts] = eeg_htpVisualizeIcErpImage(EEG, varargin)
     addParameter(p, 'plot_type', 'continuous', @(x) any(validatestring(x,{'continuous','trials'})));
     addParameter(p, 'display_image', false, @islogical);
     addParameter(p, 'useSmoothing', false, @islogical); 
+    addParameter(p, 'parallel', false, @islogical);
+
     parse(p, EEG, varargin{:});
 
     % Assign inputs to variables
@@ -28,29 +30,56 @@ function [EEG, opts] = eeg_htpVisualizeIcErpImage(EEG, varargin)
     opts.plot_type      = p.Results.plot_type;
     opts.display_image  = p.Results.display_image;
     opts.useSmoothing   = p.Results.useSmoothing; 
+    opts.parallel       = p.Results.parallel;
+
+    opts.singleIcMode   = true;
+
+    [EEG, opts] = checkIfEegLabAvailable(EEG, opts);
 
     [EEG, opts] = checkInputParameters(EEG, opts);
 
     [EEG, opts] = setVisualizationParameters(EEG, opts);
 
     if isempty(opts.ic_number)
+        opts.singleIcMode = false;
         erp_bitmaps = cell(1,opts.no_components);
-        for ic_number = 1 : opts.no_components
-
-            logMessage('info', 'Creating ERP Image for %d', ic_number);
-
-            bitmap = createIcErpBitmap( EEG, opts, ic_number);
-
-            erp_bitmaps{1, ic_number} = bitmap;
-
+        if opts.parallel && detectParallelComputingToolbox()
+            parfor ic_number = 1 : opts.no_components
+                logMessage('info', 'Creating ERP Image for %d', ic_number);
+                bitmap = createIcErpBitmap( EEG, opts, ic_number);
+                erp_bitmaps{1, ic_number} = bitmap;
+            end
+        else
+            for ic_number = 1 : opts.no_components
+                logMessage('info', 'Creating ERP Image for %d', ic_number);
+                bitmap = createIcErpBitmap( EEG, opts, ic_number);
+                erp_bitmaps{1, ic_number} = bitmap;
+            end
         end
         opts.erp_bitmaps = erp_bitmaps;
     else
         ic_number = opts.ic_number;
+        opts.erp_bitmaps = cell(1,opts.no_components);
         bitmap = createIcErpBitmap( EEG, opts, ic_number);
-        opts.erp_bitmaps{1,opts.ic_number} = opts.bitmap;
-
+        opts.erp_bitmaps{1,opts.ic_number} = bitmap;
     end
+
+    [EEG, opts] = tagEegSetFile(EEG, opts);
+
+end
+
+function  [EEG, opts] = tagEegSetFile(EEG, opts)
+
+    EEG.etc.vhtp.(mfilename).run_success = true;
+    EEG.etc.vhtp.(mfilename).erp_bitmap = opts.erp_bitmaps;
+    EEG.etc.vhtp.(mfilename).erp_index = 1:opts.no_components;
+    EEG.etc.vhtp.(mfilename).opts = opts;
+    EEG.etc.vhtp.(mfilename).opts.erp_bitmaps = [];
+
+end
+
+function res = detectParallelComputingToolbox()
+    res = ~isempty(which('parpool'));
 end
 
 function bitmap = createIcErpBitmap( EEG, opts, ic_number)
@@ -66,26 +95,37 @@ function bitmap = createIcErpBitmap( EEG, opts, ic_number)
 
 end
 
+function [EEG, opts] = checkIfEegLabAvailable(EEG, opts)
+    opts.eeglab = ~isempty(which('eeglab'));
+    if ~opts.eeglab 
+        htpDoctor('fix_eeglab');
+        logMessage('error', 'EEGLAB is not available. Please add EEGLAB to the path and try again.');
+    else
+        logMessage('trace', 'EEGLAB is available. Attempting to start without GUI...');
+        system('eeglab(''nogui'') &');
+    end
+end
+
 function [EEG, opts] = checkInputParameters(EEG, opts)
     % Check that the EEG structure contains the required fields
     if ~isfield(EEG, 'data')
         logMessage('error','EEG structure does not contain data.');
-    end
-    % Check if channel or IC number is valid
-    if ~isempty(opts.ic_number)
-        if ~opts.icacomps && (opts.ic_number < 1 || opts.ic_number > size(EEG.data, 1))
-            error('Invalid channel number.');
-        elseif opts.icacomps && (opts.ic_number < 1 || opts.ic_number > size(EEG.icaact, 1))
-            error('Invalid IC number.');
-        end
     end
     % Check for ICA weights
     if ~isfield(EEG, 'icaweights')
         error('EEG structure does not contain ICA weights.');
     end
     % initialize ica time series
-    if ~isempty(EEG.icaact)
+    if isempty(EEG.icaact)
         EEG.icaact  = eeg_getdatact(EEG, 'component', 1:size(EEG.icaweights,1));
+    end
+    % Check if channel or IC number is valid
+    if ~isempty(opts.ic_number)
+        if ~opts.icacomps && (opts.ic_number < 1 || opts.ic_number > size(EEG.data, 1))
+            error('Invalid channel number.');
+        elseif opts.icacomps && (opts.ic_number < 1 || opts.ic_number > size(EEG.icaweights, 1))
+            error('Invalid IC number.');
+        end
     end
 end
 
@@ -96,17 +136,11 @@ function [EEG, opts] = setVisualizationParameters(EEG, opts)
     opts.colormap                       = 'jet'; % Default colormap
     opts.colorAxisMax                   = .8; % Default color axis max
     opts.decFactor                      = 1; % Default decimation factor
-    
-    if strcmp(opts.plot_type, 'continuous')
-        opts.title = 'Continuous Data';
-    else
-        opts.title = 'ERP Data';
-    end
 
     opts.xlabel = 'Time (ms)';
     opts.ylabel = 'Trials';
     
-    opts.defaultFontSize                = 14;
+    opts.defaultFontSize                = 16;
     opts.cbarLabel                      = 'RMS \muV per scalp channel';
 
     % get number of components or channels
@@ -116,8 +150,6 @@ function [EEG, opts] = setVisualizationParameters(EEG, opts)
         opts.no_components              = EEG.nbchan;
     end
 
-    opts.ic_bitmaps                     = cell(1,opts.no_components);
-
     opts.total_samples = size(EEG.data, 2);
 end
 
@@ -125,12 +157,14 @@ function [EEG, opts] = transformData(EEG, opts)
 
     % Determine whether to use ICA components or original data
     if opts.icacomps
+        opts.plotType = 'IC';
         if opts.isEpoched
             icaacttmp = EEG.icaact(opts.ic_number,:,:);
         else
             icaacttmp = EEG.icaact(opts.ic_number,:);
         end
     else
+        opts.plotType = 'Channel';
         if opts.isEpoched
             icaacttmp = EEG.data(opts.ic_number,:,:);
         else
@@ -138,37 +172,71 @@ function [EEG, opts] = transformData(EEG, opts)
         end
     end
 
-    % Ensure ERPIMAGELINES does not exceed the total available data points divided by the sample rate.
-    while opts.total_samples < opts.ErpImageLines * EEG.srate
-        opts.ErpImageLines   = floor(0.9 * opts.ErpImageLines);  % Reduce ERPIMAGELINES if there's not enough data
+    if ~opts.isEpoched
+        opts.title = sprintf('%s d: Continuous Data', opts.plotType, opts.ic_number);
+
+        % Ensure ERPIMAGELINES does not exceed the total available data points divided by the sample rate.
+        while opts.total_samples < opts.ErpImageLines * EEG.srate
+            opts.ErpImageLines   = floor(0.9 * opts.ErpImageLines);  % Reduce ERPIMAGELINES if there's not enough data
+        end
+    
+        % Determine smoothing factor based on the final number of ERP image lines.
+        opts.smoothingFactor = opts.initialSmoothingFactor + (opts.ErpImageLines >= 6)*2;
+    
+        % Calculate the number of frames for each line of the ERP image.
+        opts.ErpImageFrames = floor(opts.total_samples / opts.ErpImageLines);
+        
+        % Calculate the total number of frames to use.
+        opts.ErpImageFramesTotal = opts.ErpImageFrames * opts.ErpImageLines;
+        
+        % Generate a time vector for the ERP image in milliseconds.
+        opts.eegTimes = linspace(0, ((opts.ErpImageFrames - 1) / EEG.srate) * 1000, opts.ErpImageFrames);
+        
+        % Calculate the mean offset if needed.
+        opts.offset = mean(icaacttmp, 'omitnan');
+        
+        opts.reshaped_data = reshape(icaacttmp(1,1:opts.ErpImageFramesTotal), ...
+        opts.ErpImageFrames, ...
+        opts.ErpImageLines) - opts.offset;
+    
+        wt_wind=ones(1,opts.smoothingFactor)/opts.smoothingFactor;
+    
+        [opts.smoothData, opts.smoothOutputTrials] = ...
+            movav( opts.reshaped_data, ...
+            1:opts.ErpImageLines, ...
+            1, ...
+            opts.decFactor, [], [], wt_wind);
+
+        opts.originalData = opts.reshaped_data;
+        opts.outputTrials = 1:opts.ErpImageLines;
+    else
+        opts.title = sprintf('%s %d: Original Epochs', opts.plotType, opts.ic_number);
+
+        icaacttmp = squeeze(icaacttmp);
+        opts.ErpImageLines = EEG.trials;
+
+        % Determine smoothing factor based on the final number of ERP image lines.
+        opts.smoothingFactor = opts.initialSmoothingFactor + (opts.ErpImageLines >= 6)*2;
+    
+
+        logMessage('info', 'Data is in epoch format: Original trials will be used')
+        opts.eegTimes = linspace(EEG.xmin, EEG.xmax, EEG.pnts);
+
+        % Calculate the mean offset if needed.
+        opts.offset = mean(icaacttmp(:), 'omitnan');
+
+        wt_wind=ones(1,opts.smoothingFactor)/opts.smoothingFactor;
+
+        [opts.smoothData, opts.smoothOutputTrials] = ...
+            movav( icaacttmp, ...
+            1:opts.ErpImageLines, ...
+            1, ...
+            opts.decFactor, [], [], wt_wind);
+        
+        opts.originalData = icaacttmp - opts.offset;
+        opts.outputTrials = 1:opts.ErpImageLines;
+        opts.eegTimes = EEG.times;
     end
-
-    % Determine smoothing factor based on the final number of ERP image lines.
-    opts.smoothingFactor = opts.initialSmoothingFactor + (opts.ErpImageLines >= 6)*2;
-
-    % Calculate the number of frames for each line of the ERP image.
-    opts.ErpImageFrames = floor(opts.total_samples / opts.ErpImageLines);
-    
-    % Calculate the total number of frames to use.
-    opts.ErpImageFramesTotal = opts.ErpImageFrames * opts.ErpImageLines;
-    
-    % Generate a time vector for the ERP image.
-    opts.eegTimes = linspace(0, (opts.ErpImageFrames - 1) / EEG.srate, opts.ErpImageFrames);
-    
-    % Calculate the mean offset if needed.
-    opts.offset = mean(icaacttmp, 'omitnan');
-    
-    opts.reshaped_data = reshape(icaacttmp(1,1:opts.ErpImageFramesTotal), ...
-    opts.ErpImageFrames, ...
-    opts.ErpImageLines) - opts.offset;
-
-    wt_wind=ones(1,opts.smoothingFactor)/opts.smoothingFactor;
-
-    [opts.smoothData, opts.outputTrials] = ...
-        movav( opts.reshaped_data, ...
-        1:opts.ErpImageLines, ...
-        1, ...
-        opts.decFactor, [], [], wt_wind);
 
    
 end
@@ -188,7 +256,7 @@ function [EEG, opts] = plotErpImage(EEG, opts)
         opts.plotData = opts.smoothData;
         opts.plotTrials = opts.smoothOutputTrials;
     else 
-        opts.plotData = opts.reshaped_data;
+        opts.plotData = opts.originalData;
         opts.plotTrials = opts.outputTrials;
     end
 
@@ -206,25 +274,24 @@ function [EEG, opts] = plotErpImage(EEG, opts)
             'ToolBar', 'none',...
             'MenuBar','none');
     imagesc(opts.eegTimes, opts.plotTrials, opts.plotData', [-colorAxisMax, colorAxisMax]);
-    set(gca, 'YDir', 'normal', 'Tag', 'erpimage');
-    colormap(jet);
+    set(gca, 'YDir', 'normal', 'Tag', 'erpimage','FontSize', opts.defaultFontSize-3);
+    colormap(opts.colormap);
     
     % Add titles and labels
-    title(opts.title, 'FontSize', opts.defaultFontSize, 'FontWeight', 'Normal');
-    xlabel(opts.xlabel)
-    ylabel(opts.ylabel);
-    colorbarLabel = text(1.27, 0.85, opts.cbarLabel, 'Units', 'normalized');
-    set(colorbarLabel, 'Rotation', -90, 'FontSize', opts.defaultFontSize);
+    title(opts.title, 'FontSize', opts.defaultFontSize+2, 'FontWeight', 'Normal');
+    xlabel(opts.xlabel, 'FontSize',  opts.defaultFontSize);
+    ylabel(opts.ylabel, 'FontSize',  opts.defaultFontSize);
+    % Add colorbar and set its label
+    cb = colorbar;
+    ylabel(cb, opts.cbarLabel, 'FontSize', opts.defaultFontSize);
     
-    % Set colormap and colorbar
-    colormap(opts.colormap);
-    colorbar; % Adds a colorbar to the current axes in the default (right) location
-
-    % Convert the figure to a bitmap and store it in a cell array
     frame = getframe(opts.fh);
     bitmap = frame2im(frame);
     opts.bitmap = bitmap;
-    close(opts.fh);
+
+    if ~opts.singleIcMode && ~opts.display_image
+        close(opts.fh);
+    end
 
 end
 
