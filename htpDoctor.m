@@ -34,6 +34,7 @@ if isValidAction
         case 'check_brainstorm'
             results = checkRequirements( 'brainstorm' );
         case 'fix_eeglab'
+            fixnote('Please select the folder path of EEGLAB.')
             results = fixHandler('eeglab');
         case 'check_biosig'
             results = checkRequirements( 'biosig' );
