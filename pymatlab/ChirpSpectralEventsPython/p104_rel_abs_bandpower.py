@@ -4,6 +4,8 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
+
 
 sns.set(style='white', font_scale=1.2)
 
@@ -70,51 +72,18 @@ raw = read_eeglab_continuous(set_files[1])
 sf = raw.info['sfreq']
 chans = raw.info['ch_names']
 
-data = raw.get_data(units="uV")
-
-from scipy.signal import welch
-_, data = yasa.sliding_window(data, sf, window=points_per_trial/sf)
-
-# data shape: (176, 68, 1626)
-
-
-win = int(1 * sf)  # Window size is set to 1 seconds
-freqs, psd = welch(data, sf, nperseg=win, axis=-1) 
-
-import pandas as pd
-
 # Define frequency bands
 bands = [(2, 3.5, 'Delta'), (3.5, 7, 'Theta'), (7.5, 12.5, 'Alpha'), (7.5, 10.5, 'Alpha1'), 
          (10.5, 12.5, 'Alpha2'), (15, 30, 'Beta'), (30, 55, 'Gamma1'), (65, 80, 'Gamma2')]
 
-# Calculate the bandpower on 3-D PSD array
-bandpower = yasa.bandpower_from_psd_ndarray(psd, freqs, bands)
-bandpower = np.round(bandpower,6)  # Round the bandpower values
-bandpower.shape # This will show the shape of the bandpower array (5, 176, 68)
 
-# Create a multi-index for rows (epochs and channels)
-epochs = range(bandpower.shape[1]) 
-channels = range(bandpower.shape[2]) 
-multi_index = pd.MultiIndex.from_product([channels, epochs], names=['Channel','Epoch'])
-
-# Convert the 3D bandpower array to a 2D DataFrame for easier analysis and export
-bandpower_flat = bandpower.reshape(bandpower.shape[0], -1).T  # Reshape to 2D
-df_bandpower = pd.DataFrame(bandpower_flat, index=multi_index)
-
-
-# Add band names as column names
-df_bandpower.columns = [band[2] for band in bands]
-
+powtable_abs = yasa.bandpower(raw, sf=sf, bandpass=True, relative=False, bands=bands)
+powtable_rel = yasa.bandpower(raw, sf=sf, bandpass=True, relative=True, bands=bands)
+powtable_combined = pd.concat([powtable_abs, powtable_rel], axis=0)
+powtable_combined = np.round(powtable_combined, 6)  # Round the bandpower values
 # Reset index to turn MultiIndex into columns for a flat format
-df_bandpower.reset_index(inplace=True)
+powtable_combined.reset_index(inplace=True)
 
-# Map channel labels to the channel column
-channel_labels = {idx: label for idx, label in enumerate(chans)}
-df_bandpower['Channel'] = df_bandpower['Channel'].map(channel_labels)
-
-# Offset epochs by +1 to reflect actual trials
-df_bandpower['Epoch'] = df_bandpower['Epoch'] + 1
-
-
-# Optionally, save the DataFrame to a CSV file for further analysis
-df_bandpower.to_csv('bandpower_by_epoch_and_channel.csv', index=False)
+powtable_combined.insert(0, 'filename', os.path.basename(set_files[1]))
+# Write to CSV
+powtable_combined.to_csv('bandpower.csv')
