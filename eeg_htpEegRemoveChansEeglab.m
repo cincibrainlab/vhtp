@@ -81,7 +81,15 @@ try
         EEG.vhtp.eeg_htpEegRemoveChansEeglab=rmfield(EEG.vhtp.eeg_htpEegRemoveChansEeglab,'failReason');
     end
     original = EEG;
-    if EEG.xmax < ip.Results.minimumduration % 60 seconds
+    
+    % Total Time Calculation (added by EP 2/26/2024)
+    if EEG.trials > 1
+        total_duration = EEG.trials * EEG.xmax;
+    else
+        total_duration = EEG.xmax;
+    end
+
+    if total_duration < ip.Results.minimumduration % 60 seconds
         proc_badchans = [];
         EEG.vhtp.eeg_htpEegRemoveChansEeglab.completed = 0;
         EEG.vhtp.eeg_htpEegRemoveChansEeglab.failReason = 'Data too short';
