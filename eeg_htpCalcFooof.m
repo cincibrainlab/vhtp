@@ -241,10 +241,11 @@ end
             if opts.normalize_psd
                 TF_z = zscore(TF_raw);
                 TF = 10.^(TF_z/10);
+            else
+                TF = TF_raw;
             end
             
-            TF = TF_raw;
-            
+
             if size(TF,1)>size(TF,2)
                 TF = TF';
             end
