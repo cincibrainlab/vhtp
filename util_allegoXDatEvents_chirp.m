@@ -1,7 +1,7 @@
-function [newEEG] = util_allegoXDatAddEvents_assr(char_filepath)
+function [newEEG] = util_allegoXDatEvents_chirp(char_filepath)
 %ALLEGOXDATADDEVENTS Summary of this function goes here
 %   This function takes in an allegoXDat file and will add events for the
-%   assr paradigm and return the updated eeg
+%   chirp paradigm and return the updated eeg
 %   Detailed explanation goes here
     % Signal Processing Code Below
     
@@ -114,7 +114,7 @@ function [newEEG] = util_allegoXDatAddEvents_assr(char_filepath)
 %             title('Filtered Signal (60 Hz Notch)');
 %             xlim([0 20]); % Zoom in to the first 20 seconds
 %             grid on;
-            
+%             
 %             % Generate the spectrogram of the filtered signal
 %             figure;
 %             spectrogram(filtered_signal, 256, 250, 256, fs, 'yaxis');
@@ -239,10 +239,8 @@ function [newEEG] = util_allegoXDatAddEvents_assr(char_filepath)
     % time = signalStruct.AuxSigs.timeStamps;
      
     % Parameters
-    threshold = 0.2;  % Voltage threshold for detecting events (adjust as needed)
-    min_duration = 1600;  % Minimum duration to consider an event valid (samples)
-    window_size = 13;  % Size of the window for calculating average (adjust as needed)
-    threshold_ratio = .20;  % Ratio to determine when to end an event (adjust as needed)
+    threshold = 0.4;  % Voltage threshold for detecting events (adjust as needed)
+    min_duration = 200;  % Minimum duration to consider an event valid (samples)
     
     % Find events
     events = [];
@@ -251,23 +249,15 @@ function [newEEG] = util_allegoXDatAddEvents_assr(char_filepath)
     for i = 1:length(time)
         amplitude = data(i);
         
-        % Calculate average amplitude around the current point
-        start_idx = max(1, i - floor(window_size/2));
-        end_idx = min(length(data), i + floor(window_size/2));
-        window_avg = mean(abs(data(start_idx:end_idx)));
-        
         if abs(amplitude) >= threshold && ~in_event
             event_start = time(i);
             in_event = true;
-        elseif in_event
-            if window_avg < threshold * threshold_ratio
-                event_duration = time(i) - event_start;
-                if event_duration >= min_duration
-                    events(end+1).latency = event_start;
-                    events(end).duration = event_duration;
-                    events(end).end_time = time(i);  % Add end time of the event
-                    in_event = false;
-                end
+        elseif abs(amplitude) < threshold && in_event
+            event_duration = time(i) - event_start;
+            if event_duration >= min_duration
+                events(end+1).latency = event_start;
+                events(end).duration = event_duration;
+                in_event = false;
             end
         end
     end
@@ -279,11 +269,6 @@ function [newEEG] = util_allegoXDatAddEvents_assr(char_filepath)
         EEG.event(end+1).type = 'TTL_pulse_start';
         EEG.event(end).latency = events(i).latency;
         EEG.event(end).duration = events(i).duration;
-    
-        % Add event end
-        EEG.event(end+1).type = 'TTL_pulse_end';
-        EEG.event(end).latency = events(i).end_time;
-        EEG.event(end).duration = 0;  % End event has no duration
     end
     
      
@@ -293,7 +278,7 @@ function [newEEG] = util_allegoXDatAddEvents_assr(char_filepath)
     % Save the updated EEG dataset
     % pop_saveset(EEG, 'filename', "updated_eeglab_file.set");
     
-    % pop_eegplot(EEG, 1, 1, 1);
+    pop_eegplot(EEG, 1, 1, 1);
 
     newEEG = EEG;
 end
