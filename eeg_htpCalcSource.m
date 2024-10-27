@@ -249,6 +249,7 @@ function [EEG2, results] = eeg_htpCalcSource(EEG, varargin)
     if ip.Results.deletetempfiles
         try delete(tempContFile); catch, warning('Warning: Temporary Continuous File Not Deleted or Missing.'); end
     end
+
     % Assign Channel File
     sFile = bst_process('CallProcess', 'process_import_channel', ...
         sFile, [], ...
@@ -425,7 +426,7 @@ function select_index = selectBstDefaults(chanInfoStruct)
     % L4: label format
     L4 = L3(contains(L3, chanInfoStruct.chanLabelFormat));
 
-    select_index = find(strcmp(strList, L4));
+    select_index = strList{find(strcmp(strList, L4))};
 
 end
 
