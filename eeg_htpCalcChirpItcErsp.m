@@ -226,6 +226,43 @@ for ci = 1 : size(data,1)
     computeMeanRawITC = @(roi_hz, roi_ms) sum(cellfun(@(hz, ms) mean2(uncorrected_itc(hz, ms)), ...
         roi_hz, roi_ms)) / numel(roi_hz);
 
+       plotroi = false;
+
+    if plotroi
+
+        [~,basename,~] = fileparts(EEG.filename);
+        basename = char(sprintf("%s_%s", basename, channame));
+        
+        % Plot the uncorrected ITC using imagesc
+        fig = figure('Visible','off');
+        itc = corrected_itc;
+        imagesc(t_s, f_s, itc);
+        axis xy;  % Ensures that the Y-axis is not flipped
+        xlabel('Time (ms)');
+        ylabel('Frequency (Hz)');
+        title(sprintf('ITC Heatmap %s %2.4f (max: %2.4f)', basename, computeMeanITC(roi.ITC40_hz, roi.ITC40_ms), max(max(itc))));
+        colorbar;
+
+        max_itc = .25;
+        if max(max(itc)) > max_itc
+            % axis([0 1]); % important
+            % plot_title = [plot_title ' (EXCEEDS UPPER LIMIT ' num2str(max_itc) ')' ];
+            caxis([0 .25]); % important
+
+        else
+            %caxis([0 .25]); % important
+            caxis([0 .25]); % important
+
+        end
+
+
+
+        saveas(fig, fullfile(outputdir, [basename '.png']))
+        close(fig);  % Close the figure window
+    
+
+    end
+
     csvRow = { ...
         EEG.subject ...
         EEG.trials ...
