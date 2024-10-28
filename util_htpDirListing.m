@@ -30,6 +30,7 @@ timestamp    = datestr(now,'yymmddHHMMSS');  % timestamp
 functionstamp = mfilename; % function name for logging/output
 
 % Inputs: Function Specific
+% Reviewed on 8/20/2024
 
 % Inputs: Common across Visual HTP functions
 defaultExt = [];
