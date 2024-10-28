@@ -158,10 +158,10 @@ for ci = 1 : numel(chanlabels)
 
         for gi = 1 : group_no % mean each by group id
             cur_group_idx = find(ip.Results.groupids == groups(gi));
-            group_names{gi} =  char(groups(gi));
+            group_names{gi} =  num2str(groups(gi));
             plot_title_cell{gi} = sprintf('PLACEHOLDER for group %s (%s)',  char(groups(gi)), channame);
             plot_filename_cell{gi} = fullfile(outputdir, ...
-                ['chirp_itcersp_by_group_' channame '_' char(groups(gi)) '_' timestamp '.png']);
+                ['chirp_itcersp_by_group_' channame '_' num2str(groups(gi)) '_' timestamp '.png']);
             itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3, "omitnan");
             ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3, "omitnan");
             stp(:,:,gi) = mean(stpArr(:,:,cur_group_idx),3, "omitnan");
@@ -177,16 +177,19 @@ for ci = 1 : numel(chanlabels)
                 select_contrast = contrasts{contrast_i};
                 group_no = group_no + 1;
 
-                id1 = get_id(select_contrast(1));
-                id2 = get_id(select_contrast(2));
-                
+                %id1 = get_id(select_contrast(1));
+                %id2 = get_id(select_contrast(2));
+
+                id1 = select_contrast{1};
+                id2 = select_contrast{2};
+
                 itc(:,:,group_no) = itc(:,:,id1) - itc(:,:,id2);
                 ersp(:,:,group_no) = ersp(:,:,id1) - ersp(:,:,id2);
                 stp(:,:,group_no) = stp(:,:,id1) - stp(:,:,id2);
 
                 plot_title_cell{group_no} = sprintf('PLACEHOLDER for group diff\n%s_%s (%s)',select_contrast{1}, select_contrast{2}, channame);
                 plot_filename_cell{group_no} = fullfile(outputdir, ...
-                    ['chirp_itcersp_by_groupdiff_' channame '_' sprintf('%s_%s',select_contrast{1}, select_contrast{2}) '_' timestamp '.png']);
+                    ['chirp_itcersp_by_groupdiff_' channame '_' sprintf('%s_%s',num2str(select_contrast{1}), num2str(select_contrast{2})) '_' timestamp '.png']);
             end
         else
             ifDiff = false;
@@ -197,14 +200,16 @@ for ci = 1 : numel(chanlabels)
             if ip.Results.singleplot && ei == 1 && ~ip.Results.groupmean
                 plot_title = 'PLACEHOLDER by Recording';
                 plot_filename = fullfile(outputdir,['chirp_itcersp_by_recording_' channame '_' timestamp '.png']);
-                plot_title_cell{ei} = sprintf('PLACEHOLDER for %s (%s)', EEGcell{ei}.setname, channame);
+                [~, temp_plot_name, ~] = fileparts(EEGcell{ei}.filename);
+                plot_title_cell{ei} = sprintf('PLACEHOLDER for %s (%s)', temp_plot_name, channame);
                 plot_filename_cell{ei} = fullfile(outputdir, ...
-                    ['chirp_itcersp_' channame '_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
+                    [temp_plot_name 'chirp_itc' channame '.png']);
 
             else
-                plot_title_cell{ei} = sprintf('PLACEHOLDER for %s (%s)', EEGcell{ei}.setname, channame);
+                [~, temp_plot_name, ~] = fileparts(EEGcell{ei}.filename);
+                plot_title_cell{ei} = sprintf('PLACEHOLDER for %s (%s)', temp_plot_name, channame);
                 plot_filename_cell{ei} = fullfile(outputdir, ...
-                    ['chirp_itcersp_' channame '_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
+                    [temp_plot_name 'chirp_itc' channame '.png']);
             end
             itc(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.itc1;
             ersp(:,:,ei) = EEGcell{ei}.vhtp.eeg_htpCalcChirpItcErsp.ersp1;
