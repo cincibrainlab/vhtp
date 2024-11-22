@@ -351,7 +351,10 @@ EEG.vhtp.eeg_htpGraphPhaseBcm.graph_table =  graph_table;
 EEG.vhtp.eeg_htpGraphPhaseBcm.qi_table = qi_table;
 results = EEG.vhtp.eeg_htpGraphPhaseBcm;
 
-reset(gpuDevice);
+if ip.Results.gpuon
+    note('Reseting GPU');
+    reset(gpuDevice);
+end
 
     function [bcm, G]  = create_bcm( chan1_list, chan2_list, weights, chan_labels )
         % create brain connectivity matrix using matlab graph objects
