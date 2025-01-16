@@ -78,6 +78,45 @@ for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
 
 if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
+% define ROI of auditory cortex projection
+chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
+    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
+    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
+    'E7', 'E106'};
+
+
+if ip.Results.sourceOn
+
+    dksource_labels = {EEG.chanlocs.labels};
+
+
+    try
+        atlasTable = readtable(websave([tempname, '.csv'], ...
+            'https://raw.githubusercontent.com/cincibrainlab/vhtp/refs/heads/main/chanfiles/DK_atlas-68_dict.csv'));
+        chirp_sensors = dksource_labels;
+        chirp_sensors_table = table(chirp_sensors', 'VariableNames', {'labelclean'});
+        chirp_sensors_table = innerjoin(chirp_sensors_table, atlasTable);
+        chirp_sensors_table = chirp_sensors_table(:, {'labelclean', 'lobe'});
+        chirp_dksource_labels_idx = ismember(chirp_sensors_table.lobe, {'Temporal', 'Frontal'});
+        chirp_sensors = {EEG.chanlocs(chirp_dksource_labels_idx).labels};
+        EEG = pop_select(EEG, 'channel', find(chirp_dksource_labels_idx));
+        dksource_labels = chirp_sensors;
+        
+
+    catch ME
+        chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
+        chirp_dksource_labels = dksource_labels(chirp_dksource_labels_idx);
+        chirp_sensors = chirp_dksource_labels;
+        warning('Web atlas could not be loaded. Processing Temporal ROIs instead. Error: %s', ME.message);
+    end
+
+else
+    if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
+    chirp_sensors = chirp_electrode_labels;
+    chan_label = "Frontal";
+end
+
+
 if ip.Results.sourceOn
 
     % This section identifies bad trials in EEG data based on channel-specific
@@ -139,69 +178,33 @@ if ip.Results.sourceOn
 
 else
 
+
     % amplitude based artifact rejection
     amp_threshold = ip.Results.ampThreshold;
     bad_trial_idx = [];
     bad_trial_count = 0;
-
+    
     for i = 1:EEG.trials
-
+    
         trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
         trial_index = i;
-
+    
         if any(any(trial_amplitude > amp_threshold))
             bad_trial_count = bad_trial_count +1;
             bad_trial_idx(bad_trial_count) = trial_index;
             bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
         end
-
-        if ~isempty(bad_trial_idx)
-            EEG = pop_select(EEG, 'notrial', bad_trial_idx);
-            disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
-        end
-
+    
     end
+    
+    if ~isempty(bad_trial_idx)
+        EEG = pop_select(EEG, 'notrial', bad_trial_idx);
+        disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
+    end
+
 
 end
 
-
-
-% define ROI of auditory cortex projection
-chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
-    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
-    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
-    'E7', 'E106'};
-
-
-if ip.Results.sourceOn
-
-    dksource_labels = {EEG.chanlocs.labels};
-
-
-    try
-        atlasTable = readtable(websave([tempname, '.csv'], ...
-            'https://raw.githubusercontent.com/cincibrainlab/vhtp/refs/heads/main/chanfiles/DK_atlas-68_dict.csv'));
-        chirp_sensors = dksource_labels;
-        chirp_sensors_table = table(chirp_sensors', 'VariableNames', {'labelclean'});
-        chirp_sensors_table = innerjoin(chirp_sensors_table, atlasTable);
-        chirp_sensors_table = chirp_sensors_table(:, {'labelclean', 'lobe'});
-        temporal_lobe_data = chirp_sensors_table(strcmp(chirp_sensors_table.lobe, 'Temporal'), :);
-        frontal_lobe_data = chirp_sensors_table(strcmp(chirp_sensors_table.lobe, 'Frontal'), :);
-        filtered_data = [temporal_lobe_data; frontal_lobe_data];
-        chirp_sensors = filtered_data.labelclean';
-
-    catch ME
-        chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
-        chirp_dksource_labels = dksource_labels(chirp_dksource_labels_idx);
-        chirp_sensors = chirp_dksource_labels;
-        warning('Web atlas could not be loaded. Processing Temporal ROIs instead. Error: %s', ME.message);
-    end
-
-else
-    if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
-    chirp_sensors = chirp_electrode_labels;
-    chan_label = "Frontal";
-end
 
 sensoridx = cell2mat(cellfun(@(x) find(strcmpi(x, {EEG.chanlocs.labels})), ...
     chirp_sensors, 'uni', 0));
@@ -410,3 +413,4 @@ EEG.vhtp.eeg_htpCalcChirpItcErsp.amp_threshold = amp_threshold;
 results =  EEG.vhtp.eeg_htpCalcChirpItcErsp;
 
 end
+
