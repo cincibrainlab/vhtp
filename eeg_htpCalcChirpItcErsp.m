@@ -110,10 +110,13 @@ chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
 
 if ip.Results.sourceOn
 
+    dksource_labels = {EEG.chanlocs.labels};
+
+
     try
         atlasTable = readtable(websave([tempname, '.csv'], ...
             'https://raw.githubusercontent.com/cincibrainlab/vhtp/refs/heads/main/chanfiles/DK_atlas-68_dict.csv'));
-        chirp_sensors = {EEG.chanlocs.labels};
+        chirp_sensors = dksource_labels;
         chirp_sensors_table = table(chirp_sensors', 'VariableNames', {'labelclean'});
         chirp_sensors_table = innerjoin(chirp_sensors_table, atlasTable);
         chirp_sensors_table = chirp_sensors_table(:, {'labelclean', 'lobe'});
@@ -123,13 +126,12 @@ if ip.Results.sourceOn
         chirp_sensors = filtered_data.labelclean';
 
     catch ME
-        dksource_labels = {EEG.chanlocs.labels};
         chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
         chirp_dksource_labels = dksource_labels(chirp_dksource_labels_idx);
         chirp_sensors = chirp_dksource_labels;
         warning('Web atlas could not be loaded. Processing Temporal ROIs instead. Error: %s', ME.message);
     end
-    
+
 else
     if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
     chirp_sensors = chirp_electrode_labels;
