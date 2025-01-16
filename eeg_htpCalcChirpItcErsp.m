@@ -78,28 +78,93 @@ for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
 
 if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
-% amplitude based artifact rejection
-amp_threshold = ip.Results.ampThreshold;
-bad_trial_idx = [];
-bad_trial_count = 0;
+if ip.Results.sourceOn
 
-for i = 1:EEG.trials
+    % This section identifies bad trials in EEG data based on channel-specific
+    % thresholds. Instead of using a global threshold, channel-specific means
+    % and standard deviations are computed across all samples and trials. This
+    % accounts for variability between channels, ensuring fair trial evaluation.
+    % Trials are flagged if any channel exceeds 3 SDs above its mean. The SD
+    % exceedance for the worst offending channel is reported for transparency.
 
-    trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
-    trial_index = i;
+    warning('Processing source data: using 3 SD ROI threshold, not global.');
 
-    if any(any(trial_amplitude > amp_threshold))
-        bad_trial_count = bad_trial_count +1;
-        bad_trial_idx(bad_trial_count) = trial_index;
-        bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
+    % Initialize variables for bad trial detection
+    bad_trial_count = 0;
+    bad_trial_idx = [];
+    bad_trial_sd = []; % To store SD exceedance for each bad trial
+
+    % Calculate channel-wise mean and standard deviation
+    channel_means = mean(EEG.data, [2, 3]); % Mean across samples and trials
+    channel_stds = std(EEG.data, 0, [2, 3]); % Std across samples and trials
+
+    % Define channel-specific amplitude thresholds (3 SD above mean)
+    channel_thresholds = channel_means + 3 * channel_stds;
+
+    amp_threshold = mean(channel_thresholds);
+
+    % Iterate through trials
+    for i = 1:EEG.trials
+        % Compute the mean absolute amplitude for each channel in the trial
+        trial_amplitude = mean(abs(EEG.data(:, :, i)), 2);
+
+        % Check if any channel in the trial exceeds its threshold
+        exceed_sd = (trial_amplitude - channel_means) ./ channel_stds; % SD exceedance for each channel
+        if any(trial_amplitude > channel_thresholds)
+            bad_trial_count = bad_trial_count + 1;
+            bad_trial_idx(bad_trial_count) = i;
+
+            % Store the maximum SD exceedance for the trial
+            bad_trial_sd(bad_trial_count) = max(exceed_sd);
+
+            % Print information about the bad trial
+            bad_trial_label = sprintf("%s epoch: %d exceeded by %.2f SD", EEG.setname, i, max(exceed_sd));
+            fprintf('Bad trial detected: %s\n', bad_trial_label);
+        end
+    end
+
+    % Optionally remove bad trials from EEG data
+    if ~isempty(bad_trial_idx)
+        EEG.data(:, :, bad_trial_idx) = [];
+        EEG.trials = size(EEG.data, 3); % Update the number of trials
+        fprintf('%d bad trials removed.\n', length(bad_trial_idx));
+
+        % Display the maximum SD exceedance for each bad trial
+        for idx = 1:length(bad_trial_idx)
+            fprintf('Trial %d was %.2f SD from the mean.\n', bad_trial_idx(idx), bad_trial_sd(idx));
+        end
+    else
+        fprintf('No bad trials detected.\n');
+    end
+
+else
+
+    % amplitude based artifact rejection
+    amp_threshold = ip.Results.ampThreshold;
+    bad_trial_idx = [];
+    bad_trial_count = 0;
+
+    for i = 1:EEG.trials
+
+        trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
+        trial_index = i;
+
+        if any(any(trial_amplitude > amp_threshold))
+            bad_trial_count = bad_trial_count +1;
+            bad_trial_idx(bad_trial_count) = trial_index;
+            bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
+        end
+
+        if ~isempty(bad_trial_idx)
+            EEG = pop_select(EEG, 'notrial', bad_trial_idx);
+            disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
+        end
+
     end
 
 end
 
-if ~isempty(bad_trial_idx)
-    EEG = pop_select(EEG, 'notrial', bad_trial_idx);
-    disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
-end
+
 
 % define ROI of auditory cortex projection
 chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
