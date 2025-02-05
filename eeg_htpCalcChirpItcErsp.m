@@ -64,6 +64,7 @@ addParameter(ip, 'emptyEEG', defaultEmptyEEG, @islogical)
 addParameter(ip, 'ampThreshold', defaultAmpThreshold, @isnumeric)
 addParameter(ip, 'byChannel', defaultByChannel, @islogical)
 addParameter(ip, 'baselinew', defaultBaselineW, @isvector);
+addParameter(ip, 'isMouseMea', defaultSourceOn, @islogical);
 parse(ip, EEG, varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -111,13 +112,23 @@ if ip.Results.sourceOn
     end
 
 else
-    if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
-    chirp_sensors = chirp_electrode_labels;
-    chan_label = "Frontal";
+
+    if ip.Results.isMouseMea
+
+        chirp_sensors = {EEG.chanlocs.labels};
+        dksource_labels = chirp_sensors;
+    else
+        if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
+        chirp_sensors = chirp_electrode_labels;
+
+
+        chan_label = "Frontal";
+    end
 end
 
 
-if ip.Results.sourceOn
+
+if ip.Results.sourceOn || ip.Results.isMouseMea
 
     % This section identifies bad trials in EEG data based on channel-specific
     % thresholds. Instead of using a global threshold, channel-specific means
@@ -234,7 +245,12 @@ end
 for ci = 1 : size(data,1)
     datax = squeeze(data(ci,:,:));
     if ip.Results.byChannel
-        channame = dksource_labels{ci};
+        if ip.Results.sourceOn
+            channame = dksource_labels{ci};
+        end
+        if ip.Results.isMouseMea
+            channame = dksource_labels{ci};
+        end
     else
         channame = "Average";
     end
@@ -313,7 +329,7 @@ for ci = 1 : size(data,1)
     computeMeanRawITC = @(roi_hz, roi_ms) sum(cellfun(@(hz, ms) mean2(uncorrected_itc(hz, ms)), ...
         roi_hz, roi_ms)) / numel(roi_hz);
 
-       plotroi = false;
+       plotroi = true;
 
     if plotroi
 
