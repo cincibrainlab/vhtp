@@ -38,7 +38,7 @@ if nargin < 3 || isempty(expected_stim_duration_sec)
     expected_stim_duration_sec = 2; % expected interval in seconds
 end
 if nargin < 4 || isempty(tol_sec)
-    tol_sec = 0.2; % tolerance in seconds
+    tol_sec = 0.05; % tolerance in seconds
 end
 
 nEvents = length(EEG.event);
@@ -74,20 +74,20 @@ while i <= nEvents
         % Check if the difference is approximately equal to the expected interval
         if abs(diffSec - expected_stim_duration_sec) <= tol_sec
             trialNum = trialNum + 1;
-            newEventType{i}   = 'TTL_event_start';
-            newEventType{i+1} = 'TTL_event_end';
+            newEventType{i}   = 'START';
+            newEventType{i+1} = 'END';
             trialAssign(i)   = trialNum;
             trialAssign(i+1) = trialNum;
             i = i + 2; % Skip to the event after the pair.
         else
             % Not a valid pair; mark this event as "extra"
-            newEventType{i} = 'extra';
+            newEventType{i} = 'EXTRA';
             trialAssign(i)  = NaN;
             i = i + 1;
         end
     else
         % Last event with no following event; mark as extra.
-        newEventType{i} = 'extra';
+        newEventType{i} = 'EXTRA';
         trialAssign(i)  = NaN;
         i = i + 1;
     end
