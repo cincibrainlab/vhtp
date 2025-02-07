@@ -97,31 +97,52 @@ function [newEEG] = util_allegoXDatEvents_assr(char_filepath)
             % highpass
             filtered_signal = filtfilt(highpassFilter, filtered_signal);
     
-    
-%             % Plot the original and filtered signals
-%             figure;
-%             plot(t, signal);
-%             xlabel('Time (seconds)');
-%             ylabel('Amplitude');
-%             title('Original Signal');
-%             xlim([0 20]); % Zoom in to the first 20 seconds
-%             grid on;
-%             
-%             figure;
-%             plot(t, filtered_signal);
-%             xlabel('Time (seconds)');
-%             ylabel('Amplitude');
-%             title('Filtered Signal (60 Hz Notch)');
-%             xlim([0 20]); % Zoom in to the first 20 seconds
-%             grid on;
-            
-%             % Generate the spectrogram of the filtered signal
-%             figure;
-%             spectrogram(filtered_signal, 256, 250, 256, fs, 'yaxis');
-%             title('Spectrogram of the Filtered Signal');
-%             xlabel('Time (seconds)');
-%             ylabel('Frequency (Hz)');
-%             colorbar;
+            % Compute the mean and standard deviation of the filtered signal
+            mu = mean(filtered_signal);
+            sigma = std(filtered_signal);
+
+            % Compute the z-score for the maximum and minimum values
+            zMax = (max(filtered_signal) - mu) / sigma;
+            zMin = (min(filtered_signal) - mu) / sigma;
+
+            % Display the z-scored max and min values
+            fprintf('Z-scored maximum: %f\n', zMax);
+            fprintf('Z-scored minimum: %f\n', zMin);
+
+            % Alternatively, compute the z-scored signal and extract max and min:
+            zSignal = zscore(filtered_signal);
+            % Remove negative values by setting them to zero
+            zSignal(zSignal < 0) = 0;
+            fprintf('Z-scored maximum (from full signal): %f\n', max(zSignal));
+            fprintf('Z-scored minimum (from full signal): %f\n', min(zSignal));
+
+
+            filtered_signal = zSignal;
+            % 
+            % % Plot the original and filtered signals
+            % figure;
+            % plot(t, signal);
+            % xlabel('Time (seconds)');
+            % ylabel('Amplitude');
+            % title('Original Signal');
+            % xlim([0 20]); % Zoom in to the first 20 seconds
+            % grid on;
+            % 
+            % figure;
+            % plot(t, filtered_signal);
+            % xlabel('Time (seconds)');
+            % ylabel('Amplitude');
+            % title('Filtered Signal (60 Hz Notch)');
+            % xlim([0 20]); % Zoom in to the first 20 seconds
+            % grid on;
+            % 
+            % % Generate the spectrogram of the filtered signal
+            % figure;
+            % spectrogram(filtered_signal, 256, 250, 256, fs, 'yaxis');
+            % title('Spectrogram of the Filtered Signal');
+            % xlabel('Time (seconds)');
+            % ylabel('Frequency (Hz)');
+            % colorbar;
     
             % --------------------------------------------------------------------
             stage1_map = readtable("MouseEEGv2H32_Import_Stage1.csv");
@@ -239,8 +260,8 @@ function [newEEG] = util_allegoXDatEvents_assr(char_filepath)
     % time = signalStruct.AuxSigs.timeStamps;
      
     % Parameters
-    threshold = 0.2;  % Voltage threshold for detecting events (adjust as needed)
-    min_duration = 1600;  % Minimum duration to consider an event valid (samples)
+    threshold = 3;  % Voltage threshold for detecting events (adjust as needed) (switched to SD/Zscore on 7/FEB/2025 EP/GW)
+    min_duration = 2500;  % Minimum duration to consider an event valid (samples)
     window_size = 13;  % Size of the window for calculating average (adjust as needed)
     threshold_ratio = .20;  % Ratio to determine when to end an event (adjust as needed)
     
