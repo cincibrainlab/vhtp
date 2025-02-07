@@ -21,7 +21,7 @@ function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
 %     EEG       - EEGLAB Structure with modified .etc.htp field
 %     results   - etc.htp results structure or customized
 %     baselinew - if 'baselinew' vector is specified ersp will be
-%     calculated and added to the result spreadsheet. 
+%     calculated and added to the result spreadsheet.
 %
 % Example: with baseline ERSP
 %  eeg_htpCalcChirpItcErsp(EEG, 'sourceOn', true, 'byChannel', true, 'baselinew', [-500 0]);
@@ -29,7 +29,7 @@ function [EEG, results] = eeg_htpCalcChirpItcErsp(EEG, varargin)
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
 %
-%  Contact: kyle.cullion@cchmc.org
+%  Contact: ernest.pedapati@cchmc.org
 
 timestamp = datestr(now, 'yymmddHHMMSS'); % timestamp
 functionstamp = mfilename; % function name for logging/output
@@ -48,6 +48,13 @@ defaultEmptyEEG = true;
 defaultAmpThreshold = 120;
 defaultByChannel = false;
 defaultOutputDir = tempdir;
+defaultRoi = {'E23', 'E18', 'E16', 'E10', 'E3', ...
+    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
+    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
+    'E7', 'E106'};
+defaultRoiLabel = "Average";
+defaultPlotRoi = true;
+defaultIsSteadyState = false;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -65,6 +72,11 @@ addParameter(ip, 'ampThreshold', defaultAmpThreshold, @isnumeric)
 addParameter(ip, 'byChannel', defaultByChannel, @islogical)
 addParameter(ip, 'baselinew', defaultBaselineW, @isvector);
 addParameter(ip, 'isMouseMea', defaultSourceOn, @islogical);
+addParameter(ip, 'roi', defaultRoi, @iscell);
+addParameter(ip, 'roiLabel', defaultRoiLabel, @ischar);
+addParameter(ip, 'plotRoi', defaultPlotRoi, @islogical);
+addParameter(ip, 'isSteadyState', defaultIsSteadyState, @islogical);
+
 parse(ip, EEG, varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -80,10 +92,7 @@ for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
 if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
 % define ROI of auditory cortex projection
-chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
-    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
-    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
-    'E7', 'E106'};
+chirp_electrode_labels = ip.Results.roi;
 
 
 if ip.Results.sourceOn
@@ -102,7 +111,7 @@ if ip.Results.sourceOn
         chirp_sensors = {EEG.chanlocs(chirp_dksource_labels_idx).labels};
         EEG = pop_select(EEG, 'channel', find(chirp_dksource_labels_idx));
         dksource_labels = chirp_sensors;
-        
+
 
     catch ME
         chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
@@ -118,11 +127,8 @@ else
         chirp_sensors = {EEG.chanlocs.labels};
         dksource_labels = chirp_sensors;
     else
-        if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
+        %if EEG.nbchan < 128, error('Insufficient # of Channels. Check if SourceOn = false.'); end
         chirp_sensors = chirp_electrode_labels;
-
-
-        chan_label = "Frontal";
     end
 end
 
@@ -194,20 +200,20 @@ else
     amp_threshold = ip.Results.ampThreshold;
     bad_trial_idx = [];
     bad_trial_count = 0;
-    
+
     for i = 1:EEG.trials
-    
+
         trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
         trial_index = i;
-    
+
         if any(any(trial_amplitude > amp_threshold))
             bad_trial_count = bad_trial_count +1;
             bad_trial_idx(bad_trial_count) = trial_index;
             bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
         end
-    
+
     end
-    
+
     if ~isempty(bad_trial_idx)
         EEG = pop_select(EEG, 'notrial', bad_trial_idx);
         disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
@@ -252,7 +258,7 @@ for ci = 1 : size(data,1)
             channame = dksource_labels{ci};
         end
     else
-        channame = "Average";
+        channame = ip.Results.roiLabel;
     end
 
     [stp1, itc, ~, t_s, f_s] = newtimef(double(datax), ...
@@ -272,18 +278,18 @@ for ci = 1 : size(data,1)
     % Single trial power with baseline correction (ERSP)
     if ~isnan(ip.Results.baselinew)
         [ersp1, itc, ~, t_s, f_s] = newtimef(double(datax), ...
-        EEG.pnts, ... % frames
-        tlimits, ... %tlimits
-        Fs, ... %Fs
-        cycles, ... % varwin (cycles)
-        'winsize', winsize, ...
-        'nfreqs', nfreqs, ...
-        'freqs', flimits, ...
-        'plotersp', 'off', ...
-        'plotitc', 'off', ...
-        'verbose', 'off', ...
-        'baseline', ip.Results.baselinew, ...
-        'timesout', timesout);
+            EEG.pnts, ... % frames
+            tlimits, ... %tlimits
+            Fs, ... %Fs
+            cycles, ... % varwin (cycles)
+            'winsize', winsize, ...
+            'nfreqs', nfreqs, ...
+            'freqs', flimits, ...
+            'plotersp', 'off', ...
+            'plotitc', 'off', ...
+            'verbose', 'off', ...
+            'baseline', ip.Results.baselinew, ...
+            'timesout', timesout);
     else
         ersp1 = nan(size(stp1));
     end
@@ -306,15 +312,33 @@ for ci = 1 : size(data,1)
     roi.ItcOffset_hz = {findHz(2, 13)};
     roi.ItcOffset_ms = {findTimes(2038, 2254)};
 
-    roi.ITC40_hz_og = {findHz(31, 42); findHz(43, 46); findHz(47, 57)};
-    roi.ITC40_ms_og = {findTimes(676, 785); findTimes(796, 981); findTimes(988, 1066)};
 
-    roi.ITC40_hz = {findHz(30, 35); findHz(35, 40); findHz(40, 45); findHz(45, 50); findHz(50, 55)};
-    roi.ITC40_ms = {findTimes(650, 850); findTimes(750, 950); findTimes(850, 1050); ...
-        findTimes(950, 1150); findTimes(1050, 1250)};
 
-    roi.ITC80_hz = {find(f_s >= 70 & f_s <= 100)};
-    roi.ITC80_ms = {find(t_s >= 1390 & t_s <= 1930)};
+    if ip.Results.isSteadyState
+        fprintf("Steady State Analysis");
+
+        roi.ITC40_hz_og = {findHz(30, 50)};
+        roi.ITC40_ms_og = {findTimes(0, 3000)};
+
+        roi.ITC40_hz = {findHz(35, 45)};
+        roi.ITC40_ms = {findTimes(0, 3000)};
+
+        roi.ITC80_hz = {findHz(75, 85)};
+        roi.ITC80_ms = {findTimes(0, 3000)};
+    else
+        fprintf("Chirp Analysis");
+
+        roi.ITC40_hz_og = {findHz(31, 42); findHz(43, 46); findHz(47, 57)};
+        roi.ITC40_ms_og = {findTimes(676, 785); findTimes(796, 981); findTimes(988, 1066)};
+
+        roi.ITC40_hz = {findHz(30, 35); findHz(35, 40); findHz(40, 45); findHz(45, 50); findHz(50, 55)};
+        roi.ITC40_ms = {findTimes(650, 850); findTimes(750, 950); findTimes(850, 1050); ...
+            findTimes(950, 1150); findTimes(1050, 1250)};
+
+        roi.ITC80_hz = {find(f_s >= 70 & f_s <= 100)};
+        roi.ITC80_ms = {find(t_s >= 1390 & t_s <= 1930)};
+
+    end
 
     % Summary Functions
     computeMeanSTP = @(roi_hz) sum(cellfun(@(hz) mean2(stp1(hz, :)), ...
@@ -329,13 +353,13 @@ for ci = 1 : size(data,1)
     computeMeanRawITC = @(roi_hz, roi_ms) sum(cellfun(@(hz, ms) mean2(uncorrected_itc(hz, ms)), ...
         roi_hz, roi_ms)) / numel(roi_hz);
 
-       plotroi = true;
+    plotroi = ip.Results.plotRoi;
 
     if plotroi
 
         [~,basename,~] = fileparts(EEG.filename);
         basename = char(sprintf("%s_%s", basename, channame));
-        
+
         % Plot the uncorrected ITC using imagesc
         fig = figure('Visible','off');
         itc = corrected_itc;
@@ -343,7 +367,7 @@ for ci = 1 : size(data,1)
         axis xy;  % Ensures that the Y-axis is not flipped
         xlabel('Time (ms)');
         ylabel('Frequency (Hz)');
-        title(sprintf('ITC Heatmap %s %2.4f (max: %2.4f)', basename, computeMeanITC(roi.ITC40_hz, roi.ITC40_ms), max(max(itc))));
+        title(sprintf('ITC Heatmap %s %2.4f (max: %2.4f)', basename, computeMeanITC(roi.ITC40_hz, roi.ITC40_ms), max(max(itc))), 'Interpreter', 'none');
         colorbar;
 
         max_itc = .25;
@@ -354,7 +378,7 @@ for ci = 1 : size(data,1)
 
         else
             %caxis([0 .25]); % important
-            caxis([0 .25]); % important
+            caxis([0 .5]); % important
 
         end
 
@@ -362,7 +386,7 @@ for ci = 1 : size(data,1)
 
         saveas(fig, fullfile(outputdir, [basename '.png']))
         close(fig);  % Close the figure window
-    
+
 
     end
 
