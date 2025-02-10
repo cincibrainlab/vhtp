@@ -75,7 +75,8 @@ if strcmp(fileExtension, '.xdat')
         psdsignal = filtfilt(lowpass300, signal);
         psdsignal = filtfilt(notch60, psdsignal);
         [~,name,~] = fileparts(dataFile);
-        [hysteresis, square_wave] = util_detectEventsWithHysteresis(psdsignal, t, 'basename',name, 'outputDir', folderPath);
+        [hysteresis, square_wave] = util_detectEventsWithHysteresis(psdsignal, t, 'basename',name, 'outputDir', folderPath, ...
+             'HIGH_THRESHOLD_PERCENTILE', 90, 'LOW_THRESHOLD_PERCENTILE', 50,  'REFRACTORY_PERIOD_SECONDS', 2);
 
         % --------------------------------------------------------------------
         stage1_map = readtable("MouseEEGv2H32_Import_Stage1.csv");
