@@ -1,6 +1,6 @@
-function [hysteresis, square_wave, eventTimes] = util_detectEventsWithHysteresis_samples(signal, time, varargin)
+function [hysteresis, square_wave, eventTimes] = util_detectEventsWithHysteresis(signal, time, varargin)
 % util_detectEventsWithHysteresis - Detect events using hysteresis and generate a square wave.
-% Now operates entirely in sample indices for precision.
+% All calculations are performed in samples for precision.
 
 %% --- Ensure Input is Column Vector ---
 signal = signal(:);
@@ -13,8 +13,8 @@ addParameter(p, 'basename', 'signal_plot', @ischar);
 addParameter(p, 'outputDir', '.', @ischar);
 addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 90, @isnumeric);
 addParameter(p, 'LOW_THRESHOLD_PERCENTILE', 50, @isnumeric);
-addParameter(p, 'EVENT_DURATION_SAMPLES', 300, @isnumeric); % Changed to samples
-addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 150, @isnumeric); % Changed to samples
+addParameter(p, 'EVENT_DURATION_SAMPLES', 300, @isnumeric); % Exact duration in samples
+addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 150, @isnumeric); % Exact refractory period in samples
 addParameter(p, 'LINE_WIDTH_THIN', 1, @isnumeric);
 addParameter(p, 'LINE_WIDTH_THICK', 1.5, @isnumeric);
 addParameter(p, 'SCATTER_SIZE', 50, @isnumeric);
@@ -41,7 +41,11 @@ end
 %% --- Detect Rising Edges (Event Starts) ---
 eventStarts = find(diff([0; hysteresis]) == 1); % Detect transitions
 
-%% --- Generate Square Wave Using Sample-Based Logic ---
+%% --- Debug: Verify Event Starts ---
+fprintf('Event Start Indices (first 10): \n');
+disp(eventStarts(1:min(10, length(eventStarts))));
+
+%% --- Generate Square Wave with Corrected Start Points ---
 square_wave = zeros(size(hysteresis));
 lastEventEnd = 0; % Track the end of the last valid event
 
@@ -49,15 +53,22 @@ for k = 1:length(eventStarts)
     startIdx = eventStarts(k);
     endIdx = min(startIdx + opts.EVENT_DURATION_SAMPLES - 1, length(square_wave));
 
+    % Ensure Square Wave Starts at Event Marker
+    square_wave(startIdx) = 1; % Ensure the first sample is set
+
     % Enforce Refractory Period
     if (startIdx - lastEventEnd) < opts.REFRACTORY_PERIOD_SAMPLES
         continue;
     end
     
-    % Mark event
+    % Assign square wave from event start
     square_wave(startIdx:endIdx) = 1;
     lastEventEnd = endIdx; % Update last event end
 end
+
+%% --- Debug: Verify Square Wave Alignment ---
+fprintf('Square Wave Activation Indices (first 10 nonzero samples): \n');
+disp(find(square_wave, 10));
 
 %% --- Convert Event Indices to Time for Output ---
 eventTimes = time(eventStarts);
