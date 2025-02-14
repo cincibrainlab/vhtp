@@ -13,8 +13,8 @@ addParameter(p, 'basename', 'signal_plot', @ischar);
 addParameter(p, 'outputDir', '.', @ischar);
 addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 90, @isnumeric);
 addParameter(p, 'LOW_THRESHOLD_PERCENTILE', 50, @isnumeric);
-addParameter(p, 'EVENT_DURATION_SAMPLES', 300, @isnumeric); % Exact duration in samples
-addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 150, @isnumeric); % Exact refractory period in samples
+addParameter(p, 'EVENT_DURATION_SAMPLES', 2980, @isnumeric); % Exact duration in samples
+addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 2000, @isnumeric); % Exact refractory period in samples
 addParameter(p, 'LINE_WIDTH_THIN', 1, @isnumeric);
 addParameter(p, 'LINE_WIDTH_THICK', 1.5, @isnumeric);
 addParameter(p, 'SCATTER_SIZE', 50, @isnumeric);
@@ -88,11 +88,23 @@ if opts.showPlot
     
     subplot(2,1,2);
     zoomWindow = find(time >= time(eventStarts(1)) - 1 & time <= time(eventStarts(1)) + 3);
+    
+    % Debug prints
+    fprintf('Zoom window range: %d to %d\n', zoomWindow(1), zoomWindow(end));
+    fprintf('Time range in zoom: %.3f to %.3f\n', time(zoomWindow(1)), time(zoomWindow(end)));
+    
+    % Filter events within zoom window
+    validEvents = eventTimes(eventTimes >= time(zoomWindow(1)) & eventTimes <= time(zoomWindow(end)));
+    fprintf('Number of events in zoom window: %d\n', length(validEvents));
+    
     plot(time(zoomWindow), signal(zoomWindow), 'k', 'LineWidth', opts.LINE_WIDTH_THIN); hold on;
     plot(time(zoomWindow), hysteresis(zoomWindow), 'r--', 'LineWidth', opts.LINE_WIDTH_THICK);
     plot(time(zoomWindow), square_wave(zoomWindow), 'b--', 'LineWidth', opts.LINE_WIDTH_THICK);
-    scatter(eventTimes(eventTimes >= time(zoomWindow(1)) & eventTimes <= time(zoomWindow(end))), ...
-            ones(size(eventTimes)) * max(signal) * 0.9, opts.SCATTER_SIZE, 'r', 'filled');
+    
+    if ~isempty(validEvents)
+        scatter(validEvents, ones(size(validEvents)) * max(signal(zoomWindow)) * 0.9, opts.SCATTER_SIZE, 'r', 'filled');
+    end
+    
     xlabel('Time (s)'); ylabel('Amplitude');
     title('Zoomed View of First Event Transition');
     legend('Original Signal', 'Hysteresis', 'Square Wave', 'Event Start', 'Location', 'Best');
