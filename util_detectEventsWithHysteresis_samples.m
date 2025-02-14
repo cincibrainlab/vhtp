@@ -11,8 +11,8 @@ p = inputParser;
 addParameter(p, 'showPlot', true, @(x) islogical(x) || ismember(x, [0, 1]));
 addParameter(p, 'basename', 'signal_plot', @ischar);
 addParameter(p, 'outputDir', '.', @ischar);
-addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 90, @isnumeric);
-addParameter(p, 'LOW_THRESHOLD_PERCENTILE', 50, @isnumeric);
+addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 95, @isnumeric);
+addParameter(p, 'LOW_THRESHOLD_PERCENTILE', 40, @isnumeric);
 addParameter(p, 'EVENT_DURATION_SAMPLES', 2980, @isnumeric); % Exact duration in samples
 addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 2000, @isnumeric); % Exact refractory period in samples
 addParameter(p, 'LINE_WIDTH_THIN', 1, @isnumeric);
@@ -41,29 +41,33 @@ end
 %% --- Detect Rising Edges (Event Starts) ---
 eventStarts = find(diff([0; hysteresis]) == 1); % Detect transitions
 
+%% --- Filter Event Starts Based on Refractory Period ---
+validEventStarts = [];
+lastEventEnd = 0;
+
+for k = 1:length(eventStarts)
+    startIdx = eventStarts(k);
+    
+    % Only include events that respect the refractory period
+    if (startIdx - lastEventEnd) >= opts.REFRACTORY_PERIOD_SAMPLES
+        validEventStarts = [validEventStarts; startIdx];
+        lastEventEnd = startIdx + opts.EVENT_DURATION_SAMPLES - 1;
+    end
+end
+
+eventStarts = validEventStarts; % Replace with filtered events
+
 %% --- Debug: Verify Event Starts ---
 fprintf('Event Start Indices (first 10): \n');
 disp(eventStarts(1:min(10, length(eventStarts))));
 
 %% --- Generate Square Wave with Corrected Start Points ---
 square_wave = zeros(size(hysteresis));
-lastEventEnd = 0; % Track the end of the last valid event
 
 for k = 1:length(eventStarts)
     startIdx = eventStarts(k);
     endIdx = min(startIdx + opts.EVENT_DURATION_SAMPLES - 1, length(square_wave));
-
-    % Ensure Square Wave Starts at Event Marker
-    square_wave(startIdx) = 1; % Ensure the first sample is set
-
-    % Enforce Refractory Period
-    if (startIdx - lastEventEnd) < opts.REFRACTORY_PERIOD_SAMPLES
-        continue;
-    end
-    
-    % Assign square wave from event start
     square_wave(startIdx:endIdx) = 1;
-    lastEventEnd = endIdx; % Update last event end
 end
 
 %% --- Debug: Verify Square Wave Alignment ---
