@@ -14,7 +14,7 @@ addParameter(p, 'outputDir', '.', @ischar);
 addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 92, @isnumeric);
 addParameter(p, 'LOW_THRESHOLD_PERCENTILE', 40, @isnumeric);
 addParameter(p, 'EVENT_DURATION_SAMPLES', 2980, @isnumeric); % Exact duration in samples
-addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 2000, @isnumeric); % Exact refractory period in samples
+addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 1950, @isnumeric); % Exact refractory period in samples
 addParameter(p, 'LINE_WIDTH_THIN', 1, @isnumeric);
 addParameter(p, 'LINE_WIDTH_THICK', 1.5, @isnumeric);
 addParameter(p, 'SCATTER_SIZE', 50, @isnumeric);
