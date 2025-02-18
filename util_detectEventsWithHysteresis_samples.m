@@ -11,10 +11,10 @@ p = inputParser;
 addParameter(p, 'showPlot', true, @(x) islogical(x) || ismember(x, [0, 1]));
 addParameter(p, 'basename', 'signal_plot', @ischar);
 addParameter(p, 'outputDir', '.', @ischar);
-addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 92, @isnumeric);
+addParameter(p, 'HIGH_THRESHOLD_PERCENTILE', 92.7, @isnumeric);
 addParameter(p, 'LOW_THRESHOLD_PERCENTILE', 40, @isnumeric);
 addParameter(p, 'EVENT_DURATION_SAMPLES', 2980, @isnumeric); % Exact duration in samples
-addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 1950, @isnumeric); % Exact refractory period in samples
+addParameter(p, 'REFRACTORY_PERIOD_SAMPLES', 1976, @isnumeric); % Period after to consider for no events
 addParameter(p, 'LINE_WIDTH_THIN', 1, @isnumeric);
 addParameter(p, 'LINE_WIDTH_THICK', 1.5, @isnumeric);
 addParameter(p, 'SCATTER_SIZE', 50, @isnumeric);
@@ -84,10 +84,14 @@ if opts.showPlot
     plot(time, signal, 'k', 'LineWidth', opts.LINE_WIDTH_THIN); hold on;
     plot(time, hysteresis, 'r--', 'LineWidth', opts.LINE_WIDTH_THICK);
     plot(time, square_wave, 'b--', 'LineWidth', opts.LINE_WIDTH_THICK);
-    scatter(eventTimes, ones(size(eventTimes)) * max(signal) * 0.9, opts.SCATTER_SIZE, 'r', 'filled'); % Event markers
+    % Plot start markers in green
+    scatter(eventTimes, ones(size(eventTimes)) * max(signal) * 0.9, opts.SCATTER_SIZE, 'g', 'filled');
+    % Calculate and plot end markers in red, ensuring we dont exceed array bounds
+    endIndices = min(eventStarts + opts.EVENT_DURATION_SAMPLES - 1, length(time));
+    scatter(time(endIndices), ones(size(endIndices)) * max(signal) * 0.85, opts.SCATTER_SIZE, 'r', 'filled');
     xlabel('Time (s)'); ylabel('Amplitude');
     title('Full Signal View');
-    legend('Original Signal', 'Hysteresis', 'Square Wave', 'Event Start', 'Location', 'Best');
+    legend('Original Signal', 'Hysteresis', 'Square Wave', 'Event Start', 'Event End', 'Location', 'Best');
     grid on; hold off;
     
     subplot(2,1,2);
@@ -106,12 +110,20 @@ if opts.showPlot
     plot(time(zoomWindow), square_wave(zoomWindow), 'b--', 'LineWidth', opts.LINE_WIDTH_THICK);
     
     if ~isempty(validEvents)
-        scatter(validEvents, ones(size(validEvents)) * max(signal(zoomWindow)) * 0.9, opts.SCATTER_SIZE, 'r', 'filled');
+        % Plot start events in green
+        scatter(validEvents, ones(size(validEvents)) * max(signal(zoomWindow)) * 0.9, opts.SCATTER_SIZE, 'g', 'filled');
+        % Plot end events in red (for events within zoom window)
+        validStartIndices = eventStarts(eventTimes >= time(zoomWindow(1)) & eventTimes <= time(zoomWindow(end)));
+        validEndIndices = min(validStartIndices + opts.EVENT_DURATION_SAMPLES - 1, length(time));
+        validEndTimes = time(validEndIndices);
+        if ~isempty(validEndTimes)
+            scatter(validEndTimes, ones(size(validEndTimes)) * max(signal(zoomWindow)) * 0.85, opts.SCATTER_SIZE, 'r', 'filled');
+        end
     end
     
     xlabel('Time (s)'); ylabel('Amplitude');
     title('Zoomed View of First Event Transition');
-    legend('Original Signal', 'Hysteresis', 'Square Wave', 'Event Start', 'Location', 'Best');
+    legend('Original Signal', 'Hysteresis', 'Square Wave', 'Event Start', 'Event End', 'Location', 'Best');
     grid on; hold off;
 end
 
