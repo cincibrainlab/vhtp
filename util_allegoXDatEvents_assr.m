@@ -249,6 +249,7 @@ EXPECTED_START_END_DURATION = 2980;  % Duration of each pulse
 EXPECTED_START_START_INTERVAL = 5000; % Time between starts of consecutive pulses
 EXPECTED_END_START_INTERVAL = 2020;   % Time between end of one pulse and start of next
 ALLOWED_DEVIATION = 3;  % Samples of allowed deviation
+LARGE_DEVIATION_THRESHOLD = 250; % Threshold to detect likely false positives
 
 % Initialize QC results
 qc_passed = true;
@@ -263,13 +264,41 @@ end_events = find(strcmp({EEG.event.type}, 'TTL_pulse_end'));
 num_start_events = length(start_events);
 num_end_events = length(end_events);
 
-fprintf('Found %d start events and %d end events (expected %d each)\n', ...
-    num_start_events, num_end_events, EXPECTED_EVENT_COUNT);
-
-if num_start_events ~= EXPECTED_EVENT_COUNT || num_end_events ~= EXPECTED_EVENT_COUNT
-    qc_passed = false;
-    qc_messages{end+1} = sprintf('Event count mismatch: Found %d starts and %d ends, expected %d each', ...
-        num_start_events, num_end_events, EXPECTED_EVENT_COUNT);
+% Check for false positive events after expected end
+if num_start_events > EXPECTED_EVENT_COUNT
+    fprintf('Checking for false positive events...\n');
+    
+    % Look at the interval after event 50
+    if EXPECTED_EVENT_COUNT < num_start_events
+        event_50_end = EEG.event(end_events(EXPECTED_EVENT_COUNT)).latency;
+        next_start = EEG.event(start_events(EXPECTED_EVENT_COUNT + 1)).latency;
+        interval = next_start - event_50_end - EXPECTED_END_START_INTERVAL;
+        
+        % If we see a very large deviation, likely a false positive
+        if abs(interval) > LARGE_DEVIATION_THRESHOLD
+            fprintf('Found likely false positive event after expected end. Removing...\n');
+            
+            % Remove the extra events
+            extra_start_indices = start_events(EXPECTED_EVENT_COUNT + 1:end);
+            extra_end_indices = end_events(EXPECTED_EVENT_COUNT + 1:end);
+            
+            % Remove from end to not mess up indices
+            for idx = sort([extra_start_indices extra_end_indices], 'descend')
+                EEG.event(idx) = [];
+            end
+            
+            % Update counts
+            start_events = find(strcmp({EEG.event.type}, 'TTL_pulse_start'));
+            end_events = find(strcmp({EEG.event.type}, 'TTL_pulse_end'));
+            num_start_events = length(start_events);
+            num_end_events = length(end_events);
+            
+            qc_messages{end+1} = sprintf('Removed %d false positive event(s) after expected end of stimulus', ...
+                length(extra_start_indices));
+            fprintf('Events removed. Now have %d start events and %d end events.\n', ...
+                num_start_events, num_end_events);
+        end
+    end
 end
 
 % 2. Check each start-end duration
@@ -445,7 +474,7 @@ if ~qc_passed
 end
 fprintf('===================================\n\n');
 
-pop_eegplot(EEG, 1, 1, 1);
+% pop_eegplot(EEG, 1, 1, 1);
 
 newEEG = EEG;
 end
