@@ -417,12 +417,6 @@ if ~qc_passed
     end
 end
 
-% Store QC results in EEG structure
-EEG.vhtp.assr_qc = struct();
-EEG.vhtp.assr_qc.passed = qc_passed;
-EEG.vhtp.assr_qc.messages = qc_messages;
-EEG.vhtp.assr_qc.num_start_events = num_start_events;
-EEG.vhtp.assr_qc.num_end_events = num_end_events;
 
 % Display final QC result
 fprintf('\nQC Check Result: %s\n', ternary(qc_passed, 'PASSED', 'FAILED'));
