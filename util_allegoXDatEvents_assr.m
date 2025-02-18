@@ -367,6 +367,7 @@ for i = 1:num_end_events-1
 end
 
 % Analyze timing error patterns
+bad_event_indices = [];
 if ~qc_passed
     fprintf('\nTiming Error Analysis:\n');
     
@@ -413,10 +414,16 @@ if ~qc_passed
             fprintf('Event %d (at %.2f seconds) is misaligned:\n', event_num, interval_data.time);
             fprintf('  - Interval before event: %+.1f samples from expected\n', interval_data.interval_before);
             fprintf('  - Interval after event: %+.1f samples from expected\n', interval_data.interval_after);
+            bad_event_indices = [bad_event_indices; event_num];
         end
     end
 end
 
+% Store QC results in EEG structure
+EEG.etc.util_allegoXDatEvents_assr = struct();
+EEG.etc.util_allegoXDatEvents_assr.passed = qc_passed;
+EEG.etc.util_allegoXDatEvents_assr.messages = qc_messages;
+EEG.etc.util_allegoXDatEvents_assr.bad_events = bad_event_indices;
 
 % Display final QC result
 fprintf('\nQC Check Result: %s\n', ternary(qc_passed, 'PASSED', 'FAILED'));
