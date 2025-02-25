@@ -48,6 +48,12 @@ defaultEmptyEEG = true;
 defaultAmpThreshold = 200;
 defaultByChannel = false;
 defaultOutputDir = tempdir;
+defaultRoi = {'E23', 'E18', 'E16', 'E10', 'E3', ...
+    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
+    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
+    'E7', 'E106'};
+defaultRoiLabel = "Average";
+defaultPlotRoi = true;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -101,11 +107,10 @@ if ~isempty(bad_trial_idx)
     disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
 end
 
+
 % define ROI of auditory cortex projection
-chirp_electrode_labels = {'E23', 'E18', 'E16', 'E10', 'E3', ...
-    'E28', 'E24', 'E19', 'E11', 'E4', 'E124', 'E117', ...
-    'E29', 'E20', 'E12', 'E5', 'E118', 'E111', 'E13', 'E6', 'E112', ...
-    'E7', 'E106'};
+chirp_electrode_labels = ip.Results.roi;
+
 
 dksource_labels = {EEG.chanlocs.labels};
 chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
@@ -212,9 +217,6 @@ for ci = 1 : size(data,1)
 
     roi.ITC40_hz = {findHz(35, 45)};
     roi.ITC40_ms = {findTimes(0, 3000)};
-
-    %roi.ITC80_hz = {find(f_s >= 70 & f_s <= 100)};
-    %roi.ITC80_ms = {find(t_s >= 1390 & t_s <= 1930)};
 
     roi.ITC80_hz = {findHz(75, 85)};
     roi.ITC80_ms = {findTimes(0, 3000)};

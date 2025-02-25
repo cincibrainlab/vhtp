@@ -46,6 +46,7 @@ defaultContrasts = {};
 defaultDiffColorLimits = [];
 defaultChannel = missing;
 EEGno =  numel(EEGcell);
+defaultUseRawItc = false;
 
 % MATLAB built-in input validation
 ip = inputParser();
@@ -64,6 +65,7 @@ addParameter(ip, 'averageByRegion', defaultAverageByRegion, @islogical);
 addParameter(ip,'contrasts', defaultContrasts, @iscell);
 addParameter(ip,'diffColorLimits', defaultDiffColorLimits, @isvector);
 addParameter(ip,'channel', defaultChannel, @ischar); % specific channel for plotting
+addParameter(ip,'useRawItc', defaultUseRawItc, @logical); 
 
 parse(ip,EEGcell,varargin{:});
 outputdir = ip.Results.outputdir;
@@ -72,6 +74,20 @@ isDiff = false;
 if isstruct(EEGcell)
     warning('Struct passed, converting to Cell.')
     EEGcell = num2cell(EEGcell);
+end
+
+if ip.Results.useRawItc
+
+    for idx = 1:numel(EEGcell)
+        if isfield(EEGcell{idx}, 'vhtp') && ...
+           isfield(EEGcell{idx}.vhtp, 'eeg_htpCalcChirpItcErsp')
+            EEGcell{idx}.vhtp.eeg_htpCalcChirpItcErsp.itc1 = ...
+                EEGcell{idx}.vhtp.eeg_htpCalcChirpItcErsp.rawitc1;
+        else
+            warning('EEGCell{%d} is missing required fields.', idx);
+        end
+    end
+
 end
 
 % base output file can be modified with strrep()

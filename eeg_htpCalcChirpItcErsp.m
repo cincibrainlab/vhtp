@@ -86,8 +86,16 @@ outputfile = fullfile(outputdir, [functionstamp '_' EEG.setname '_' timestamp '.
 
 % START: Signal Processing
 
-% create critical values correction
-for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
+% Flag to control whether to use actual critical values or zeros
+useCritValues = ~ip.Results.isMouseMea;  % Set to true to use original calculation, false for zeros
+
+if useCritValues
+    % Original critical values correction
+    for i = 1:400, rcrits(i, 1) = sqrt(- (1 / i) * log(.5)); end
+else
+    % All zeros version
+    rcrits = zeros(400, 1);
+end
 
 if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
@@ -117,7 +125,7 @@ if ip.Results.sourceOn
         chirp_dksource_labels_idx = contains(dksource_labels, 'temporal');
         chirp_dksource_labels = dksource_labels(chirp_dksource_labels_idx);
         chirp_sensors = chirp_dksource_labels;
-        warning('Web atlas could not be loaded. Processing Temporal ROIs instead. Error: %s', ME.message);
+        warning(ME.identifier, 'Web atlas could not be loaded. Processing Temporal ROIs instead. Error: %s', ME.message);
     end
 
 else
@@ -132,60 +140,34 @@ else
     end
 end
 
-
-
 if ip.Results.sourceOn || ip.Results.isMouseMea
-
-    % This section identifies bad trials in EEG data based on channel-specific
-    % thresholds. Instead of using a global threshold, channel-specific means
-    % and standard deviations are computed across all samples and trials. This
-    % accounts for variability between channels, ensuring fair trial evaluation.
-    % Trials are flagged if any channel exceeds 3 SDs above its mean. The SD
-    % exceedance for the worst offending channel is reported for transparency.
-
     warning('Processing source data: using 3 SD ROI threshold, not global.');
 
-    % Initialize variables for bad trial detection
     bad_trial_count = 0;
     bad_trial_idx = [];
-    bad_trial_sd = []; % To store SD exceedance for each bad trial
+    bad_trial_sd = [];
 
-    % Calculate channel-wise mean and standard deviation
-    channel_means = mean(EEG.data, [2, 3]); % Mean across samples and trials
-    channel_stds = std(EEG.data, 0, [2, 3]); % Std across samples and trials
-
-    % Define channel-specific amplitude thresholds (3 SD above mean)
+    channel_means = mean(EEG.data, [2, 3]);
+    channel_stds = std(EEG.data, 0, [2, 3]);
     channel_thresholds = channel_means + 3 * channel_stds;
-
     amp_threshold = mean(channel_thresholds);
 
-    % Iterate through trials
     for i = 1:EEG.trials
-        % Compute the mean absolute amplitude for each channel in the trial
         trial_amplitude = mean(abs(EEG.data(:, :, i)), 2);
-
-        % Check if any channel in the trial exceeds its threshold
-        exceed_sd = (trial_amplitude - channel_means) ./ channel_stds; % SD exceedance for each channel
+        exceed_sd = (trial_amplitude - channel_means) ./ channel_stds;
+        
         if any(trial_amplitude > channel_thresholds)
             bad_trial_count = bad_trial_count + 1;
             bad_trial_idx(bad_trial_count) = i;
-
-            % Store the maximum SD exceedance for the trial
             bad_trial_sd(bad_trial_count) = max(exceed_sd);
-
-            % Print information about the bad trial
-            bad_trial_label = sprintf("%s epoch: %d exceeded by %.2f SD", EEG.setname, i, max(exceed_sd));
-            fprintf('Bad trial detected: %s\n', bad_trial_label);
+            fprintf('Bad trial detected: %s\n', sprintf("%s epoch: %d exceeded by %.2f SD", EEG.setname, i, max(exceed_sd)));
         end
     end
 
-    % Optionally remove bad trials from EEG data
     if ~isempty(bad_trial_idx)
         EEG.data(:, :, bad_trial_idx) = [];
-        EEG.trials = size(EEG.data, 3); % Update the number of trials
+        EEG.trials = size(EEG.data, 3);
         fprintf('%d bad trials removed.\n', length(bad_trial_idx));
-
-        % Display the maximum SD exceedance for each bad trial
         for idx = 1:length(bad_trial_idx)
             fprintf('Trial %d was %.2f SD from the mean.\n', bad_trial_idx(idx), bad_trial_sd(idx));
         end
@@ -194,32 +176,27 @@ if ip.Results.sourceOn || ip.Results.isMouseMea
     end
 
 else
-
-
-    % amplitude based artifact rejection
     amp_threshold = ip.Results.ampThreshold;
-    bad_trial_idx = [];
+    bad_trial_idx = zeros(1, EEG.trials);  % Pre-allocate for efficiency
     bad_trial_count = 0;
 
     for i = 1:EEG.trials
-
-        trial_amplitude = abs(mean(EEG.data(:, :, i), 3));
+        trial_amplitude = abs(mean(EEG.data(:, :, i), 2));  % Fixed dimension
         trial_index = i;
 
-        if any(any(trial_amplitude > amp_threshold))
-            bad_trial_count = bad_trial_count +1;
+        if any(trial_amplitude > amp_threshold)
+            bad_trial_count = bad_trial_count + 1;
             bad_trial_idx(bad_trial_count) = trial_index;
-            bad_trial_label = sprintf("%s epoch: %d", EEG.setname, trial_index);
+            fprintf('Bad trial detected: %s\n', sprintf("%s epoch: %d", EEG.setname, trial_index));
         end
-
     end
 
     if ~isempty(bad_trial_idx)
+        % Only keep non-zero indices
+        bad_trial_idx = bad_trial_idx(1:bad_trial_count);
         EEG = pop_select(EEG, 'notrial', bad_trial_idx);
         disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
     end
-
-
 end
 
 
