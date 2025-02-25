@@ -249,10 +249,10 @@ function [newEEG] = util_allegoXDatEvents_chirp(char_filepath)
     for i = 1:length(time)
         amplitude = data(i);
         
-        if abs(amplitude) >= threshold && ~in_event
+        if amplitude >= threshold && ~in_event && i > 1000
             event_start = time(i);
             in_event = true;
-        elseif abs(amplitude) < threshold && in_event
+        elseif amplitude < -threshold && in_event
             event_duration = time(i) - event_start;
             if event_duration >= min_duration
                 events(end+1).latency = event_start;
@@ -269,12 +269,74 @@ function [newEEG] = util_allegoXDatEvents_chirp(char_filepath)
         EEG.event(end+1).type = 'TTL_pulse_start';
         EEG.event(end).latency = events(i).latency;
         EEG.event(end).duration = events(i).duration;
+
+        % Add event end
+        EEG.event(end+1).type = 'TTL_pulse_end';
+        EEG.event(end).latency = events(i).latency + events(i).duration;
+        EEG.event(end).duration = 0;
     end
     
-     
     % Sort events by latency
     EEG = eeg_checkset(EEG, 'eventconsistency');
-     
+    
+    % Plot the event detection results
+    fs = 1000; % Sampling frequency in Hz
+    time_sec = (0:length(data)-1) / fs; % Convert samples to seconds
+    
+    figure;
+    subplot(2,1,1);
+    plot(time_sec, data, 'k', 'LineWidth', 1); hold on;
+    
+    % Plot event markers
+    event_times = [events.latency] / fs; % Convert to seconds
+    event_durations = [events.duration] / fs; % Convert to seconds
+    event_ends = event_times + event_durations;
+    
+    % Create square wave for visualization
+    square_wave = zeros(size(data));
+    for i = 1:length(events)
+        start_idx = events(i).latency;
+        end_idx = min(start_idx + events(i).duration, length(data));
+        square_wave(start_idx:end_idx) = max(abs(data)) * 0.8;
+    end
+    
+    % Plot square wave and event markers
+    plot(time_sec, square_wave, 'b--', 'LineWidth', 1.5);
+    scatter(event_times, ones(size(event_times)) * max(abs(data)) * 0.9, 50, 'g', 'filled');
+    scatter(event_ends, ones(size(event_ends)) * max(abs(data)) * 0.85, 50, 'r', 'filled');
+    
+    xlabel('Time (s)'); ylabel('Amplitude');
+    title('Full Signal View with Detected Events');
+    legend('Filtered Signal', 'Event Windows', 'Event Start', 'Event End', 'Location', 'Best');
+    grid on;
+    
+    % Zoomed view of first event
+    subplot(2,1,2);
+    if ~isempty(events)
+        first_event = events(1).latency;
+        zoom_start = max(1, first_event - fs); % 1 second before
+        zoom_end = min(length(data), first_event + 3*fs); % 3 seconds after
+        zoom_window = zoom_start:zoom_end;
+        zoom_time = time_sec(zoom_window);
+        
+        plot(zoom_time, data(zoom_window), 'k', 'LineWidth', 1); hold on;
+        plot(zoom_time, square_wave(zoom_window), 'b--', 'LineWidth', 1.5);
+        
+        % Plot events in zoom window
+        zoom_event_times = event_times(event_times >= time_sec(zoom_start) & event_times <= time_sec(zoom_end));
+        zoom_event_ends = event_ends(event_times >= time_sec(zoom_start) & event_times <= time_sec(zoom_end));
+        
+        if ~isempty(zoom_event_times)
+            scatter(zoom_event_times, ones(size(zoom_event_times)) * max(abs(data(zoom_window))) * 0.9, 50, 'g', 'filled');
+            scatter(zoom_event_ends, ones(size(zoom_event_ends)) * max(abs(data(zoom_window))) * 0.85, 50, 'r', 'filled');
+        end
+        
+        xlabel('Time (s)'); ylabel('Amplitude');
+        title('Zoomed View of First Event');
+        legend('Filtered Signal', 'Event Windows', 'Event Start', 'Event End', 'Location', 'Best');
+        grid on;
+    end
+    
     % Save the updated EEG dataset
     % pop_saveset(EEG, 'filename', "updated_eeglab_file.set");
     

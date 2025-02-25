@@ -240,12 +240,256 @@ end
 
 EEG = eeg_checkset(EEG, 'eventconsistency');
 
+% Quality Control Check for ASSR Events
+fprintf('\n=== ASSR Event Quality Control Check ===\n');
 
-% Save the updated EEG dataset
-% pop_saveset(EEG, 'filename', "updated_eeglab_file.set");
+% Expected parameters
+EXPECTED_EVENT_COUNT = 50;
+EXPECTED_START_END_DURATION = 2980;  % Duration of each pulse
+EXPECTED_START_START_INTERVAL = 5000; % Time between starts of consecutive pulses
+EXPECTED_END_START_INTERVAL = 2020;   % Time between end of one pulse and start of next
+ALLOWED_DEVIATION = 3;  % Samples of allowed deviation
+LARGE_DEVIATION_THRESHOLD = 250; % Threshold to detect likely false positives
 
-pop_eegplot(EEG, 1, 1, 1);
+% Initialize QC results
+qc_passed = true;
+qc_messages = {};
+
+% Initialize error pattern tracking
+timing_errors = struct();
+
+% 1. Check total number of TTL_pulse_start events
+start_events = find(strcmp({EEG.event.type}, 'TTL_pulse_start'));
+end_events = find(strcmp({EEG.event.type}, 'TTL_pulse_end'));
+num_start_events = length(start_events);
+num_end_events = length(end_events);
+
+% Check for false positive events after expected end
+if num_start_events > EXPECTED_EVENT_COUNT
+    fprintf('Checking for false positive events...\n');
+    
+    % Look at the interval after event 50
+    if EXPECTED_EVENT_COUNT < num_start_events
+        event_50_end = EEG.event(end_events(EXPECTED_EVENT_COUNT)).latency;
+        next_start = EEG.event(start_events(EXPECTED_EVENT_COUNT + 1)).latency;
+        interval = next_start - event_50_end - EXPECTED_END_START_INTERVAL;
+        
+        % If we see a very large deviation, likely a false positive
+        if abs(interval) > LARGE_DEVIATION_THRESHOLD
+            fprintf('Found likely false positive event after expected end. Removing...\n');
+            
+            % Remove the extra events
+            extra_start_indices = start_events(EXPECTED_EVENT_COUNT + 1:end);
+            extra_end_indices = end_events(EXPECTED_EVENT_COUNT + 1:end);
+            
+            % Remove from end to not mess up indices
+            for idx = sort([extra_start_indices extra_end_indices], 'descend')
+                EEG.event(idx) = [];
+            end
+            
+            % Update counts
+            start_events = find(strcmp({EEG.event.type}, 'TTL_pulse_start'));
+            end_events = find(strcmp({EEG.event.type}, 'TTL_pulse_end'));
+            num_start_events = length(start_events);
+            num_end_events = length(end_events);
+            
+            qc_messages{end+1} = sprintf('Removed %d false positive event(s) after expected end of stimulus', ...
+                length(extra_start_indices));
+            fprintf('Events removed. Now have %d start events and %d end events.\n', ...
+                num_start_events, num_end_events);
+        end
+    end
+end
+
+% 2. Check each start-end duration
+fprintf('\nChecking individual pulse durations (start to end)...\n');
+for i = 1:num_start_events
+    start_time = EEG.event(start_events(i)).latency;
+    end_time = EEG.event(end_events(i)).latency;
+    duration = end_time - start_time;
+    time_in_seconds = start_time / EEG.srate;
+    
+    if abs(duration - EXPECTED_START_END_DURATION) > ALLOWED_DEVIATION
+        qc_passed = false;
+        msg = sprintf('Pulse %d duration error at %.2f seconds: %.1f samples (expected %d ± %d)', ...
+            i, time_in_seconds, duration, EXPECTED_START_END_DURATION, ALLOWED_DEVIATION);
+        qc_messages{end+1} = msg;
+        fprintf('- %s\n', msg);
+    end
+end
+
+% 3. Check start-to-start intervals
+fprintf('\nChecking intervals between consecutive starts...\n');
+for i = 1:num_start_events-1
+    start_current = EEG.event(start_events(i)).latency;
+    start_next = EEG.event(start_events(i+1)).latency;
+    interval = start_next - start_current;
+    time_in_seconds = start_current / EEG.srate;
+    
+    if abs(interval - EXPECTED_START_START_INTERVAL) > ALLOWED_DEVIATION
+        qc_passed = false;
+        deviation = interval - EXPECTED_START_START_INTERVAL;
+        if ~isfield(timing_errors, sprintf('event_%d', i+1))
+            timing_errors.(sprintf('event_%d', i+1)) = struct('early_late', 0, 'time', time_in_seconds);
+        end
+        timing_errors.(sprintf('event_%d', i+1)).early_late = timing_errors.(sprintf('event_%d', i+1)).early_late + deviation;
+        
+        msg = sprintf('Start-to-start interval error at event %d (%.2f seconds): %.1f samples (expected %d ± %d) [%s]', ...
+            i, time_in_seconds, interval, EXPECTED_START_START_INTERVAL, ALLOWED_DEVIATION, ...
+            ternary(deviation > 0, 'longer than expected', 'shorter than expected'));
+        qc_messages{end+1} = msg;
+        fprintf('- %s\n', msg);
+    end
+end
+
+% 4. Check end-to-start intervals
+fprintf('\nChecking intervals between end and next start...\n');
+for i = 1:num_end_events-1
+    end_current = EEG.event(end_events(i)).latency;
+    start_next = EEG.event(start_events(i+1)).latency;
+    interval = start_next - end_current;
+    time_in_seconds = end_current / EEG.srate;
+    
+    if abs(interval - EXPECTED_END_START_INTERVAL) > ALLOWED_DEVIATION
+        qc_passed = false;
+        deviation = interval - EXPECTED_END_START_INTERVAL;
+        if ~isfield(timing_errors, sprintf('event_%d', i+1))
+            timing_errors.(sprintf('event_%d', i+1)) = struct('early_late', 0, 'time', time_in_seconds);
+        end
+        timing_errors.(sprintf('event_%d', i+1)).early_late = timing_errors.(sprintf('event_%d', i+1)).early_late + deviation;
+        
+        msg = sprintf('End-to-start interval error at event %d (%.2f seconds): %.1f samples (expected %d ± %d) [%s]', ...
+            i, time_in_seconds, interval, EXPECTED_END_START_INTERVAL, ALLOWED_DEVIATION, ...
+            ternary(deviation > 0, 'longer than expected', 'shorter than expected'));
+        qc_messages{end+1} = msg;
+        fprintf('- %s\n', msg);
+    end
+end
+
+% Analyze timing error patterns
+bad_event_indices = [];
+if ~qc_passed
+    fprintf('\nTiming Error Analysis:\n');
+    
+    % Create a structure to store interval information for each event
+    event_intervals = struct();
+    
+    % First pass: collect all interval information for each event
+    for i = 1:num_start_events-1
+        event_num = i + 1;  
+        % Current event num the one we are analyzing
+        
+        % Get the intervals
+        prev_end = EEG.event(end_events(i)).latency;
+        curr_start = EEG.event(start_events(event_num)).latency;
+        curr_end = EEG.event(end_events(event_num)).latency;
+        
+        % Only process if we have a next event to compare with
+        if event_num < num_start_events
+            next_start = EEG.event(start_events(event_num+1)).latency;
+            
+            % Calculate interval deviations
+            interval_before = curr_start - prev_end - EXPECTED_END_START_INTERVAL;
+            interval_after = next_start - curr_end - EXPECTED_END_START_INTERVAL;
+            
+            % Store the information
+            event_intervals.(sprintf('event_%d', event_num)) = struct(...
+                'time', curr_start / EEG.srate, ...
+                'interval_before', interval_before, ...
+                'interval_after', interval_after);
+        end
+    end
+    
+    % Second pass: analyze each event for misalignment
+    event_nums = fieldnames(event_intervals);
+    for i = 1:length(event_nums)
+        event_num = str2double(regexp(event_nums{i}, '\d+', 'match'));
+        interval_data = event_intervals.(event_nums{i});
+        
+        % An event is misaligned if:
+        % - The interval before it is too long AND the interval after it is too short
+        % - OR vice versa
+        if (interval_data.interval_before > ALLOWED_DEVIATION && interval_data.interval_after < -ALLOWED_DEVIATION) || ...
+           (interval_data.interval_before < -ALLOWED_DEVIATION && interval_data.interval_after > ALLOWED_DEVIATION)
+            fprintf('Event %d (at %.2f seconds) is misaligned:\n', event_num, interval_data.time);
+            fprintf('  - Interval before event: %+.1f samples from expected\n', interval_data.interval_before);
+            fprintf('  - Interval after event: %+.1f samples from expected\n', interval_data.interval_after);
+            bad_event_indices = [bad_event_indices; event_num];
+        end
+    end
+end
+
+% Store QC results in EEG structure
+EEG.etc.util_allegoXDatEvents_assr = struct();
+EEG.etc.util_allegoXDatEvents_assr.passed = qc_passed;
+EEG.etc.util_allegoXDatEvents_assr.messages = qc_messages;
+EEG.etc.util_allegoXDatEvents_assr.bad_events = bad_event_indices;
+
+% Display final QC result
+fprintf('\nQC Check Result: %s\n', ternary(qc_passed, 'PASSED', 'FAILED'));
+if ~qc_passed
+    fprintf('\nSummary of all issues found:\n');
+    cellfun(@(msg) fprintf('- %s\n', msg), qc_messages);
+    
+    % Create popup message with QC results
+    popup_msg = sprintf('Quality Control Issues Found in: %s\n\n', EEG.filename);
+    
+    % Add timing error analysis if it exists
+    timing_analysis = '';
+    event_nums = fieldnames(event_intervals);
+    for i = 1:length(event_nums)
+        event_num = str2double(regexp(event_nums{i}, '\d+', 'match'));
+        interval_data = event_intervals.(event_nums{i});
+        
+        if (interval_data.interval_before > ALLOWED_DEVIATION && interval_data.interval_after < -ALLOWED_DEVIATION) || ...
+           (interval_data.interval_before < -ALLOWED_DEVIATION && interval_data.interval_after > ALLOWED_DEVIATION)
+            timing_analysis = sprintf('%sEvent %d (at %.2f seconds) is misaligned:\n  Before: %+.1f samples\n  After: %+.1f samples\n\n', ...
+                timing_analysis, event_num, interval_data.time, ...
+                interval_data.interval_before, interval_data.interval_after);
+        end
+    end
+    
+    if ~isempty(timing_analysis)
+        popup_msg = sprintf('%s\nTiming Analysis:\n%s', popup_msg, timing_analysis);
+    end
+    
+    % Add all other QC messages
+    popup_msg = sprintf('%s\nAll Issues Found:\n', popup_msg);
+    for i = 1:length(qc_messages)
+        popup_msg = sprintf('%s• %s\n', popup_msg, qc_messages{i});
+    end
+    
+    % Create a wider dialog box
+    d = figure('Position',[300 300 700 500], ...
+        'Name','ASSR Quality Control Results', ...
+        'NumberTitle','off', ...
+        'MenuBar','none', ...
+        'ToolBar','none', ...
+        'WindowStyle','normal');
+    
+    % Create text control with scrolling enabled
+    txt = uicontrol('Parent',d,...
+        'Style','edit',... % Use edit instead of text to get scrolling
+        'Position',[20 40 660 440],...
+        'String',popup_msg,...
+        'HorizontalAlignment','left',...
+        'Min',0,'Max',2,... % Enable multiline
+        'BackgroundColor','white',...
+        'Enable','inactive'); % Make read-only but still selectable
+    
+end
+fprintf('===================================\n\n');
+
+% pop_eegplot(EEG, 1, 1, 1);
 
 newEEG = EEG;
+end
+
+function result = ternary(condition, if_true, if_false)
+    if condition
+        result = if_true;
+    else
+        result = if_false;
+    end
 end
 
