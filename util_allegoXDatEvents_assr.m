@@ -22,7 +22,13 @@ if strcmp(fileExtension, '.xdat')
     % EEG = util_htpImportAndRemapMea(args.char_filepath);
     note = @(msg) fprintf('%s: %s\n', mfilename, msg );
     dataFile = args.char_filepath;
-    if ~isempty(regexp(dataFile,'xdat','match')); xdatFile = true; else; xdatFile = false; end
+    if ~endsWith(dataFile, '_data.xdat')
+        note(['Skipping file (does not end with _data.xdat): ' dataFile]);
+        EEG = []; % Return empty to indicate no processing
+        return;
+    else
+        xdatFile = true;
+    end
 
     if xdatFile
         % Xdat import code from manufacturer

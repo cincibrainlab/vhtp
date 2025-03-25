@@ -22,7 +22,13 @@ function [newEEG] = util_allegoXDatEvents_chirp(char_filepath)
         % EEG = util_htpImportAndRemapMea(args.char_filepath);
         note = @(msg) fprintf('%s: %s\n', mfilename, msg );
         dataFile = args.char_filepath;
-        if ~isempty(regexp(dataFile,'xdat','match')); xdatFile = true; else; xdatFile = false; end
+        if ~endsWith(dataFile, '_data.xdat')
+            note(['Skipping file (does not end with _data.xdat): ' dataFile]);
+            EEG = []; % Return empty to indicate no processing
+            return;
+        else
+            xdatFile = true;
+        end
         
         if xdatFile
             % Xdat import code from manufacturer
@@ -340,7 +346,7 @@ function [newEEG] = util_allegoXDatEvents_chirp(char_filepath)
     % Save the updated EEG dataset
     % pop_saveset(EEG, 'filename', "updated_eeglab_file.set");
     
-    pop_eegplot(EEG, 1, 1, 1);
+    % pop_eegplot(EEG, 1, 1, 1);
 
     newEEG = EEG;
 end

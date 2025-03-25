@@ -6,7 +6,13 @@ function EEG =  util_htpImportAndRemapMea( dataFile )
 % 7/6/2023: Revised XDAT import
 
 note = @(msg) fprintf('%s: %s\n', mfilename, msg );
-if ~isempty(regexp(dataFile,'xdat','match')); xdatFile = true; else; xdatFile = false; end
+if ~endsWith(dataFile, '_data.xdat')
+    note(['Skipping file (does not end with _data.xdat): ' dataFile]);
+    EEG = []; % Return empty to indicate no processing
+    return;
+else
+    xdatFile = true;
+end
 
 if xdatFile
     try 
