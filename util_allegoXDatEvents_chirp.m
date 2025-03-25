@@ -24,7 +24,7 @@ function [newEEG] = util_allegoXDatEvents_chirp(char_filepath)
         dataFile = args.char_filepath;
         if ~endsWith(dataFile, '_data.xdat')
             note(['Skipping file (does not end with _data.xdat): ' dataFile]);
-            EEG = []; % Return empty to indicate no processing
+            newEEG = []; % Return empty to indicate no processing
             return;
         else
             xdatFile = true;
