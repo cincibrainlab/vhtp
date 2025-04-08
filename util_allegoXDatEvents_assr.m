@@ -147,10 +147,10 @@ if strcmp(fileExtension, '.xdat')
             EEG.chanlocs(i).Z = chanlocs(j).Z;
         end
         % Remap Channel Locations
-        EEG =  util_htpRemapXdatMea( EEG );
+        % EEG =  util_htpRemapXdatMea( EEG );
 
-        EEG = eeg_checkset(EEG);
-        EEG = eeg_checkchanlocs(EEG);
+        % EEG = eeg_checkset(EEG);
+        % EEG = eeg_checkchanlocs(EEG);
 
     end
 
