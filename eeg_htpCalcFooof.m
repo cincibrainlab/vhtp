@@ -38,6 +38,7 @@ addParameter(p, 'ic_assessment', false, @islogical);
 addParameter(p, 'save_fooof_img', true, @islogical);
 addParameter(p, 'parallel', true, @islogical);
 addParameter(p, 'normalize_psd', false, @islogical);
+addParameter(p, 'outputdir', EEG.filepath, @ischar);
 
 
 parse(p, varargin{:});
@@ -493,7 +494,12 @@ end
         % save_to_csv - Saves FOOOF results and summary to CSV files.
         if opts.save_to_csv
             % Save FOOOF results to CSV file.
-            subdir = fullfile(EEG.filepath, mfilename);
+
+            
+            outputPath = p.Results.outputdir;
+
+
+            subdir = fullfile(outputPath, mfilename);
             if ~exist(subdir, 'dir')
                 mkdir(subdir);
             end
